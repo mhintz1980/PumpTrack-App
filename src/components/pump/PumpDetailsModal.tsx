@@ -26,7 +26,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import type { Pump } from '@/types';
+import type { Pump, StageId } from '@/types';
 import { STAGES, POWDER_COATERS, PUMP_MODELS, DEFAULT_POWDER_COAT_COLORS } from '@/lib/constants';
 import { AiActions } from '@/components/AiActions';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -78,7 +78,7 @@ export function PumpDetailsModal({ isOpen, onClose, pump, onUpdatePump }: PumpDe
     const updatedPumpData = {
       ...pump,
       ...data,
-      powderCoater: data.powderCoater || undefined, // ensure undefined if empty
+      powderCoater: data.powderCoater || undefined, 
       powderCoatColor: data.powderCoatColor || undefined,
       notes: data.notes || undefined,
     };
@@ -88,6 +88,9 @@ export function PumpDetailsModal({ isOpen, onClose, pump, onUpdatePump }: PumpDe
   };
   
   const currentStageDetails = STAGES.find(s => s.id === pump.currentStage);
+  const relevantStagesForPowderCoatFields: StageId[] = ['fabrication', 'assembly', 'powder-coat', 'testing'];
+  const showPowderCoatFields = relevantStagesForPowderCoatFields.includes(pump.currentStage);
+
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
@@ -99,7 +102,7 @@ export function PumpDetailsModal({ isOpen, onClose, pump, onUpdatePump }: PumpDe
             View or edit pump information below.
           </DialogDescription>
         </DialogHeader>
-        <ScrollArea className="flex-grow pr-6 -mr-6"> {/* Added pr for scrollbar space */}
+        <ScrollArea className="flex-grow pr-6 -mr-6">
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -164,7 +167,7 @@ export function PumpDetailsModal({ isOpen, onClose, pump, onUpdatePump }: PumpDe
                     </FormItem>
                   )}
                 />
-                 {(pump.currentStage === 'powder-coat' || pump.currentStage === 'assembly' || pump.currentStage === 'final-qc' || pump.currentStage === 'ready-to-ship') && (
+                 {showPowderCoatFields && (
                   <>
                     <FormField
                       control={form.control}

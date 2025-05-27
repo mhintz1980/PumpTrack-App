@@ -1,13 +1,14 @@
+
 import type { LucideIcon } from 'lucide-react';
 
 export type StageId =
   | 'open-jobs'
-  | 'parts-staged'
+  | 'fabrication' // Was 'parts-staged'
   | 'assembly'
   | 'testing'
   | 'powder-coat'
-  | 'final-qc'
-  | 'ready-to-ship'
+  // | 'final-qc' // Removed
+  // | 'ready-to-ship' // Removed
   | 'shipped';
 
 export interface Pump {

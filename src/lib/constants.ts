@@ -1,23 +1,24 @@
+
 import type { Stage } from '@/types';
 import {
   ListTodo,
-  Archive,
+  Hammer, // Changed from Archive
   Wrench,
   TestTube2,
   SprayCan,
-  CheckCircle2,
-  Package,
   Truck,
+  // CheckCircle2, // Removed
+  // Package, // Removed
 } from 'lucide-react';
 
 export const STAGES: Stage[] = [
   { id: 'open-jobs', title: 'Open Jobs', icon: ListTodo },
-  { id: 'parts-staged', title: 'Parts Staged', icon: Archive },
+  { id: 'fabrication', title: 'Fabrication', icon: Hammer }, // Was 'parts-staged' with Archive
+  { id: 'powder-coat', title: 'Powder Coat', icon: SprayCan }, // Moved up
   { id: 'assembly', title: 'Assembly', icon: Wrench },
   { id: 'testing', title: 'Testing', icon: TestTube2 },
-  { id: 'powder-coat', title: 'Powder Coat', icon: SprayCan },
-  { id: 'final-qc', title: 'Final QC', icon: CheckCircle2 },
-  { id: 'ready-to-ship', title: 'Ready to Ship', icon: Package },
+  // { id: 'final-qc', title: 'Final QC', icon: CheckCircle2 }, // Removed
+  // { id: 'ready-to-ship', title: 'Ready to Ship', icon: Package }, // Removed
   { id: 'shipped', title: 'Shipped', icon: Truck },
 ];
 

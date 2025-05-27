@@ -4,14 +4,15 @@
 import React from 'react';
 import Image from 'next/image';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import type { Pump, ViewMode } from '@/types';
-import { GripVertical } from 'lucide-react';
+import { GripVertical, Eye } from 'lucide-react';
 
 interface KanbanCardProps {
   pump: Pump;
   viewMode: ViewMode;
   onDragStart: (e: React.DragEvent<HTMLDivElement>, pumpId: string) => void;
-  onClick: () => void;
+  onClick: () => void; // This prop is now for opening the modal
 }
 
 export function KanbanCard({ pump, viewMode, onDragStart, onClick }: KanbanCardProps) {
@@ -19,12 +20,12 @@ export function KanbanCard({ pump, viewMode, onDragStart, onClick }: KanbanCardP
     <Card
       draggable
       onDragStart={(e) => onDragStart(e, pump.id)}
-      onClick={onClick}
-      className="mb-3 cursor-grab active:cursor-grabbing shadow-md hover:shadow-lg hover:scale-[1.02] transition-all duration-150 ease-in-out bg-card"
+      // onClick is removed from the Card itself
+      className="mb-3 shadow-md hover:shadow-lg hover:scale-[1.02] transition-all duration-150 ease-in-out bg-card group"
       aria-label={`Pump: ${pump.serialNumber}, Customer: ${pump.customer}`}
     >
-      <CardHeader className="p-3 flex flex-row items-center justify-between space-y-0">
-        <div className="flex-grow">
+      <CardHeader className="p-3 flex flex-row items-start justify-between space-y-0">
+        <div className="flex-grow pr-2">
           <CardTitle className="text-sm font-semibold leading-none">
             {pump.model} - {pump.serialNumber}
           </CardTitle>
@@ -32,7 +33,23 @@ export function KanbanCard({ pump, viewMode, onDragStart, onClick }: KanbanCardP
             Customer: {pump.customer}
           </CardDescription>
         </div>
-        <GripVertical className="h-5 w-5 text-muted-foreground flex-shrink-0" />
+        <div className="flex items-center space-x-1">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-7 w-7 text-muted-foreground hover:text-primary opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity"
+            onClick={(e) => {
+              e.stopPropagation(); // Prevent card drag or other unwanted interactions
+              onClick(); // Open details modal
+            }}
+            aria-label="View pump details"
+          >
+            <Eye className="h-4 w-4" />
+          </Button>
+          <div className="cursor-grab" aria-label="Drag pump">
+            <GripVertical className="h-5 w-5 text-muted-foreground" />
+          </div>
+        </div>
       </CardHeader>
       {viewMode === 'detailed' && (
         <CardContent className="p-3 pt-0 text-xs space-y-1">

@@ -35,6 +35,15 @@ export function Header({
   availablePumpModels,
   availablePowderCoaters,
 }: HeaderProps) {
+  const activeFilterCount = Object.values(filters).filter(value => value !== undefined && value !== '').length;
+
+  const handleFilterInteraction = () => {
+    if (activeFilterCount > 0) {
+      onFiltersChange({}); // Clear filters
+    }
+    // The DropdownMenuTrigger will handle opening/closing the dropdown.
+  };
+
   return (
     <header className="bg-card p-4 shadow-md sticky top-0 z-40">
       <div className="container mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
@@ -47,8 +56,14 @@ export function Header({
         <div className="flex items-center gap-4 flex-wrap justify-center sm:justify-end">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm">
-                <Settings2 className="mr-2 h-4 w-4" /> Filters
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={handleFilterInteraction}
+                aria-label={activeFilterCount > 0 ? `Clear ${activeFilterCount} filters and toggle menu` : "Open filters menu"}
+              >
+                <Settings2 className="mr-2 h-4 w-4" />
+                {activeFilterCount > 0 ? `Filters (${activeFilterCount} Applied)` : "Filters"}
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent className="w-72 p-4">
