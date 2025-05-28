@@ -4,10 +4,8 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { PlusCircle, Settings2, FilterX } from 'lucide-react';
-import type { ViewMode, Filters } from '@/types';
+import type { Filters } from '@/types';
 import { PumpFilterControls } from '@/components/pump/PumpFilterControls';
-import { Switch } from '@/components/ui/switch';
-import { Label } from '@/components/ui/label';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -24,8 +22,6 @@ import {
 
 interface HeaderProps {
   onAddPump: () => void;
-  viewMode: ViewMode;
-  onViewModeChange: (mode: ViewMode) => void;
   filters: Filters;
   onFiltersChange: (filters: Filters) => void;
   availablePumpModels: string[];
@@ -38,8 +34,6 @@ interface HeaderProps {
 
 export function Header({
   onAddPump,
-  viewMode,
-  onViewModeChange,
   filters,
   onFiltersChange,
   availablePumpModels,
@@ -49,7 +43,9 @@ export function Header({
   availablePONumbers,
   availablePriorities,
 }: HeaderProps) {
-  const activeFilterCount = Object.values(filters).filter(value => value !== undefined && value !== '').length;
+  const activeFilterCount = Object.values(filters).filter(
+    (value) => Array.isArray(value) ? value.length > 0 : value !== undefined && value !== ''
+  ).length;
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const handleClearFilters = () => {
@@ -74,6 +70,7 @@ export function Header({
                     <Button
                       variant="outline"
                       size="sm"
+                      onClick={() => setIsMenuOpen(o => !o)} // Toggle explicitly, clearFilters is separate
                       aria-label={activeFilterCount > 0 ? `Filters (${activeFilterCount} Applied), open menu` : "Open filters menu"}
                     >
                       <Settings2 className="mr-2 h-4 w-4" />
@@ -119,27 +116,6 @@ export function Header({
                 </TooltipContent>
               </Tooltip>
             )}
-
-            <div className="flex items-center space-x-2">
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Switch
-                    id="view-mode-toggle"
-                    checked={viewMode === 'condensed'}
-                    onCheckedChange={(checked) =>
-                      onViewModeChange(checked ? 'condensed' : 'default')
-                    }
-                    aria-label="Toggle condensed view (group by model)"
-                  />
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>Toggle condensed/grouped view</p>
-                </TooltipContent>
-              </Tooltip>
-              <Label htmlFor="view-mode-toggle" className="text-sm">
-                Condensed View
-              </Label>
-            </div>
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button onClick={onAddPump} size="sm">

@@ -19,7 +19,6 @@ const generateRandomSerialNumber = () => `MSP-JN-${String(Math.floor(Math.random
 export default function HomePage() {
   const [pumps, setPumps] = useState<Pump[]>([]);
   const [filteredPumps, setFilteredPumps] = useState<Pump[]>([]);
-  const [viewMode, setViewMode] = useState<ViewMode>('default');
   const [filters, setFilters] = useState<Filters>({});
   
   const [isAddPumpModalOpen, setIsAddPumpModalOpen] = useState(false);
@@ -36,11 +35,13 @@ export default function HomePage() {
   const [isGroupDetailsModalOpen, setIsGroupDetailsModalOpen] = useState(false);
 
   const [explodedGroups, setExplodedGroups] = useState<Record<StageId, Set<string>>>({});
+  const [columnViewModes, setColumnViewModes] = useState<Record<StageId, ViewMode>>(() =>
+    STAGES.reduce((acc, stage) => ({ ...acc, [stage.id]: 'default' }), {} as Record<StageId, ViewMode>)
+  );
 
   const { toast } = useToast();
   
   useEffect(() => {
-    // This effect runs once on the client after initial hydration
     const initialSamplePumps: Pump[] = [
       { id: generateId(), model: PUMP_MODELS[0], serialNumber: generateRandomSerialNumber(), customer: CUSTOMER_NAMES[0], poNumber: 'PO123', currentStage: 'open-jobs', notes: 'Initial inspection pending.', priority: 'normal' },
       { id: generateId(), model: PUMP_MODELS[1], serialNumber: generateRandomSerialNumber(), customer: CUSTOMER_NAMES[1], poNumber: 'PO456', currentStage: 'assembly', notes: 'Waiting for part XYZ.', priority: 'high' },
@@ -99,7 +100,6 @@ export default function HomePage() {
       } else if (quantity > 1 && !startSerialNumber) {
         // Serial number remains undefined for batch add without starting SN
       } else if (quantity === 1 && (!startSerialNumber || !/^MSP-JN-\d{4}$/.test(startSerialNumber))) {
-        // This case should be caught by form validation, but as a safeguard:
         console.error("Serial number is required and must be valid for single pump addition.");
         toast({ variant: "destructive", title: "Validation Error", description: "Serial number is required for single pump addition." });
         return; 
@@ -126,7 +126,7 @@ export default function HomePage() {
 
   const handleUpdatePump = useCallback((updatedPump: Pump) => {
     setPumps(prev => prev.map(p => p.id === updatedPump.id ? updatedPump : p));
-    setSelectedPumpIdsForDrag([]); // Clear selection after update
+    setSelectedPumpIdsForDrag([]); 
     toast({ title: "Pump Updated", description: `Details for ${updatedPump.serialNumber || 'Pump'} saved.` });
   }, [toast]);
 
@@ -166,7 +166,7 @@ export default function HomePage() {
 
     if (powderCoatInfoMissing && newStageId === 'powder-coat') {
       if (firstMissingPumpForModal) {
-        setMissingInfoPump(firstMissingPumpForModal); // Only show modal for the first pump with missing info in the batch for now
+        setMissingInfoPump(firstMissingPumpForModal); 
         setMissingInfoTargetStage(newStageId);
         setIsMissingInfoModalOpen(true);
       }
@@ -175,7 +175,7 @@ export default function HomePage() {
         title: "Move Aborted",
         description: "One or more pumps require powder coat information. Please update them or resolve via the prompted modal.",
       });
-      setSelectedPumpIdsForDrag([]); // Clear selection if move is aborted
+      setSelectedPumpIdsForDrag([]); 
       return; 
     }
     
@@ -212,9 +212,8 @@ export default function HomePage() {
       event.preventDefault();
       setSelectedPumpIdsForDrag(prevSelectedIds => {
         const firstSelectedPump = pumps.find(p => p.id === prevSelectedIds[0]);
-        // Only allow selection within the same stage when using CTRL/Meta
         if (prevSelectedIds.length > 0 && firstSelectedPump && firstSelectedPump.currentStage !== clickedPump.currentStage) {
-          return [clickedPump.id]; // Start new selection if stage differs
+          return [clickedPump.id]; 
         }
 
         if (prevSelectedIds.includes(clickedPump.id)) {
@@ -224,7 +223,6 @@ export default function HomePage() {
         }
       });
     } else {
-      // Normal click without CTRL/Meta always starts a new selection with just the clicked card
       setSelectedPumpIdsForDrag([clickedPump.id]);
     }
   }, [pumps]);
@@ -234,9 +232,25 @@ export default function HomePage() {
     setIsGroupDetailsModalOpen(true);
   }, []);
 
-  const handleViewModeChange = useCallback((newMode: ViewMode) => {
-    setViewMode(newMode);
-    setExplodedGroups({}); // Reset exploded state when changing view mode
+  const handleToggleColumnViewMode = useCallback((stageId: StageId) => {
+    setColumnViewModes(prevModes => {
+        const newMode = prevModes[stageId] === 'default' ? 'condensed' : 'default';
+        const updatedModes = { ...prevModes, [stageId]: newMode };
+
+        if (newMode === 'default') { // Switching FROM condensed TO default
+            setExplodedGroups(prevExploded => {
+                const newExplodedForStage = new Set(prevExploded[stageId] || []);
+                if (newExplodedForStage.size > 0) { // Only update if there were exploded groups
+                    return {
+                        ...prevExploded,
+                        [stageId]: new Set<string>(), // Clear exploded models for this stage
+                    };
+                }
+                return prevExploded; // No change if no groups were exploded in this stage
+            });
+        }
+        return updatedModes;
+    });
   }, []);
 
   const handleToggleExplodeGroup = useCallback((stageId: StageId, model: string) => {
@@ -271,8 +285,6 @@ export default function HomePage() {
     <div className="flex flex-col h-screen bg-background">
       <Header
         onAddPump={() => setIsAddPumpModalOpen(true)}
-        viewMode={viewMode}
-        onViewModeChange={handleViewModeChange}
         filters={filters}
         onFiltersChange={setFilters}
         availablePumpModels={allPumpModels}
@@ -285,7 +297,8 @@ export default function HomePage() {
       <main className="flex-grow overflow-hidden">
         <KanbanBoard
           pumps={filteredPumps}
-          viewMode={viewMode}
+          columnViewModes={columnViewModes}
+          onToggleColumnViewMode={handleToggleColumnViewMode}
           onPumpMove={handlePumpMove}
           onMultiplePumpsMove={handleMultiplePumpsMove}
           onOpenPumpDetailsModal={handleOpenPumpDetailsModal}
@@ -337,5 +350,4 @@ export default function HomePage() {
     </div>
   );
 }
-
     

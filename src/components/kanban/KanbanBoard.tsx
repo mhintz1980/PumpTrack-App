@@ -8,7 +8,8 @@ import { KanbanColumn } from './KanbanColumn';
 
 interface KanbanBoardProps {
   pumps: Pump[];
-  viewMode: ViewMode;
+  columnViewModes: Record<StageId, ViewMode>;
+  onToggleColumnViewMode: (stageId: StageId) => void;
   onPumpMove: (pumpId: string, newStageId: StageId) => void;
   onMultiplePumpsMove: (pumpIds: string[], newStageId: StageId) => void;
   onOpenPumpDetailsModal: (pump: Pump) => void;
@@ -21,7 +22,8 @@ interface KanbanBoardProps {
 
 export function KanbanBoard({
   pumps,
-  viewMode,
+  columnViewModes,
+  onToggleColumnViewMode,
   onPumpMove,
   onMultiplePumpsMove,
   onOpenPumpDetailsModal,
@@ -89,7 +91,8 @@ export function KanbanBoard({
           key={stage.id}
           stage={stage}
           pumps={pumps.filter((p) => p.currentStage === stage.id)}
-          viewMode={viewMode}
+          viewMode={columnViewModes[stage.id] || 'default'}
+          onToggleViewMode={() => onToggleColumnViewMode(stage.id)}
           onDragStartCard={handleDragStartSingle}
           onDragStartGroupCard={handleDragStartGroup}
           onDragOver={handleDragOver}
@@ -105,5 +108,4 @@ export function KanbanBoard({
     </div>
   );
 }
-
     
