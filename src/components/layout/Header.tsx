@@ -52,7 +52,6 @@ export function Header({
 
   const handleClearFilters = () => {
     onFiltersChange({});
-    // setIsMenuOpen(false); // Optionally close menu after clearing
   };
 
   return (
@@ -115,11 +114,11 @@ export function Header({
           <div className="flex items-center space-x-2">
             <Switch
               id="view-mode-toggle"
-              checked={viewMode === 'condensed'}
+              checked={viewMode === 'condensed'} // 'condensed' is now the grouped view
               onCheckedChange={(checked) =>
-                onViewModeChange(checked ? 'condensed' : 'detailed')
+                onViewModeChange(checked ? 'condensed' : 'default')
               }
-              aria-label="Toggle view mode"
+              aria-label="Toggle condensed view (group by model)"
             />
             <Label htmlFor="view-mode-toggle" className="text-sm">
               Condensed View

@@ -2,20 +2,18 @@
 "use client";
 
 import React from 'react';
-import Image from 'next/image';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import type { Pump, ViewMode } from '@/types';
+import type { Pump } from '@/types';
 import { GripVertical, Eye } from 'lucide-react';
 
 interface KanbanCardProps {
   pump: Pump;
-  viewMode: ViewMode;
   onDragStart: (e: React.DragEvent<HTMLDivElement>, pumpId: string) => void;
-  onClick: () => void; // This prop is now for opening the modal
+  onClick: () => void;
 }
 
-export function KanbanCard({ pump, viewMode, onDragStart, onClick }: KanbanCardProps) {
+export function KanbanCard({ pump, onDragStart, onClick }: KanbanCardProps) {
   const displaySerialNumber = pump.serialNumber || 'N/A';
   return (
     <Card
@@ -51,36 +49,7 @@ export function KanbanCard({ pump, viewMode, onDragStart, onClick }: KanbanCardP
           </div>
         </div>
       </CardHeader>
-      {viewMode === 'detailed' && (
-        <CardContent className="p-3 pt-0 text-xs space-y-1">
-          <div className="flex justify-between">
-            <span>PO Number:</span>
-            <span className="font-medium">{pump.poNumber}</span>
-          </div>
-          {pump.powderCoater && (
-            <div className="flex justify-between">
-              <span>Coater:</span>
-              <span className="font-medium">{pump.powderCoater}</span>
-            </div>
-          )}
-          {pump.powderCoatColor && (
-            <div className="flex justify-between">
-              <span>Color:</span>
-              <span className="font-medium">{pump.powderCoatColor}</span>
-            </div>
-          )}
-           <div className="pt-2">
-             <Image 
-                src="https://placehold.co/300x200.png" 
-                alt="Pump placeholder image" 
-                width={300} 
-                height={200} 
-                className="rounded-sm object-cover w-full"
-                data-ai-hint="industrial pump"
-              />
-           </div>
-        </CardContent>
-      )}
+      {/* Removed detailed view section with image and extra fields. Details are in the modal. */}
     </Card>
   );
 }

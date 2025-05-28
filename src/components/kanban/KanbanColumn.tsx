@@ -4,6 +4,7 @@
 import React from 'react';
 import type { Pump, Stage, ViewMode } from '@/types';
 import { KanbanCard } from './KanbanCard';
+import { GroupedKanbanCard } from './GroupedKanbanCard';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface KanbanColumnProps {
@@ -27,11 +28,24 @@ export function KanbanColumn({
 }: KanbanColumnProps) {
   const Icon = stage.icon;
 
+  const groupedPumpsByModel = React.useMemo(() => {
+    if (viewMode === 'condensed') {
+      return pumps.reduce((acc, pump) => {
+        if (!acc[pump.model]) {
+          acc[pump.model] = [];
+        }
+        acc[pump.model].push(pump);
+        return acc;
+      }, {} as Record<string, Pump[]>);
+    }
+    return {};
+  }, [pumps, viewMode]);
+
   return (
     <div
       className="flex-shrink-0 w-80 bg-secondary/50 rounded-lg shadow-sm h-full flex flex-col"
-      onDragOver={onDragOver}
-      onDrop={(e) => onDrop(e, stage.id)}
+      onDragOver={viewMode === 'default' ? onDragOver : undefined} // Only allow drag over for default view
+      onDrop={viewMode === 'default' ? (e) => onDrop(e, stage.id) : undefined} // Only allow drop for default view
       aria-labelledby={`stage-title-${stage.id}`}
     >
       <div className="p-4 border-b border-border flex items-center justify-between sticky top-0 bg-secondary/50 z-10 rounded-t-lg">
@@ -50,14 +64,22 @@ export function KanbanColumn({
           <div className="flex items-center justify-center h-full text-sm text-muted-foreground italic">
             No pumps in this stage.
           </div>
-        ) : (
+        ) : viewMode === 'default' ? (
           pumps.map((pump) => (
             <KanbanCard
               key={pump.id}
               pump={pump}
-              viewMode={viewMode}
               onDragStart={onDragStartCard}
               onClick={() => onCardClick(pump)}
+            />
+          ))
+        ) : ( // viewMode === 'condensed'
+          Object.entries(groupedPumpsByModel).map(([model, pumpsInGroup]) => (
+            <GroupedKanbanCard
+              key={model}
+              model={model}
+              pumpsInGroup={pumpsInGroup}
+              // onCardClick prop is not passed here as grouped card interaction is different
             />
           ))
         )}
