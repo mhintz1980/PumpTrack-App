@@ -2,7 +2,6 @@
 "use client";
 
 import React from 'react';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Combobox } from '@/components/ui/combobox';
 import type { Filters } from '@/types';
@@ -13,6 +12,8 @@ interface PumpFilterControlsProps {
   availablePumpModels: string[];
   availablePowderCoaters: string[];
   availableCustomers: string[];
+  availableSerialNumbers: string[];
+  availablePONumbers: string[];
 }
 
 export function PumpFilterControls({
@@ -21,10 +22,9 @@ export function PumpFilterControls({
   availablePumpModels,
   availablePowderCoaters,
   availableCustomers,
+  availableSerialNumbers,
+  availablePONumbers,
 }: PumpFilterControlsProps) {
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    onFiltersChange({ ...filters, [e.target.name]: e.target.value === '' ? undefined : e.target.value });
-  };
 
   const handleComboboxChange = (name: keyof Filters, value: string) => {
     onFiltersChange({ ...filters, [name]: value === '' ? undefined : value });
@@ -33,17 +33,20 @@ export function PumpFilterControls({
   const customerOptions = availableCustomers.map(c => ({ label: c, value: c }));
   const modelOptions = availablePumpModels.map(m => ({ label: m, value: m }));
   const powderCoaterOptions = availablePowderCoaters.map(pc => ({ label: pc, value: pc }));
+  const serialNumberOptions = availableSerialNumbers.map(sn => ({ label: sn, value: sn}));
+  const poNumberOptions = availablePONumbers.map(po => ({ label: po, value: po }));
 
   return (
     <div className="space-y-4">
       <div>
         <Label htmlFor="serialNumberFilter" className="text-xs">Serial Number</Label>
-        <Input
-          id="serialNumberFilter"
-          name="serialNumber"
+        <Combobox
+          options={serialNumberOptions}
           value={filters.serialNumber || ''}
-          onChange={handleInputChange}
-          placeholder="Filter by Serial..."
+          onChange={(value) => handleComboboxChange('serialNumber', value)}
+          placeholder="All Serial Numbers"
+          searchPlaceholder="Search serial numbers..."
+          emptyText="No serial number found."
           className="mt-1 h-8 text-sm"
         />
       </div>
@@ -61,12 +64,13 @@ export function PumpFilterControls({
       </div>
       <div>
         <Label htmlFor="poNumberFilter" className="text-xs">PO Number</Label>
-        <Input
-          id="poNumberFilter"
-          name="poNumber"
+        <Combobox
+          options={poNumberOptions}
           value={filters.poNumber || ''}
-          onChange={handleInputChange}
-          placeholder="Filter by PO Number..."
+          onChange={(value) => handleComboboxChange('poNumber', value)}
+          placeholder="All PO Numbers"
+          searchPlaceholder="Search PO numbers..."
+          emptyText="No PO number found."
           className="mt-1 h-8 text-sm"
         />
       </div>

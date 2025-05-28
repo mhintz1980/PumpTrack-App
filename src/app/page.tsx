@@ -16,8 +16,8 @@ const generateId = () => crypto.randomUUID();
 const generateSerialNumber = () => `MSP-JN-${String(Math.floor(Math.random() * 9000) + 1000)}`;
 
 export default function HomePage() {
-  const [pumps, setPumps] = useState<Pump[]>([]); // Initialize as empty
-  const [filteredPumps, setFilteredPumps] = useState<Pump[]>([]); // Initialize as empty
+  const [pumps, setPumps] = useState<Pump[]>([]);
+  const [filteredPumps, setFilteredPumps] = useState<Pump[]>([]);
   const [viewMode, setViewMode] = useState<ViewMode>('detailed');
   const [filters, setFilters] = useState<Filters>({});
   
@@ -31,7 +31,6 @@ export default function HomePage() {
 
   const { toast } = useToast();
 
-  // Effect to load initial sample data on client-side
   useEffect(() => {
     const initialSamplePumps: Pump[] = [
       { id: generateId(), model: PUMP_MODELS[0], serialNumber: generateSerialNumber(), customer: CUSTOMER_NAMES[0], poNumber: 'PO123', currentStage: 'open-jobs', notes: 'Initial inspection pending.' },
@@ -41,7 +40,7 @@ export default function HomePage() {
       { id: generateId(), model: PUMP_MODELS[4], serialNumber: generateSerialNumber(), customer: CUSTOMER_NAMES[4], poNumber: 'PO567', currentStage: 'fabrication' },
     ];
     setPumps(initialSamplePumps);
-  }, []); // Empty dependency array ensures this runs once on mount (client-side)
+  }, []);
 
 
   // Filter pumps based on current filters
@@ -65,11 +64,12 @@ export default function HomePage() {
     setFilteredPumps(tempPumps);
   }, [pumps, filters]);
 
-  const handleAddPump = useCallback((newPumpData: Omit<Pump, 'id' | 'currentStage'>) => {
+  const handleAddPump = useCallback((newPumpData: Omit<Pump, 'id' | 'currentStage' | 'notes'> & { notes?: string }) => {
     const newPump: Pump = {
       ...newPumpData,
       id: generateId(),
       currentStage: 'open-jobs',
+      notes: newPumpData.notes || undefined,
     };
     setPumps(prev => [newPump, ...prev]);
     toast({ title: "Pump Added", description: `${newPump.serialNumber} added to Open Jobs.` });
@@ -119,6 +119,9 @@ export default function HomePage() {
   const allPowderCoaters = Array.from(new Set(powderCoatersInPumps.concat(POWDER_COATERS))).sort();
   
   const allCustomerNames = Array.from(new Set(pumps.map(p => p.customer).concat(CUSTOMER_NAMES))).sort();
+  
+  const allSerialNumbers = Array.from(new Set(pumps.map(p => p.serialNumber))).sort();
+  const allPONumbers = Array.from(new Set(pumps.map(p => p.poNumber))).sort();
 
 
   return (
@@ -132,6 +135,8 @@ export default function HomePage() {
         availablePumpModels={allPumpModels}
         availablePowderCoaters={allPowderCoaters}
         availableCustomers={allCustomerNames}
+        availableSerialNumbers={allSerialNumbers}
+        availablePONumbers={allPONumbers}
       />
       <main className="flex-grow overflow-hidden">
         <KanbanBoard

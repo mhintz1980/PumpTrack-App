@@ -30,7 +30,9 @@ interface HeaderProps {
   onFiltersChange: (filters: Filters) => void;
   availablePumpModels: string[];
   availablePowderCoaters: string[];
-  availableCustomers: string[]; // Added this prop
+  availableCustomers: string[];
+  availableSerialNumbers: string[];
+  availablePONumbers: string[];
 }
 
 export function Header({
@@ -41,13 +43,16 @@ export function Header({
   onFiltersChange,
   availablePumpModels,
   availablePowderCoaters,
-  availableCustomers, // Destructure new prop
+  availableCustomers,
+  availableSerialNumbers,
+  availablePONumbers,
 }: HeaderProps) {
   const activeFilterCount = Object.values(filters).filter(value => value !== undefined && value !== '').length;
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const handleClearFilters = () => {
     onFiltersChange({});
+    // setIsMenuOpen(false); // Optionally close menu after clearing
   };
 
   return (
@@ -79,7 +84,9 @@ export function Header({
                 onFiltersChange={onFiltersChange}
                 availablePumpModels={availablePumpModels}
                 availablePowderCoaters={availablePowderCoaters}
-                availableCustomers={availableCustomers} // Pass new prop
+                availableCustomers={availableCustomers}
+                availableSerialNumbers={availableSerialNumbers}
+                availablePONumbers={availablePONumbers}
               />
             </DropdownMenuContent>
           </DropdownMenu>
