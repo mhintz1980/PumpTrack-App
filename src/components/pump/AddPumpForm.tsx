@@ -77,7 +77,7 @@ export function AddPumpForm({ isOpen, onClose, onAddPump }: AddPumpFormProps) {
     resolver: zodResolver(pumpFormSchema),
     defaultValues: {
       model: '',
-      serialNumber: 'MSP-JN-',
+      serialNumber: '', // Default to empty string
       customer: '',
       poNumber: '',
       notes: '',
@@ -87,22 +87,11 @@ export function AddPumpForm({ isOpen, onClose, onAddPump }: AddPumpFormProps) {
 
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const quantity = form.watch("quantity");
-
-  useEffect(() => {
-    if (quantity === 1) {
-      if (!form.getValues("serialNumber")?.startsWith("MSP-JN-")) {
-        form.setValue("serialNumber", "MSP-JN-");
-      }
-    } else if (quantity > 1) {
-      // Optionally clear or change placeholder for starting serial number
-      // For now, let's allow user to manage if they started typing something
-    }
-  }, [quantity, form]);
   
   const handleClose = () => {
     form.reset({
       model: '',
-      serialNumber: 'MSP-JN-',
+      serialNumber: '', // Reset to empty string
       customer: '',
       poNumber: '',
       notes: '',
@@ -113,15 +102,13 @@ export function AddPumpForm({ isOpen, onClose, onAddPump }: AddPumpFormProps) {
 
   const onSubmit = (data: PumpFormValues) => {
     setIsSubmitting(true);
-    // The serialNumber from form is the starting one if quantity > 1
-    // or the specific one if quantity === 1
     onAddPump({ 
       model: data.model,
       customer: data.customer,
       poNumber: data.poNumber,
       notes: data.notes,
       quantity: data.quantity,
-      serialNumber: data.serialNumber // Pass as is; handler logic will determine if it's a start S/N
+      serialNumber: data.serialNumber?.trim() === '' ? undefined : data.serialNumber // Ensure empty string is passed as undefined
     });
     setIsSubmitting(false);
     handleClose();
@@ -215,7 +202,11 @@ export function AddPumpForm({ isOpen, onClose, onAddPump }: AddPumpFormProps) {
                   <FormLabel>{quantity > 1 ? "Starting Serial Number (Optional)" : "Serial Number"}</FormLabel>
                   <FormControl>
                     <Input 
-                      placeholder={quantity > 1 ? "e.g., MSP-JN-1001 (optional)" : "Enter last 4 digits (e.g., 1234)"} 
+                      placeholder={
+                        quantity > 1 
+                          ? "MSP-JN-XXXX (optional, e.g., MSP-JN-1001)" 
+                          : "MSP-JN-XXXX (e.g., MSP-JN-1234)"
+                      } 
                       {...field} 
                       value={field.value || ''}
                       disabled={isSubmitting} 
