@@ -10,6 +10,12 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Loader2, Wand2, ListChecks, Mail } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 // Import AI functions
 import { suggestNextSteps, type SuggestNextStepsOutput } from '@/ai/flows/suggest-next-steps';
@@ -20,7 +26,7 @@ interface AiActionsProps {
   pump: Pump;
 }
 
-type AiResult = 
+type AiResult =
   | { type: 'nextSteps'; data: SuggestNextStepsOutput }
   | { type: 'checklist'; data: CreateTestingChecklistOutput }
   | { type: 'email'; data: DraftEmailToVendorOutput }
@@ -148,24 +154,48 @@ export function AiActions({ pump }: AiActionsProps) {
   return (
     <div className="mt-6">
       <h4 className="text-md font-semibold mb-3 text-foreground">AI Assistant</h4>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-2 mb-4">
-        <Button onClick={handleSuggestNextSteps} disabled={!!isLoading} variant="outline" size="sm">
-          {isLoading === 'nextSteps' ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Wand2 className="mr-2 h-4 w-4" />}
-          Next Steps
-        </Button>
-        {pump.currentStage === 'testing' && (
-          <Button onClick={handleCreateTestingChecklist} disabled={!!isLoading || !pump.serialNumber} variant="outline" size="sm">
-            {isLoading === 'checklist' ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <ListChecks className="mr-2 h-4 w-4" />}
-            Testing Checklist
-          </Button>
-        )}
-        {(pump.currentStage === 'powder-coat' || pump.currentStage === 'assembly') && (
-          <Button onClick={handleDraftEmailToVendor} disabled={!!isLoading || !pump.powderCoater || !pump.powderCoatColor || !pump.serialNumber} variant="outline" size="sm">
-            {isLoading === 'email' ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Mail className="mr-2 h-4 w-4" />}
-            Draft Email
-          </Button>
-        )}
-      </div>
+      <TooltipProvider>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-2 mb-4">
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button onClick={handleSuggestNextSteps} disabled={!!isLoading} variant="outline" size="sm">
+                {isLoading === 'nextSteps' ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Wand2 className="mr-2 h-4 w-4" />}
+                Next Steps
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Suggest Next Steps</p>
+            </TooltipContent>
+          </Tooltip>
+          
+          {pump.currentStage === 'testing' && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button onClick={handleCreateTestingChecklist} disabled={!!isLoading || !pump.serialNumber} variant="outline" size="sm">
+                  {isLoading === 'checklist' ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <ListChecks className="mr-2 h-4 w-4" />}
+                  Testing Checklist
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Create Testing Checklist</p>
+              </TooltipContent>
+            </Tooltip>
+          )}
+          {(pump.currentStage === 'powder-coat' || pump.currentStage === 'assembly') && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button onClick={handleDraftEmailToVendor} disabled={!!isLoading || !pump.powderCoater || !pump.powderCoatColor || !pump.serialNumber} variant="outline" size="sm">
+                  {isLoading === 'email' ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Mail className="mr-2 h-4 w-4" />}
+                  Draft Email
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Draft Email to Vendor</p>
+              </TooltipContent>
+            </Tooltip>
+          )}
+        </div>
+      </TooltipProvider>
       {aiResult && (
         <Card className="mt-4 bg-muted/50">
           <CardHeader className="pb-2 pt-4">
