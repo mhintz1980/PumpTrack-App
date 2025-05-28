@@ -12,12 +12,12 @@ import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
 
 const UserQuestionInputSchema = z.object({
-  question: z.string().describe('The user's question about pump data.'),
+  question: z.string().describe("The user's question about pump data."),
 });
 export type UserQuestionInput = z.infer<typeof UserQuestionInputSchema>;
 
 const AIResponseOutputSchema = z.object({
-  answer: z.string().describe('The AI-generated answer to the user's question.'),
+  answer: z.string().describe("The AI-generated answer to the user's question."),
 });
 export type AIResponseOutput = z.infer<typeof AIResponseOutputSchema>;
 
