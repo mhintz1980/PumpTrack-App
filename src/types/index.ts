@@ -23,6 +23,16 @@ export interface Pump {
   powderCoatColor?: string;
   notes?: string;
   priority?: PriorityLevel;
+  createdAt: string; // ISO date string
+  updatedAt: string; // ISO date string
+}
+
+export interface PumpMovement {
+  id: string;
+  pumpId: string;
+  fromStage: StageId | null; // Null if it's the initial creation
+  toStage: StageId;
+  movedAt: string; // ISO date string
 }
 
 export interface Stage {
@@ -34,10 +44,10 @@ export interface Stage {
 export type ViewMode = 'default' | 'condensed';
 
 export interface Filters {
-  serialNumber?: string[]; // Changed to string[]
-  customer?: string[]; // Changed to string[]
-  poNumber?: string[]; // Changed to string[]
-  model?: string[]; // Changed to string[]
-  powderCoater?: string[]; // Changed to string[]
-  priority?: string[]; // Changed to string[] to align with other multi-select filters
+  serialNumber?: string[];
+  customer?: string[];
+  poNumber?: string[];
+  model?: string[];
+  powderCoater?: string[];
+  priority?: string[];
 }

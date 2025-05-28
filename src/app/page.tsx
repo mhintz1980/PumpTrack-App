@@ -2,6 +2,7 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from 'react';
+import Link from 'next/link';
 import { Header } from '@/components/layout/Header';
 import { KanbanBoard } from '@/components/kanban/KanbanBoard';
 import { AddPumpForm } from '@/components/pump/AddPumpForm';
@@ -53,15 +54,16 @@ export default function HomePage() {
   const { toast } = useToast();
   
   useEffect(() => {
+    const now = new Date().toISOString();
     const initialSamplePumps: Pump[] = [
-      { id: generateId(), model: PUMP_MODELS[0], serialNumber: generateRandomSerialNumber(), customer: CUSTOMER_NAMES[0], poNumber: 'PO123', currentStage: 'open-jobs', notes: 'Initial inspection pending.', priority: 'normal' },
-      { id: generateId(), model: PUMP_MODELS[1], serialNumber: generateRandomSerialNumber(), customer: CUSTOMER_NAMES[1], poNumber: 'PO456', currentStage: 'assembly', notes: 'Waiting for part XYZ.', priority: 'high' },
-      { id: generateId(), model: PUMP_MODELS[0], serialNumber: generateRandomSerialNumber(), customer: CUSTOMER_NAMES[0], poNumber: 'PO788', currentStage: 'open-jobs', notes: 'Urgent.', priority: 'urgent' },
-      { id: generateId(), model: PUMP_MODELS[2], serialNumber: generateRandomSerialNumber(), customer: CUSTOMER_NAMES[2], poNumber: 'PO789', currentStage: 'testing', powderCoater: POWDER_COATERS[0], powderCoatColor: DEFAULT_POWDER_COAT_COLORS[0], notes: 'High pressure test passed.', priority: 'normal' },
-      { id: generateId(), model: PUMP_MODELS[3], serialNumber: generateRandomSerialNumber(), customer: CUSTOMER_NAMES[3], poNumber: 'PO124', currentStage: 'powder-coat', powderCoater: POWDER_COATERS[1], powderCoatColor: DEFAULT_POWDER_COAT_COLORS[1], priority: 'high' },
-      { id: generateId(), model: PUMP_MODELS[0], serialNumber: generateRandomSerialNumber(), customer: CUSTOMER_NAMES[1], poNumber: 'PO101', currentStage: 'open-jobs', notes: 'Needs quick turnaround', priority: 'urgent' },
-      { id: generateId(), model: PUMP_MODELS[4], serialNumber: generateRandomSerialNumber(), customer: CUSTOMER_NAMES[4], poNumber: 'PO567', currentStage: 'fabrication', priority: 'normal' },
-      { id: generateId(), model: PUMP_MODELS[0], serialNumber: generateRandomSerialNumber(), customer: CUSTOMER_NAMES[2], poNumber: 'PO202', currentStage: 'open-jobs', priority: 'normal' },
+      { id: generateId(), model: PUMP_MODELS[0], serialNumber: generateRandomSerialNumber(), customer: CUSTOMER_NAMES[0], poNumber: 'PO123', currentStage: 'open-jobs', notes: 'Initial inspection pending.', priority: 'normal', createdAt: now, updatedAt: now },
+      { id: generateId(), model: PUMP_MODELS[1], serialNumber: generateRandomSerialNumber(), customer: CUSTOMER_NAMES[1], poNumber: 'PO456', currentStage: 'assembly', notes: 'Waiting for part XYZ.', priority: 'high', createdAt: now, updatedAt: now },
+      { id: generateId(), model: PUMP_MODELS[0], serialNumber: generateRandomSerialNumber(), customer: CUSTOMER_NAMES[0], poNumber: 'PO788', currentStage: 'open-jobs', notes: 'Urgent.', priority: 'urgent', createdAt: now, updatedAt: now },
+      { id: generateId(), model: PUMP_MODELS[2], serialNumber: generateRandomSerialNumber(), customer: CUSTOMER_NAMES[2], poNumber: 'PO789', currentStage: 'testing', powderCoater: POWDER_COATERS[0], powderCoatColor: DEFAULT_POWDER_COAT_COLORS[0], notes: 'High pressure test passed.', priority: 'normal', createdAt: now, updatedAt: now },
+      { id: generateId(), model: PUMP_MODELS[3], serialNumber: generateRandomSerialNumber(), customer: CUSTOMER_NAMES[3], poNumber: 'PO124', currentStage: 'powder-coat', powderCoater: POWDER_COATERS[1], powderCoatColor: DEFAULT_POWDER_COAT_COLORS[1], priority: 'high', createdAt: now, updatedAt: now },
+      { id: generateId(), model: PUMP_MODELS[0], serialNumber: generateRandomSerialNumber(), customer: CUSTOMER_NAMES[1], poNumber: 'PO101', currentStage: 'open-jobs', notes: 'Needs quick turnaround', priority: 'urgent', createdAt: now, updatedAt: now },
+      { id: generateId(), model: PUMP_MODELS[4], serialNumber: generateRandomSerialNumber(), customer: CUSTOMER_NAMES[4], poNumber: 'PO567', currentStage: 'fabrication', priority: 'normal', createdAt: now, updatedAt: now },
+      { id: generateId(), model: PUMP_MODELS[0], serialNumber: generateRandomSerialNumber(), customer: CUSTOMER_NAMES[2], poNumber: 'PO202', currentStage: 'open-jobs', priority: 'normal', createdAt: now, updatedAt: now },
     ];
     setPumps(initialSamplePumps);
   }, []);
@@ -89,11 +91,12 @@ export default function HomePage() {
     setFilteredPumps(tempPumps);
   }, [pumps, filters]);
 
-  const handleAddPump = useCallback((newPumpData: Omit<Pump, 'id' | 'currentStage'> & { quantity: number; serialNumber?: string; priority?: PriorityLevel }) => {
+  const handleAddPump = useCallback((newPumpData: Omit<Pump, 'id' | 'currentStage' | 'createdAt' | 'updatedAt'> & { quantity: number; serialNumber?: string; priority?: PriorityLevel }) => {
     const { quantity, serialNumber: startSerialNumberInput, priority, ...basePumpData } = newPumpData;
     const newPumps: Pump[] = [];
     let currentSerialNumberNumeric = -1;
     const startSerialNumber = startSerialNumberInput?.trim() === '' ? undefined : startSerialNumberInput;
+    const now = new Date().toISOString();
 
 
     if (quantity > 1 && startSerialNumber && /^MSP-JN-\d{4}$/.test(startSerialNumber)) {
@@ -123,6 +126,8 @@ export default function HomePage() {
         currentStage: 'open-jobs',
         notes: basePumpData.notes || undefined,
         priority: priority || 'normal',
+        createdAt: now,
+        updatedAt: now,
       };
       newPumps.push(newPump);
     }
@@ -136,7 +141,8 @@ export default function HomePage() {
   }, [toast]);
 
   const handleUpdatePump = useCallback((updatedPump: Pump) => {
-    setPumps(prev => prev.map(p => p.id === updatedPump.id ? updatedPump : p));
+    const now = new Date().toISOString();
+    setPumps(prev => prev.map(p => p.id === updatedPump.id ? {...updatedPump, updatedAt: now } : p));
     setSelectedPumpIdsForDrag([]); 
     toast({ title: "Pump Updated", description: `Details for ${updatedPump.serialNumber || 'Pump'} saved.` });
   }, [toast]);
@@ -144,13 +150,15 @@ export default function HomePage() {
   const handlePumpMove = useCallback((pumpId: string, newStageId: StageId) => {
     const pumpToMove = pumps.find(p => p.id === pumpId);
     if (!pumpToMove) return;
+    const now = new Date().toISOString();
 
     if (newStageId === 'powder-coat' && (!pumpToMove.powderCoater || !pumpToMove.powderCoatColor)) {
       setMissingInfoPump(pumpToMove);
       setMissingInfoTargetStage(newStageId);
       setIsMissingInfoModalOpen(true);
     } else {
-      setPumps(prev => prev.map(p => p.id === pumpId ? { ...p, currentStage: newStageId } : p));
+      setPumps(prev => prev.map(p => p.id === pumpId ? { ...p, currentStage: newStageId, updatedAt: now } : p));
+      // TODO: Save PumpMovement record to Firestore here
       const stageTitle = STAGES.find(s => s.id === newStageId)?.title || newStageId;
       toast({ title: "Pump Moved", description: `${pumpToMove.serialNumber || 'Pump'} moved to ${stageTitle}.` });
     }
@@ -161,6 +169,7 @@ export default function HomePage() {
     const pumpsToActuallyMove: Pump[] = [];
     let powderCoatInfoMissing = false;
     let firstMissingPumpForModal: Pump | null = null;
+    const now = new Date().toISOString();
 
     for (const pumpId of pumpIdsToMove) {
       const pump = pumps.find(p => p.id === pumpId);
@@ -192,9 +201,10 @@ export default function HomePage() {
     
     setPumps(prev => 
       prev.map(p => 
-        pumpIdsToMove.includes(p.id) ? { ...p, currentStage: newStageId } : p
+        pumpIdsToMove.includes(p.id) ? { ...p, currentStage: newStageId, updatedAt: now } : p
       )
     );
+    // TODO: Save PumpMovement records to Firestore here for each pump moved
     const stageTitle = STAGES.find(s => s.id === newStageId)?.title || newStageId;
     toast({ title: `${pumpIdsToMove.length} Pump(s) Moved`, description: `Moved to ${stageTitle}.` });
     setSelectedPumpIdsForDrag([]);
@@ -202,7 +212,9 @@ export default function HomePage() {
 
 
   const handleSaveMissingInfo = useCallback((pumpId: string, data: Partial<Pump>) => {
-    setPumps(prev => prev.map(p => p.id === pumpId ? { ...p, ...data, currentStage: missingInfoTargetStage! } : p));
+    const now = new Date().toISOString();
+    setPumps(prev => prev.map(p => p.id === pumpId ? { ...p, ...data, currentStage: missingInfoTargetStage!, updatedAt: now } : p));
+    // TODO: Save PumpMovement record to Firestore here
     const pump = pumps.find(p => p.id === pumpId); 
     if (pump && missingInfoTargetStage) {
        const stageTitle = STAGES.find(s => s.id === missingInfoTargetStage)?.title || missingInfoTargetStage;
@@ -306,16 +318,32 @@ export default function HomePage() {
         <SidebarContent>
           <SidebarMenu>
             <SidebarMenuItem>
-              <SidebarMenuButton tooltip="Kanban Board"><LayoutDashboard /> Kanban Board</SidebarMenuButton>
+              <SidebarMenuButton tooltip="Kanban Board" isActive={true} asChild>
+                <Link href="/">
+                  <LayoutDashboard /> Kanban Board
+                </Link>
+              </SidebarMenuButton>
             </SidebarMenuItem>
             <SidebarMenuItem>
-              <SidebarMenuButton tooltip="Charts and Graphs"><BarChart2 /> Charts and Graphs</SidebarMenuButton>
+              <SidebarMenuButton tooltip="Charts and Graphs" asChild>
+                <Link href="#"> {/* Replace # with actual path later */}
+                  <BarChart2 /> Charts and Graphs
+                </Link>
+              </SidebarMenuButton>
             </SidebarMenuItem>
             <SidebarMenuItem>
-              <SidebarMenuButton tooltip="Calendar and Schedule"><CalendarDays /> Calendar and Schedule</SidebarMenuButton>
+              <SidebarMenuButton tooltip="Calendar and Schedule" asChild>
+                <Link href="#"> {/* Replace # with actual path later */}
+                  <CalendarDays /> Calendar and Schedule
+                </Link>
+              </SidebarMenuButton>
             </SidebarMenuItem>
             <SidebarMenuItem>
-              <SidebarMenuButton tooltip="A.I. Query"><BrainCircuit /> A.I. Query</SidebarMenuButton>
+              <SidebarMenuButton tooltip="A.I. Query" asChild>
+                <Link href="/ai-query">
+                  <BrainCircuit /> A.I. Query
+                </Link>
+              </SidebarMenuButton>
             </SidebarMenuItem>
           </SidebarMenu>
         </SidebarContent>
