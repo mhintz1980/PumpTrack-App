@@ -11,22 +11,37 @@ interface KanbanBoardProps {
   viewMode: ViewMode;
   onPumpMove: (pumpId: string, newStageId: StageId) => void;
   onMultiplePumpsMove: (pumpIds: string[], newStageId: StageId) => void;
-  onCardClick: (pump: Pump) => void;
+  onOpenPumpDetailsModal: (pump: Pump) => void; // Renamed from onCardClick
+  selectedPumpIdsForDrag: string[];
+  onPumpCardClick: (pump: Pump, event: React.MouseEvent<HTMLDivElement>) => void;
 }
 
-export function KanbanBoard({ pumps, viewMode, onPumpMove, onMultiplePumpsMove, onCardClick }: KanbanBoardProps) {
+export function KanbanBoard({
+  pumps,
+  viewMode,
+  onPumpMove,
+  onMultiplePumpsMove,
+  onOpenPumpDetailsModal,
+  selectedPumpIdsForDrag,
+  onPumpCardClick,
+}: KanbanBoardProps) {
   const [draggedItemInfo, setDraggedItemInfo] = React.useState<{type: 'single'; id: string} | {type: 'group'; pumpIds: string[]} | null>(null);
 
   const handleDragStartSingle = (e: React.DragEvent<HTMLDivElement>, pumpId: string) => {
-    setDraggedItemInfo({ type: 'single', id: pumpId });
-    e.dataTransfer.setData('application/pump-id', pumpId); // More specific type
+    if (selectedPumpIdsForDrag.includes(pumpId) && selectedPumpIdsForDrag.length > 1) {
+      setDraggedItemInfo({ type: 'group', pumpIds: selectedPumpIdsForDrag });
+      e.dataTransfer.setData('application/pump-group-ids', JSON.stringify(selectedPumpIdsForDrag));
+    } else {
+      setDraggedItemInfo({ type: 'single', id: pumpId });
+      e.dataTransfer.setData('application/pump-id', pumpId);
+    }
     e.dataTransfer.effectAllowed = "move";
   };
   
   const handleDragStartGroup = (e: React.DragEvent<HTMLButtonElement>, pumpsToDrag: Pump[]) => {
     const pumpIds = pumpsToDrag.map(p => p.id);
     setDraggedItemInfo({ type: 'group', pumpIds });
-    e.dataTransfer.setData('application/pump-group-ids', JSON.stringify(pumpIds)); // Store as JSON
+    e.dataTransfer.setData('application/pump-group-ids', JSON.stringify(pumpIds)); 
     e.dataTransfer.effectAllowed = "move";
   };
 
@@ -48,7 +63,6 @@ export function KanbanBoard({ pumps, viewMode, onPumpMove, onMultiplePumpsMove, 
       const pumpGroupIdsFromDataTransfer = e.dataTransfer.getData('application/pump-group-ids');
       try {
         const parsedPumpIds = JSON.parse(pumpGroupIdsFromDataTransfer) as string[];
-        // Verify if the parsed IDs match what's in our state to prevent mismatches
         if (Array.isArray(parsedPumpIds) && parsedPumpIds.every(id => typeof id === 'string') && 
             JSON.stringify(parsedPumpIds.sort()) === JSON.stringify(draggedItemInfo.pumpIds.sort())) {
           onMultiplePumpsMove(draggedItemInfo.pumpIds, newStageId);
@@ -60,6 +74,7 @@ export function KanbanBoard({ pumps, viewMode, onPumpMove, onMultiplePumpsMove, 
       }
     }
     setDraggedItemInfo(null);
+    // SelectedPumpIdsForDrag will be cleared in HomePage after move
   };
 
   return (
@@ -74,7 +89,9 @@ export function KanbanBoard({ pumps, viewMode, onPumpMove, onMultiplePumpsMove, 
           onDragStartGroupCard={handleDragStartGroup}
           onDragOver={handleDragOver}
           onDrop={handleDrop}
-          onCardClick={onCardClick}
+          onOpenPumpDetailsModal={onOpenPumpDetailsModal}
+          selectedPumpIdsForDrag={selectedPumpIdsForDrag}
+          onPumpCardClick={onPumpCardClick}
         />
       ))}
     </div>

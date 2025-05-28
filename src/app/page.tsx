@@ -11,12 +11,9 @@ import type { Pump, StageId, ViewMode, Filters } from '@/types';
 import { STAGES, POWDER_COATERS, PUMP_MODELS, CUSTOMER_NAMES, DEFAULT_POWDER_COAT_COLORS } from '@/lib/constants';
 import { useToast } from '@/hooks/use-toast';
 
-// Helper to generate unique IDs
 const generateId = () => crypto.randomUUID();
 
-// Helper to generate random serial numbers for initial sample data
 const generateRandomSerialNumber = () => `MSP-JN-${String(Math.floor(Math.random() * 9000) + 1000).padStart(4, '0')}`;
-
 
 export default function HomePage() {
   const [pumps, setPumps] = useState<Pump[]>([]);
@@ -25,17 +22,18 @@ export default function HomePage() {
   const [filters, setFilters] = useState<Filters>({});
   
   const [isAddPumpModalOpen, setIsAddPumpModalOpen] = useState(false);
-  const [selectedPump, setSelectedPump] = useState<Pump | null>(null);
+  const [selectedPumpForDetails, setSelectedPumpForDetails] = useState<Pump | null>(null);
   const [isPumpDetailsModalOpen, setIsPumpDetailsModalOpen] = useState(false);
   
   const [missingInfoPump, setMissingInfoPump] = useState<Pump | null>(null);
   const [missingInfoTargetStage, setMissingInfoTargetStage] = useState<StageId | null>(null);
   const [isMissingInfoModalOpen, setIsMissingInfoModalOpen] = useState(false);
 
+  const [selectedPumpIdsForDrag, setSelectedPumpIdsForDrag] = useState<string[]>([]);
+
   const { toast } = useToast();
   
   useEffect(() => {
-    // Client-side only effect to set initial pumps
     const initialSamplePumps: Pump[] = [
       { id: generateId(), model: PUMP_MODELS[0], serialNumber: generateRandomSerialNumber(), customer: CUSTOMER_NAMES[0], poNumber: 'PO123', currentStage: 'open-jobs', notes: 'Initial inspection pending.' },
       { id: generateId(), model: PUMP_MODELS[1], serialNumber: generateRandomSerialNumber(), customer: CUSTOMER_NAMES[1], poNumber: 'PO456', currentStage: 'assembly', notes: 'Waiting for part XYZ.' },
@@ -49,8 +47,6 @@ export default function HomePage() {
     setPumps(initialSamplePumps);
   }, []);
 
-
-  // Filter pumps based on current filters
   useEffect(() => {
     let tempPumps = [...pumps];
     if (filters.serialNumber) {
@@ -72,9 +68,11 @@ export default function HomePage() {
   }, [pumps, filters]);
 
   const handleAddPump = useCallback((newPumpData: Omit<Pump, 'id' | 'currentStage'> & { quantity: number; serialNumber?: string }) => {
-    const { quantity, serialNumber: startSerialNumber, ...basePumpData } = newPumpData;
+    const { quantity, serialNumber: startSerialNumberInput, ...basePumpData } = newPumpData;
     const newPumps: Pump[] = [];
     let currentSerialNumberNumeric = -1;
+    const startSerialNumber = startSerialNumberInput?.trim() === '' ? undefined : startSerialNumberInput;
+
 
     if (quantity > 1 && startSerialNumber && /^MSP-JN-\d{4}$/.test(startSerialNumber)) {
       currentSerialNumberNumeric = parseInt(startSerialNumber.substring(7), 10);
@@ -85,17 +83,16 @@ export default function HomePage() {
       if (quantity === 1 && startSerialNumber && /^MSP-JN-\d{4}$/.test(startSerialNumber)) {
         pumpSerialNumber = startSerialNumber;
       } else if (quantity > 1 && currentSerialNumberNumeric !== -1) {
-        if (currentSerialNumberNumeric + i <= 9999) { // Basic check for serial number limit
+        if (currentSerialNumberNumeric + i <= 9999) { 
             pumpSerialNumber = `MSP-JN-${String(currentSerialNumberNumeric + i).padStart(4, '0')}`;
         }
       } else if (quantity > 1 && !startSerialNumber) {
         pumpSerialNumber = undefined;
       } else if (quantity === 1 && (!startSerialNumber || !/^MSP-JN-\d{4}$/.test(startSerialNumber))) {
-         // This case should be caught by form validation making serialNumber required and valid if quantity is 1
         console.error("Serial number is required and must be valid for single pump addition.");
-        return; // Or handle error appropriately
+        toast({ variant: "destructive", title: "Validation Error", description: "Serial number is required and must be in MSP-JN-XXXX format for single pump addition." });
+        return; 
       }
-
 
       const newPump: Pump = {
         ...basePumpData,
@@ -117,6 +114,7 @@ export default function HomePage() {
 
   const handleUpdatePump = useCallback((updatedPump: Pump) => {
     setPumps(prev => prev.map(p => p.id === updatedPump.id ? updatedPump : p));
+    setSelectedPumpIdsForDrag([]);
     toast({ title: "Pump Updated", description: `Details for ${updatedPump.serialNumber || 'Pump'} saved.` });
   }, [toast]);
 
@@ -133,22 +131,21 @@ export default function HomePage() {
       const stageTitle = STAGES.find(s => s.id === newStageId)?.title || newStageId;
       toast({ title: "Pump Moved", description: `${pumpToMove.serialNumber || 'Pump'} moved to ${stageTitle}.` });
     }
+    setSelectedPumpIdsForDrag([]);
   }, [pumps, toast]);
   
   const handleMultiplePumpsMove = useCallback((pumpIdsToMove: string[], newStageId: StageId) => {
     const pumpsToActuallyMove: Pump[] = [];
     let powderCoatInfoMissing = false;
+    let firstMissingPumpForModal: Pump | null = null;
 
     for (const pumpId of pumpIdsToMove) {
       const pump = pumps.find(p => p.id === pumpId);
       if (pump) {
         if (newStageId === 'powder-coat' && (!pump.powderCoater || !pump.powderCoatColor)) {
           powderCoatInfoMissing = true;
-          // For simplicity, we'll only set the first missing pump for the modal, 
-          // but the move will be blocked for all if any are missing.
-          if (!missingInfoPump) { 
-            setMissingInfoPump(pump);
-            setMissingInfoTargetStage(newStageId);
+          if (!firstMissingPumpForModal) { 
+            firstMissingPumpForModal = pump;
           }
         }
         pumpsToActuallyMove.push(pump);
@@ -156,13 +153,16 @@ export default function HomePage() {
     }
 
     if (powderCoatInfoMissing && newStageId === 'powder-coat') {
+      if (firstMissingPumpForModal) {
+        setMissingInfoPump(firstMissingPumpForModal);
+        setMissingInfoTargetStage(newStageId);
+        setIsMissingInfoModalOpen(true);
+      }
       toast({
         variant: "destructive",
         title: "Move Aborted",
-        description: "One or more pumps require powder coat information before moving to Powder Coat. Please update them individually.",
+        description: "One or more pumps require powder coat information. Please update them or resolve via the prompted modal.",
       });
-      // Optionally open modal for the first identified missing pump, but actual move is blocked
-      // setIsMissingInfoModalOpen(true); 
       return; 
     }
     
@@ -173,34 +173,59 @@ export default function HomePage() {
     );
     const stageTitle = STAGES.find(s => s.id === newStageId)?.title || newStageId;
     toast({ title: `${pumpIdsToMove.length} Pump(s) Moved`, description: `Moved to ${stageTitle}.` });
-
-  }, [pumps, toast, missingInfoPump]);
+    setSelectedPumpIdsForDrag([]);
+  }, [pumps, toast]);
 
 
   const handleSaveMissingInfo = useCallback((pumpId: string, data: Partial<Pump>) => {
     setPumps(prev => prev.map(p => p.id === pumpId ? { ...p, ...data, currentStage: missingInfoTargetStage! } : p));
-    const pump = pumps.find(p => p.id === pumpId); // Find the updated pump
+    const pump = pumps.find(p => p.id === pumpId); 
     if (pump && missingInfoTargetStage) {
        const stageTitle = STAGES.find(s => s.id === missingInfoTargetStage)?.title || missingInfoTargetStage;
        toast({ title: "Info Saved & Pump Moved", description: `${pump.serialNumber || 'Pump'} updated and moved to ${stageTitle}.` });
     }
     setMissingInfoPump(null);
     setMissingInfoTargetStage(null);
-  }, [pumps, missingInfoTargetStage, toast]); // Added pumps to dependency array
+    setSelectedPumpIdsForDrag([]);
+  }, [pumps, missingInfoTargetStage, toast]);
 
-  const handleCardClick = useCallback((pump: Pump) => {
-    setSelectedPump(pump);
+  const handleOpenPumpDetailsModal = useCallback((pump: Pump) => {
+    setSelectedPumpForDetails(pump);
     setIsPumpDetailsModalOpen(true);
   }, []);
 
-  const allPumpModels = PUMP_MODELS; // Directly use the constant
+  const handlePumpCardClick = useCallback((clickedPump: Pump, event: React.MouseEvent<HTMLDivElement>) => {
+    if (event.ctrlKey || event.metaKey) {
+      event.preventDefault();
+      setSelectedPumpIdsForDrag(prevSelectedIds => {
+        // Check if all currently selected pumps are in the same stage as the clickedPump
+        const firstSelectedPump = pumps.find(p => p.id === prevSelectedIds[0]);
+        if (firstSelectedPump && firstSelectedPump.currentStage !== clickedPump.currentStage) {
+          // If stages don't match, select only the newly clicked pump
+          return [clickedPump.id];
+        }
+        // Toggle selection
+        if (prevSelectedIds.includes(clickedPump.id)) {
+          return prevSelectedIds.filter(id => id !== clickedPump.id);
+        } else {
+          return [...prevSelectedIds, clickedPump.id];
+        }
+      });
+    } else {
+      // Normal click (without CTRL/Meta) - select only this card
+      setSelectedPumpIdsForDrag([clickedPump.id]);
+    }
+  }, [pumps]);
+
+
+  const allPumpModels = PUMP_MODELS;
   
   const powderCoatersInPumps = pumps
     .map(p => p.powderCoater)
     .filter((pc): pc is string => typeof pc === 'string' && pc.length > 0);
   const allPowderCoaters = Array.from(new Set(powderCoatersInPumps.concat(POWDER_COATERS))).sort();
   
-  const allCustomerNames = CUSTOMER_NAMES; // Directly use the constant
+  const allCustomerNames = CUSTOMER_NAMES;
   
   const allSerialNumbers = Array.from(new Set(pumps.map(p => p.serialNumber).filter((sn): sn is string => !!sn))).sort();
   const allPONumbers = Array.from(new Set(pumps.map(p => p.poNumber))).sort();
@@ -226,7 +251,9 @@ export default function HomePage() {
           viewMode={viewMode}
           onPumpMove={handlePumpMove}
           onMultiplePumpsMove={handleMultiplePumpsMove}
-          onCardClick={handleCardClick}
+          onOpenPumpDetailsModal={handleOpenPumpDetailsModal}
+          selectedPumpIdsForDrag={selectedPumpIdsForDrag}
+          onPumpCardClick={handlePumpCardClick}
         />
       </main>
 
@@ -236,11 +263,11 @@ export default function HomePage() {
         onAddPump={handleAddPump}
       />
 
-      {selectedPump && (
+      {selectedPumpForDetails && (
         <PumpDetailsModal
           isOpen={isPumpDetailsModalOpen}
-          onClose={() => { setIsPumpDetailsModalOpen(false); setSelectedPump(null); }}
-          pump={selectedPump}
+          onClose={() => { setIsPumpDetailsModalOpen(false); setSelectedPumpForDetails(null); }}
+          pump={selectedPumpForDetails}
           onUpdatePump={handleUpdatePump}
         />
       )}

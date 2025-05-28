@@ -12,21 +12,43 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { cn } from '@/lib/utils';
 
 interface KanbanCardProps {
   pump: Pump;
   onDragStart: (e: React.DragEvent<HTMLDivElement>, pumpId: string) => void;
-  onClick: () => void;
+  onCardClick?: (event: React.MouseEvent<HTMLDivElement>) => void;
+  onOpenDetailsModal?: () => void;
   isDraggable?: boolean;
+  isSelected?: boolean;
 }
 
-export function KanbanCard({ pump, onDragStart, onClick, isDraggable = true }: KanbanCardProps) {
+export function KanbanCard({
+  pump,
+  onDragStart,
+  onCardClick,
+  onOpenDetailsModal,
+  isDraggable = true,
+  isSelected = false,
+}: KanbanCardProps) {
   const displaySerialNumber = pump.serialNumber || 'N/A';
+
+  const handleEyeClick = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent card's onClick from firing
+    if (onOpenDetailsModal) {
+      onOpenDetailsModal();
+    }
+  };
+
   return (
     <Card
       draggable={isDraggable}
       onDragStart={isDraggable ? (e) => onDragStart(e, pump.id) : undefined}
-      className="mb-3 shadow-md hover:shadow-lg hover:scale-[1.02] transition-all duration-150 ease-in-out bg-card group"
+      onClick={onCardClick}
+      className={cn(
+        "mb-3 shadow-md hover:shadow-lg hover:scale-[1.02] transition-all duration-150 ease-in-out bg-card group cursor-pointer",
+        isSelected && "ring-2 ring-primary ring-offset-1 border-primary"
+      )}
       aria-label={`Pump Model: ${pump.model}, Customer: ${pump.customer}, S/N: ${displaySerialNumber}`}
     >
       <CardHeader className="p-3 flex flex-row items-start justify-between space-y-0">
@@ -39,27 +61,26 @@ export function KanbanCard({ pump, onDragStart, onClick, isDraggable = true }: K
           </CardDescription>
         </div>
         <div className="flex items-center space-x-1">
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-7 w-7 text-muted-foreground hover:text-primary opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onClick();
-                  }}
-                  aria-label="View pump details"
-                >
-                  <Eye className="h-4 w-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>View pump details</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
+          {onOpenDetailsModal && (
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-7 w-7 text-muted-foreground hover:text-primary opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity"
+                    onClick={handleEyeClick}
+                    aria-label="View pump details"
+                  >
+                    <Eye className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>View pump details</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          )}
           {isDraggable && (
             <TooltipProvider>
               <Tooltip>
