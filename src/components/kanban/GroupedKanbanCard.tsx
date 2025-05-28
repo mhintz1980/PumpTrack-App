@@ -5,7 +5,7 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { Layers } from 'lucide-react'; // Or Ungroup, or similar
+import { Layers } from 'lucide-react';
 import type { Pump } from '@/types';
 
 interface GroupedKanbanCardProps {
@@ -42,7 +42,7 @@ export function GroupedKanbanCard({
   };
 
   const handleExplodeClick = (e: React.MouseEvent) => {
-    e.stopPropagation(); // Prevent double click from firing
+    e.stopPropagation(); // Prevent double click from firing if card is also double-clickable
     if (onToggleExplode) {
       onToggleExplode();
     }
