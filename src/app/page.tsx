@@ -13,7 +13,9 @@ import { useToast } from '@/hooks/use-toast';
 
 // Helper to generate unique IDs
 const generateId = () => crypto.randomUUID();
-const generateSerialNumber = () => `MSP-JN-${String(Math.floor(Math.random() * 9000) + 1000)}`;
+
+// Helper to generate random serial numbers for initial sample data
+const generateRandomSerialNumber = () => `MSP-JN-${String(Math.floor(Math.random() * 9000) + 1000)}`;
 
 export default function HomePage() {
   const [pumps, setPumps] = useState<Pump[]>([]);
@@ -33,11 +35,11 @@ export default function HomePage() {
 
   useEffect(() => {
     const initialSamplePumps: Pump[] = [
-      { id: generateId(), model: PUMP_MODELS[0], serialNumber: generateSerialNumber(), customer: CUSTOMER_NAMES[0], poNumber: 'PO123', currentStage: 'open-jobs', notes: 'Initial inspection pending.' },
-      { id: generateId(), model: PUMP_MODELS[1], serialNumber: generateSerialNumber(), customer: CUSTOMER_NAMES[1], poNumber: 'PO456', currentStage: 'assembly', notes: 'Waiting for part XYZ.' },
-      { id: generateId(), model: PUMP_MODELS[2], serialNumber: generateSerialNumber(), customer: CUSTOMER_NAMES[2], poNumber: 'PO789', currentStage: 'testing', powderCoater: POWDER_COATERS[0], powderCoatColor: DEFAULT_POWDER_COAT_COLORS[0], notes: 'High pressure test passed.' },
-      { id: generateId(), model: PUMP_MODELS[3], serialNumber: generateSerialNumber(), customer: CUSTOMER_NAMES[3], poNumber: 'PO124', currentStage: 'powder-coat', powderCoater: POWDER_COATERS[1], powderCoatColor: DEFAULT_POWDER_COAT_COLORS[1] },
-      { id: generateId(), model: PUMP_MODELS[4], serialNumber: generateSerialNumber(), customer: CUSTOMER_NAMES[4], poNumber: 'PO567', currentStage: 'fabrication' },
+      { id: generateId(), model: PUMP_MODELS[0], serialNumber: generateRandomSerialNumber(), customer: CUSTOMER_NAMES[0], poNumber: 'PO123', currentStage: 'open-jobs', notes: 'Initial inspection pending.' },
+      { id: generateId(), model: PUMP_MODELS[1], serialNumber: generateRandomSerialNumber(), customer: CUSTOMER_NAMES[1], poNumber: 'PO456', currentStage: 'assembly', notes: 'Waiting for part XYZ.' },
+      { id: generateId(), model: PUMP_MODELS[2], serialNumber: generateRandomSerialNumber(), customer: CUSTOMER_NAMES[2], poNumber: 'PO789', currentStage: 'testing', powderCoater: POWDER_COATERS[0], powderCoatColor: DEFAULT_POWDER_COAT_COLORS[0], notes: 'High pressure test passed.' },
+      { id: generateId(), model: PUMP_MODELS[3], serialNumber: generateRandomSerialNumber(), customer: CUSTOMER_NAMES[3], poNumber: 'PO124', currentStage: 'powder-coat', powderCoater: POWDER_COATERS[1], powderCoatColor: DEFAULT_POWDER_COAT_COLORS[1] },
+      { id: generateId(), model: PUMP_MODELS[4], serialNumber: generateRandomSerialNumber(), customer: CUSTOMER_NAMES[4], poNumber: 'PO567', currentStage: 'fabrication' },
     ];
     setPumps(initialSamplePumps);
   }, []);
@@ -47,7 +49,7 @@ export default function HomePage() {
   useEffect(() => {
     let tempPumps = [...pumps];
     if (filters.serialNumber) {
-      tempPumps = tempPumps.filter(p => p.serialNumber.toLowerCase().includes(filters.serialNumber!.toLowerCase()));
+      tempPumps = tempPumps.filter(p => p.serialNumber?.toLowerCase().includes(filters.serialNumber!.toLowerCase()));
     }
     if (filters.customer) {
       tempPumps = tempPumps.filter(p => p.customer === filters.customer);
@@ -64,20 +66,57 @@ export default function HomePage() {
     setFilteredPumps(tempPumps);
   }, [pumps, filters]);
 
-  const handleAddPump = useCallback((newPumpData: Omit<Pump, 'id' | 'currentStage' | 'notes'> & { notes?: string }) => {
-    const newPump: Pump = {
-      ...newPumpData,
-      id: generateId(),
-      currentStage: 'open-jobs',
-      notes: newPumpData.notes || undefined,
-    };
-    setPumps(prev => [newPump, ...prev]);
-    toast({ title: "Pump Added", description: `${newPump.serialNumber} added to Open Jobs.` });
+  const handleAddPump = useCallback((newPumpData: Omit<Pump, 'id' | 'currentStage'> & { quantity: number; serialNumber?: string }) => {
+    const { quantity, serialNumber: startSerialNumber, ...basePumpData } = newPumpData;
+    const newPumps: Pump[] = [];
+    let currentSerialNumberNumeric = -1;
+
+    if (quantity > 1 && startSerialNumber && /^MSP-JN-\d{4}$/.test(startSerialNumber)) {
+      currentSerialNumberNumeric = parseInt(startSerialNumber.substring(7), 10);
+    }
+
+    for (let i = 0; i < quantity; i++) {
+      let pumpSerialNumber: string | undefined = undefined;
+      if (quantity === 1 && startSerialNumber && /^MSP-JN-\d{4}$/.test(startSerialNumber)) {
+        pumpSerialNumber = startSerialNumber;
+      } else if (quantity > 1 && currentSerialNumberNumeric !== -1) {
+        if (currentSerialNumberNumeric + i <= 9999) {
+            pumpSerialNumber = `MSP-JN-${String(currentSerialNumberNumeric + i).padStart(4, '0')}`;
+        } else {
+            // Handle overflow or stop, for now, we'll not assign if it overflows.
+            // Or, notify user: For now, pumps beyond 9999 won't get an auto-SN.
+        }
+      } else if (quantity > 1 && !startSerialNumber) {
+        // No serial number provided for batch
+        pumpSerialNumber = undefined;
+      } else if (quantity === 1 && !startSerialNumber) {
+        // This case is handled by form validation making serialNumber required if quantity is 1
+        // However, if it somehow gets here, serialNumber will be undefined
+        pumpSerialNumber = undefined;
+      }
+
+
+      const newPump: Pump = {
+        ...basePumpData,
+        id: generateId(),
+        serialNumber: pumpSerialNumber,
+        currentStage: 'open-jobs',
+        notes: basePumpData.notes || undefined,
+      };
+      newPumps.push(newPump);
+    }
+    
+    setPumps(prev => [...newPumps, ...prev]);
+    if (newPumps.length === 1) {
+      toast({ title: "Pump Added", description: `${newPumps[0].serialNumber || 'New Pump'} added to Open Jobs.` });
+    } else {
+      toast({ title: `${newPumps.length} Pumps Added`, description: `Batch added to Open Jobs.` });
+    }
   }, [toast]);
 
   const handleUpdatePump = useCallback((updatedPump: Pump) => {
     setPumps(prev => prev.map(p => p.id === updatedPump.id ? updatedPump : p));
-    toast({ title: "Pump Updated", description: `Details for ${updatedPump.serialNumber} saved.` });
+    toast({ title: "Pump Updated", description: `Details for ${updatedPump.serialNumber || 'Pump'} saved.` });
   }, [toast]);
 
   const handlePumpMove = useCallback((pumpId: string, newStageId: StageId) => {
@@ -91,7 +130,7 @@ export default function HomePage() {
     } else {
       setPumps(prev => prev.map(p => p.id === pumpId ? { ...p, currentStage: newStageId } : p));
       const stageTitle = STAGES.find(s => s.id === newStageId)?.title || newStageId;
-      toast({ title: "Pump Moved", description: `${pumpToMove.serialNumber} moved to ${stageTitle}.` });
+      toast({ title: "Pump Moved", description: `${pumpToMove.serialNumber || 'Pump'} moved to ${stageTitle}.` });
     }
   }, [pumps, toast]);
 
@@ -100,7 +139,7 @@ export default function HomePage() {
     const pump = pumps.find(p => p.id === pumpId);
     if (pump && missingInfoTargetStage) {
        const stageTitle = STAGES.find(s => s.id === missingInfoTargetStage)?.title || missingInfoTargetStage;
-       toast({ title: "Info Saved & Pump Moved", description: `${pump.serialNumber} updated and moved to ${stageTitle}.` });
+       toast({ title: "Info Saved & Pump Moved", description: `${pump.serialNumber || 'Pump'} updated and moved to ${stageTitle}.` });
     }
     setMissingInfoPump(null);
     setMissingInfoTargetStage(null);
@@ -120,7 +159,7 @@ export default function HomePage() {
   
   const allCustomerNames = Array.from(new Set(pumps.map(p => p.customer).concat(CUSTOMER_NAMES))).sort();
   
-  const allSerialNumbers = Array.from(new Set(pumps.map(p => p.serialNumber))).sort();
+  const allSerialNumbers = Array.from(new Set(pumps.map(p => p.serialNumber).filter((sn): sn is string => !!sn))).sort();
   const allPONumbers = Array.from(new Set(pumps.map(p => p.poNumber))).sort();
 
 

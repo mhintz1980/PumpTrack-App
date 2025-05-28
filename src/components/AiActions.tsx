@@ -5,8 +5,8 @@ import React, { useState } from 'react';
 import type { Pump } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Input } from '@/components/ui/input'; // Added Input import
-import { Label } from '@/components/ui/label'; // Added Label import
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Loader2, Wand2, ListChecks, Mail } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
@@ -31,13 +31,15 @@ export function AiActions({ pump }: AiActionsProps) {
   const [aiResult, setAiResult] = useState<AiResult | null>(null);
   const { toast } = useToast();
 
+  const pumpSerialNumberText = pump.serialNumber || 'N/A';
+
   const handleSuggestNextSteps = async () => {
     setIsLoading('nextSteps');
     setAiResult(null);
     try {
       const result = await suggestNextSteps({
         stage: pump.currentStage,
-        pumpDetails: `Model: ${pump.model}, SN: ${pump.serialNumber}, Customer: ${pump.customer}, PO: ${pump.poNumber}`,
+        pumpDetails: `Model: ${pump.model}, SN: ${pumpSerialNumberText}, Customer: ${pump.customer}, PO: ${pump.poNumber}`,
       });
       setAiResult({ type: 'nextSteps', data: result });
     } catch (error) {
@@ -49,13 +51,17 @@ export function AiActions({ pump }: AiActionsProps) {
   };
 
   const handleCreateTestingChecklist = async () => {
+    if (!pump.serialNumber) {
+      toast({ variant: "destructive", title: "Missing Info", description: "Serial number is required to create a testing checklist." });
+      return;
+    }
     setIsLoading('checklist');
     setAiResult(null);
     try {
       const result = await createTestingChecklist({
         pumpModel: pump.model,
         customer: pump.customer,
-        serialNumber: pump.serialNumber,
+        serialNumber: pump.serialNumber, // SN must exist here
         poNumber: pump.poNumber,
       });
       setAiResult({ type: 'checklist', data: result });
@@ -72,13 +78,17 @@ export function AiActions({ pump }: AiActionsProps) {
       toast({ variant: "destructive", title: "Missing Info", description: "Powder coater and color are required to draft email." });
       return;
     }
+    if (!pump.serialNumber) {
+      toast({ variant: "destructive", title: "Missing Info", description: "Serial number is required to draft email to vendor." });
+      return;
+    }
     setIsLoading('email');
     setAiResult(null);
     try {
       const result = await draftEmailToVendor({
         vendorName: pump.powderCoater,
         pumpModel: pump.model,
-        pumpSerialNumber: pump.serialNumber,
+        pumpSerialNumber: pump.serialNumber, // SN must exist here
         pumpPONumber: pump.poNumber,
         customerName: pump.customer,
         powderCoatColor: pump.powderCoatColor,
@@ -108,7 +118,7 @@ export function AiActions({ pump }: AiActionsProps) {
       case 'checklist':
         return (
           <CardContent>
-            <p className="font-medium mb-2">Testing Checklist:</p>
+            <p className="font-medium mb-2">Testing Checklist (for S/N: {pump.serialNumber}):</p>
             <ul className="list-decimal pl-5 space-y-1 text-sm">
               {aiResult.data.checklist.map((item, index) => <li key={index}>{item}</li>)}
             </ul>
@@ -117,6 +127,7 @@ export function AiActions({ pump }: AiActionsProps) {
       case 'email':
         return (
           <CardContent className="space-y-2">
+            <p className="text-sm text-muted-foreground mb-1">Email draft for S/N: {pump.serialNumber}</p>
             <div>
               <Label htmlFor="emailSubject" className="text-xs font-medium">Subject</Label>
               <Input id="emailSubject" readOnly value={aiResult.data.emailSubject} className="mt-1"/>
@@ -143,13 +154,13 @@ export function AiActions({ pump }: AiActionsProps) {
           Next Steps
         </Button>
         {pump.currentStage === 'testing' && (
-          <Button onClick={handleCreateTestingChecklist} disabled={!!isLoading} variant="outline" size="sm">
+          <Button onClick={handleCreateTestingChecklist} disabled={!!isLoading || !pump.serialNumber} variant="outline" size="sm">
             {isLoading === 'checklist' ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <ListChecks className="mr-2 h-4 w-4" />}
             Testing Checklist
           </Button>
         )}
-        {(pump.currentStage === 'powder-coat' || pump.currentStage === 'assembly' /* allow drafting before moving */) && (
-          <Button onClick={handleDraftEmailToVendor} disabled={!!isLoading || !pump.powderCoater || !pump.powderCoatColor} variant="outline" size="sm">
+        {(pump.currentStage === 'powder-coat' || pump.currentStage === 'assembly') && (
+          <Button onClick={handleDraftEmailToVendor} disabled={!!isLoading || !pump.powderCoater || !pump.powderCoatColor || !pump.serialNumber} variant="outline" size="sm">
             {isLoading === 'email' ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Mail className="mr-2 h-4 w-4" />}
             Draft Email
           </Button>

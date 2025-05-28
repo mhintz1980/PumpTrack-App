@@ -33,7 +33,10 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 
 const pumpDetailsSchema = z.object({
   model: z.string().min(1, "Model is required"),
-  serialNumber: z.string().regex(/^MSP-JN-\d{4}$/, "Serial number must be in MSP-JN-XXXX format (e.g., MSP-JN-1234)"),
+  serialNumber: z.string().optional().refine(val => {
+    if (val === undefined || val.trim() === '') return true; // Optional, so empty/undefined is fine
+    return /^MSP-JN-\d{4}$/.test(val);
+  }, { message: "Serial number must be in MSP-JN-XXXX format if provided." }),
   customer: z.string().min(1, "Customer name is required"),
   poNumber: z.string().min(1, "PO number is required"),
   powderCoater: z.string().optional(),
@@ -59,7 +62,7 @@ export function PumpDetailsModal({ isOpen, onClose, pump, onUpdatePump }: PumpDe
     if (pump) {
       form.reset({
         model: pump.model,
-        serialNumber: pump.serialNumber,
+        serialNumber: pump.serialNumber || '',
         customer: pump.customer,
         poNumber: pump.poNumber,
         powderCoater: pump.powderCoater || '',
@@ -67,7 +70,7 @@ export function PumpDetailsModal({ isOpen, onClose, pump, onUpdatePump }: PumpDe
         notes: pump.notes || '',
       });
     }
-  }, [pump, form]);
+  }, [pump, form, isOpen]); // Added isOpen to deps to ensure reset when modal reopens with same pump
   
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -75,12 +78,13 @@ export function PumpDetailsModal({ isOpen, onClose, pump, onUpdatePump }: PumpDe
 
   const onSubmit = (data: PumpDetailsFormValues) => {
     setIsSubmitting(true);
-    const updatedPumpData = {
+    const updatedPumpData: Pump = {
       ...pump,
       ...data,
-      powderCoater: data.powderCoater || undefined, 
-      powderCoatColor: data.powderCoatColor || undefined,
-      notes: data.notes || undefined,
+      serialNumber: data.serialNumber?.trim() === '' ? undefined : data.serialNumber,
+      powderCoater: data.powderCoater?.trim() === '' ? undefined : data.powderCoater,
+      powderCoatColor: data.powderCoatColor?.trim() === '' ? undefined : data.powderCoatColor,
+      notes: data.notes?.trim() === '' ? undefined : data.notes,
     };
     onUpdatePump(updatedPumpData);
     setIsSubmitting(false);
@@ -97,18 +101,18 @@ export function PumpDetailsModal({ isOpen, onClose, pump, onUpdatePump }: PumpDe
   const powderCoatColorOptions = DEFAULT_POWDER_COAT_COLORS.map(color => ({ label: color, value: color }));
 
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+    <Dialog open={isOpen} onOpenChange={(open) => {if (!open) onClose()}}>
       <DialogContent className="sm:max-w-2xl max-h-[90vh] flex flex-col">
         <DialogHeader>
-          <DialogTitle>Pump Details: {pump.serialNumber}</DialogTitle>
+          <DialogTitle>Pump Details: {pump.serialNumber || 'N/A'}</DialogTitle>
           <DialogDescription>
             Currently in stage: <span className="font-semibold text-primary">{currentStageDetails?.title || pump.currentStage}</span>.
             View or edit pump information below.
           </DialogDescription>
         </DialogHeader>
-        <ScrollArea className="flex-grow pr-6 -mr-6">
+        <ScrollArea className="flex-grow pr-6 -mr-6"> {/* Added pr-6 -mr-6 for scrollbar visibility */}
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 py-2"> {/* Added py-2 */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
@@ -136,7 +140,7 @@ export function PumpDetailsModal({ isOpen, onClose, pump, onUpdatePump }: PumpDe
                     <FormItem>
                       <FormLabel>Serial Number</FormLabel>
                       <FormControl>
-                        <Input {...field} disabled={isSubmitting} />
+                        <Input {...field} value={field.value || ''} placeholder="MSP-JN-XXXX or leave blank" disabled={isSubmitting} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -201,13 +205,14 @@ export function PumpDetailsModal({ isOpen, onClose, pump, onUpdatePump }: PumpDe
                       render={({ field }) => (
                         <FormItem className="flex flex-col">
                           <FormLabel>Powder Coat Color</FormLabel>
-                          <Combobox
+                           <Combobox
                             options={powderCoatColorOptions}
                             value={field.value || ''}
                             onChange={field.onChange}
                             placeholder="Select or type color"
                             searchPlaceholder="Search colors..."
-                            emptyText="No color found. Type to add custom."
+                            emptyText="No color found. Type to add."
+                            allowCustomValue={true} // Assuming Combobox supports this prop or behavior
                             disabled={isSubmitting}
                           />
                           <FormMessage />
@@ -224,7 +229,7 @@ export function PumpDetailsModal({ isOpen, onClose, pump, onUpdatePump }: PumpDe
                   <FormItem>
                     <FormLabel>Notes</FormLabel>
                     <FormControl>
-                      <Textarea placeholder="Add any relevant notes for this pump..." {...field} rows={3} disabled={isSubmitting}/>
+                      <Textarea placeholder="Add any relevant notes for this pump..." {...field} value={field.value || ''} rows={3} disabled={isSubmitting}/>
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -235,7 +240,7 @@ export function PumpDetailsModal({ isOpen, onClose, pump, onUpdatePump }: PumpDe
 
               <DialogFooter className="pt-4">
                 <DialogClose asChild>
-                  <Button type="button" variant="outline" disabled={isSubmitting}>
+                  <Button type="button" variant="outline" onClick={onClose} disabled={isSubmitting}>
                     Close
                   </Button>
                 </DialogClose>

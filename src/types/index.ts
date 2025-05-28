@@ -14,7 +14,7 @@ export type StageId =
 export interface Pump {
   id: string;
   model: string;
-  serialNumber: string;
+  serialNumber?: string; // Made optional
   customer: string;
   poNumber: string;
   currentStage: StageId;
