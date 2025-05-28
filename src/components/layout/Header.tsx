@@ -1,7 +1,7 @@
 
 "use client";
 
-import React from 'react';
+import React, { useState } from 'react'; // Added useState
 import { Button } from '@/components/ui/button';
 import { PlusCircle, Settings2 } from 'lucide-react';
 import type { ViewMode, Filters } from '@/types';
@@ -36,12 +36,13 @@ export function Header({
   availablePowderCoaters,
 }: HeaderProps) {
   const activeFilterCount = Object.values(filters).filter(value => value !== undefined && value !== '').length;
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
-  const handleFilterInteraction = () => {
+  const handleFilterButtonClick = () => {
     if (activeFilterCount > 0) {
       onFiltersChange({}); // Clear filters
     }
-    // The DropdownMenuTrigger will handle opening/closing the dropdown.
+    setIsMenuOpen(prev => !prev); // Toggle menu visibility
   };
 
   return (
@@ -54,24 +55,28 @@ export function Header({
           <h1 className="text-2xl font-bold text-primary">PumpTrack</h1>
         </div>
         <div className="flex items-center gap-4 flex-wrap justify-center sm:justify-end">
-          <DropdownMenu>
+          <DropdownMenu open={isMenuOpen} onOpenChange={setIsMenuOpen}>
             <DropdownMenuTrigger asChild>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={handleFilterInteraction}
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleFilterButtonClick} // Use the new handler
                 aria-label={activeFilterCount > 0 ? `Clear ${activeFilterCount} filters and toggle menu` : "Open filters menu"}
               >
                 <Settings2 className="mr-2 h-4 w-4" />
                 {activeFilterCount > 0 ? `Filters (${activeFilterCount} Applied)` : "Filters"}
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent className="w-72 p-4">
+            <DropdownMenuContent className="w-72 p-4" align="end"> {/* Added align="end" for better positioning */}
               <DropdownMenuLabel>Filter Pumps</DropdownMenuLabel>
               <DropdownMenuSeparator />
               <PumpFilterControls
                 filters={filters}
-                onFiltersChange={onFiltersChange}
+                onFiltersChange={(newFilters) => {
+                  onFiltersChange(newFilters);
+                  // Optionally keep menu open after applying a filter from controls
+                  // setIsMenuOpen(true); 
+                }}
                 availablePumpModels={availablePumpModels}
                 availablePowderCoaters={availablePowderCoaters}
               />
