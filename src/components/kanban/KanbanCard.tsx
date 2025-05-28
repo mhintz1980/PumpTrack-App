@@ -22,15 +22,15 @@ export function KanbanCard({ pump, viewMode, onDragStart, onClick }: KanbanCardP
       draggable
       onDragStart={(e) => onDragStart(e, pump.id)}
       className="mb-3 shadow-md hover:shadow-lg hover:scale-[1.02] transition-all duration-150 ease-in-out bg-card group"
-      aria-label={`Pump S/N: ${displaySerialNumber}, Customer: ${pump.customer}`}
+      aria-label={`Pump Model: ${pump.model}, Customer: ${pump.customer}, S/N: ${displaySerialNumber}`}
     >
       <CardHeader className="p-3 flex flex-row items-start justify-between space-y-0">
         <div className="flex-grow pr-2">
           <CardTitle className="text-sm font-semibold leading-none">
-            {pump.model} - {displaySerialNumber}
+            {pump.model} - {pump.customer}
           </CardTitle>
           <CardDescription className="text-xs text-muted-foreground mt-1">
-            Customer: {pump.customer}
+            S/N: {displaySerialNumber}
           </CardDescription>
         </div>
         <div className="flex items-center space-x-1">
