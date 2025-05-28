@@ -42,7 +42,7 @@ export function GroupedKanbanCard({
   };
 
   const handleExplodeClick = (e: React.MouseEvent) => {
-    e.stopPropagation(); // Prevent double click from firing if card is also double-clickable
+    e.stopPropagation(); 
     if (onToggleExplode) {
       onToggleExplode();
     }
@@ -54,7 +54,7 @@ export function GroupedKanbanCard({
       onDoubleClick={handleDoubleClick}
       aria-label={`Grouped pumps for model ${model}, total ${totalQuantity}. Double-click to see details.`}
     >
-      <CardHeader className="p-3 flex items-center justify-between">
+      <CardHeader className="p-3 flex flex-row items-center justify-between">
         <CardTitle className="text-base font-semibold">
           {model} (Total: {totalQuantity})
         </CardTitle>
