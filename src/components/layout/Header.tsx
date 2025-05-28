@@ -3,7 +3,7 @@
 
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { PlusCircle, Settings2 } from 'lucide-react';
+import { PlusCircle, Settings2, FilterX } from 'lucide-react'; // Added FilterX
 import type { ViewMode, Filters } from '@/types';
 import { PumpFilterControls } from '@/components/pump/PumpFilterControls';
 import { Switch } from '@/components/ui/switch';
@@ -15,6 +15,12 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"; // Added Tooltip components
 
 interface HeaderProps {
   onAddPump: () => void;
@@ -38,13 +44,8 @@ export function Header({
   const activeFilterCount = Object.values(filters).filter(value => value !== undefined && value !== '').length;
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
-  // This handler is for the Button's onClick.
-  // It will clear filters if any are active.
-  // The DropdownMenu's onOpenChange will handle toggling isMenuOpen.
-  const handleButtonClick = () => {
-    if (activeFilterCount > 0) {
-      onFiltersChange({}); // Clear filters
-    }
+  const handleClearFilters = () => {
+    onFiltersChange({});
   };
 
   return (
@@ -56,17 +57,16 @@ export function Header({
           </svg>
           <h1 className="text-2xl font-bold text-primary">PumpTrack</h1>
         </div>
-        <div className="flex items-center gap-4 flex-wrap justify-center sm:justify-end">
+        <div className="flex items-center gap-2 sm:gap-3 flex-wrap justify-center sm:justify-end"> {/* Adjusted gap */}
           <DropdownMenu open={isMenuOpen} onOpenChange={setIsMenuOpen}>
             <DropdownMenuTrigger asChild>
               <Button
                 variant="outline"
                 size="sm"
-                onClick={handleButtonClick} // Use the simplified handler
-                aria-label={activeFilterCount > 0 ? `Clear ${activeFilterCount} filters and toggle menu` : "Open filters menu"}
+                aria-label={activeFilterCount > 0 ? `Filters (${activeFilterCount} Applied), open menu` : "Open filters menu"}
               >
                 <Settings2 className="mr-2 h-4 w-4" />
-                {activeFilterCount > 0 ? `Filters (${activeFilterCount} Applied)` : "Filters"}
+                {activeFilterCount > 0 ? `Filters (${activeFilterCount})` : "Filters"}
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent className="w-72 p-4" align="end">
@@ -74,14 +74,33 @@ export function Header({
               <DropdownMenuSeparator />
               <PumpFilterControls
                 filters={filters}
-                onFiltersChange={(newFilters) => {
-                  onFiltersChange(newFilters);
-                }}
+                onFiltersChange={onFiltersChange} // Pass onFiltersChange directly
                 availablePumpModels={availablePumpModels}
                 availablePowderCoaters={availablePowderCoaters}
               />
             </DropdownMenuContent>
           </DropdownMenu>
+
+          {activeFilterCount > 0 && (
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={handleClearFilters}
+                    className="h-9 w-9" // Match size of filter button
+                    aria-label="Clear all filters"
+                  >
+                    <FilterX className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Clear all filters</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          )}
 
           <div className="flex items-center space-x-2">
             <Switch
