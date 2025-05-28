@@ -7,6 +7,7 @@ import { KanbanBoard } from '@/components/kanban/KanbanBoard';
 import { AddPumpForm } from '@/components/pump/AddPumpForm';
 import { PumpDetailsModal } from '@/components/pump/PumpDetailsModal';
 import { MissingInfoModal } from '@/components/pump/MissingInfoModal';
+import { GroupedPumpDetailsModal } from '@/components/pump/GroupedPumpDetailsModal'; // Added import
 import type { Pump, StageId, ViewMode, Filters } from '@/types';
 import { STAGES, POWDER_COATERS, PUMP_MODELS, CUSTOMER_NAMES, DEFAULT_POWDER_COAT_COLORS } from '@/lib/constants';
 import { useToast } from '@/hooks/use-toast';
@@ -30,6 +31,11 @@ export default function HomePage() {
   const [isMissingInfoModalOpen, setIsMissingInfoModalOpen] = useState(false);
 
   const [selectedPumpIdsForDrag, setSelectedPumpIdsForDrag] = useState<string[]>([]);
+
+  // State for GroupedPumpDetailsModal
+  const [selectedGroupForDetails, setSelectedGroupForDetails] = useState<{ model: string; pumps: Pump[] } | null>(null);
+  const [isGroupDetailsModalOpen, setIsGroupDetailsModalOpen] = useState(false);
+
 
   const { toast } = useToast();
   
@@ -87,7 +93,7 @@ export default function HomePage() {
             pumpSerialNumber = `MSP-JN-${String(currentSerialNumberNumeric + i).padStart(4, '0')}`;
         }
       } else if (quantity > 1 && !startSerialNumber) {
-        pumpSerialNumber = undefined;
+        // Serial number remains undefined for batch add without starting SN
       } else if (quantity === 1 && (!startSerialNumber || !/^MSP-JN-\d{4}$/.test(startSerialNumber))) {
         console.error("Serial number is required and must be valid for single pump addition.");
         toast({ variant: "destructive", title: "Validation Error", description: "Serial number is required and must be in MSP-JN-XXXX format for single pump addition." });
@@ -198,13 +204,10 @@ export default function HomePage() {
     if (event.ctrlKey || event.metaKey) {
       event.preventDefault();
       setSelectedPumpIdsForDrag(prevSelectedIds => {
-        // Check if all currently selected pumps are in the same stage as the clickedPump
         const firstSelectedPump = pumps.find(p => p.id === prevSelectedIds[0]);
         if (firstSelectedPump && firstSelectedPump.currentStage !== clickedPump.currentStage) {
-          // If stages don't match, select only the newly clicked pump
           return [clickedPump.id];
         }
-        // Toggle selection
         if (prevSelectedIds.includes(clickedPump.id)) {
           return prevSelectedIds.filter(id => id !== clickedPump.id);
         } else {
@@ -212,10 +215,14 @@ export default function HomePage() {
         }
       });
     } else {
-      // Normal click (without CTRL/Meta) - select only this card
       setSelectedPumpIdsForDrag([clickedPump.id]);
     }
   }, [pumps]);
+
+  const handleOpenGroupDetailsModal = useCallback((model: string, pumpsInGroup: Pump[]) => {
+    setSelectedGroupForDetails({ model, pumps: pumpsInGroup });
+    setIsGroupDetailsModalOpen(true);
+  }, []);
 
 
   const allPumpModels = PUMP_MODELS;
@@ -252,6 +259,7 @@ export default function HomePage() {
           onPumpMove={handlePumpMove}
           onMultiplePumpsMove={handleMultiplePumpsMove}
           onOpenPumpDetailsModal={handleOpenPumpDetailsModal}
+          onOpenGroupDetailsModal={handleOpenGroupDetailsModal} // Pass down new handler
           selectedPumpIdsForDrag={selectedPumpIdsForDrag}
           onPumpCardClick={handlePumpCardClick}
         />
@@ -279,6 +287,19 @@ export default function HomePage() {
           pump={missingInfoPump}
           targetStageId={missingInfoTargetStage}
           onSave={handleSaveMissingInfo}
+        />
+      )}
+
+      {selectedGroupForDetails && (
+        <GroupedPumpDetailsModal
+          isOpen={isGroupDetailsModalOpen}
+          onClose={() => {
+            setIsGroupDetailsModalOpen(false);
+            setSelectedGroupForDetails(null);
+          }}
+          modelName={selectedGroupForDetails.model}
+          pumpsInGroup={selectedGroupForDetails.pumps}
+          onOpenIndividualPumpDetails={handleOpenPumpDetailsModal}
         />
       )}
     </div>

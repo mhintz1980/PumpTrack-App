@@ -10,9 +10,15 @@ interface GroupedKanbanCardProps {
   model: string;
   pumpsInGroup: Pump[];
   onDragStartCustomerGroup: (event: React.DragEvent<HTMLButtonElement>, pumpsToDrag: Pump[]) => void;
+  onOpenGroupDetailsModal?: (model: string, pumpsInGroup: Pump[]) => void; // Added prop
 }
 
-export function GroupedKanbanCard({ model, pumpsInGroup, onDragStartCustomerGroup }: GroupedKanbanCardProps) {
+export function GroupedKanbanCard({ 
+  model, 
+  pumpsInGroup, 
+  onDragStartCustomerGroup,
+  onOpenGroupDetailsModal, // Destructure new prop
+}: GroupedKanbanCardProps) {
   const totalQuantity = pumpsInGroup.length;
 
   const customerCounts = pumpsInGroup.reduce((acc, pump) => {
@@ -25,8 +31,18 @@ export function GroupedKanbanCard({ model, pumpsInGroup, onDragStartCustomerGrou
     onDragStartCustomerGroup(e, pumpsForThisCustomerAndModel);
   };
 
+  const handleDoubleClick = () => {
+    if (onOpenGroupDetailsModal) {
+      onOpenGroupDetailsModal(model, pumpsInGroup);
+    }
+  };
+
   return (
-    <Card className="mb-3 shadow-md bg-card">
+    <Card 
+      className="mb-3 shadow-md bg-card cursor-pointer"
+      onDoubleClick={handleDoubleClick} // Added onDoubleClick handler
+      aria-label={`Grouped pumps for model ${model}, total ${totalQuantity}. Double-click to see details.`}
+    >
       <CardHeader className="p-3">
         <CardTitle className="text-base font-semibold">
           {model} (Total: {totalQuantity})

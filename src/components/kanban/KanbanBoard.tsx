@@ -11,7 +11,8 @@ interface KanbanBoardProps {
   viewMode: ViewMode;
   onPumpMove: (pumpId: string, newStageId: StageId) => void;
   onMultiplePumpsMove: (pumpIds: string[], newStageId: StageId) => void;
-  onOpenPumpDetailsModal: (pump: Pump) => void; // Renamed from onCardClick
+  onOpenPumpDetailsModal: (pump: Pump) => void;
+  onOpenGroupDetailsModal?: (model: string, pumpsInGroup: Pump[]) => void; // Added prop
   selectedPumpIdsForDrag: string[];
   onPumpCardClick: (pump: Pump, event: React.MouseEvent<HTMLDivElement>) => void;
 }
@@ -22,6 +23,7 @@ export function KanbanBoard({
   onPumpMove,
   onMultiplePumpsMove,
   onOpenPumpDetailsModal,
+  onOpenGroupDetailsModal, // Destructure new prop
   selectedPumpIdsForDrag,
   onPumpCardClick,
 }: KanbanBoardProps) {
@@ -74,7 +76,6 @@ export function KanbanBoard({
       }
     }
     setDraggedItemInfo(null);
-    // SelectedPumpIdsForDrag will be cleared in HomePage after move
   };
 
   return (
@@ -90,6 +91,7 @@ export function KanbanBoard({
           onDragOver={handleDragOver}
           onDrop={handleDrop}
           onOpenPumpDetailsModal={onOpenPumpDetailsModal}
+          onOpenGroupDetailsModal={onOpenGroupDetailsModal} // Pass down new prop
           selectedPumpIdsForDrag={selectedPumpIdsForDrag}
           onPumpCardClick={onPumpCardClick}
         />

@@ -15,7 +15,8 @@ interface KanbanColumnProps {
   onDragStartGroupCard: (e: React.DragEvent<HTMLButtonElement>, pumpsToDrag: Pump[]) => void;
   onDragOver: (e: React.DragEvent<HTMLDivElement>) => void;
   onDrop: (e: React.DragEvent<HTMLDivElement>, stageId: Stage['id']) => void;
-  onOpenPumpDetailsModal: (pump: Pump) => void; // Renamed from onCardClick
+  onOpenPumpDetailsModal: (pump: Pump) => void;
+  onOpenGroupDetailsModal?: (model: string, pumpsInGroup: Pump[]) => void; // Added prop
   selectedPumpIdsForDrag: string[];
   onPumpCardClick: (pump: Pump, event: React.MouseEvent<HTMLDivElement>) => void;
 }
@@ -29,6 +30,7 @@ export function KanbanColumn({
   onDragOver,
   onDrop,
   onOpenPumpDetailsModal,
+  onOpenGroupDetailsModal, // Destructure new prop
   selectedPumpIdsForDrag,
   onPumpCardClick,
 }: KanbanColumnProps) {
@@ -88,7 +90,7 @@ export function KanbanColumn({
                   model={model}
                   pumpsInGroup={pumpsInGroup}
                   onDragStartCustomerGroup={onDragStartGroupCard}
-                  // Add onOpenGroupDetailsModal prop here later
+                  onOpenGroupDetailsModal={onOpenGroupDetailsModal} // Pass down new prop
                 />
               );
             } else {
@@ -100,7 +102,7 @@ export function KanbanColumn({
                   onDragStart={onDragStartCard}
                   onCardClick={(event) => onPumpCardClick(singlePump, event)}
                   onOpenDetailsModal={() => onOpenPumpDetailsModal(singlePump)}
-                  isDraggable={true} // Individual cards in condensed view are draggable
+                  isDraggable={true} 
                   isSelected={selectedPumpIdsForDrag.includes(singlePump.id)}
                 />
               );
