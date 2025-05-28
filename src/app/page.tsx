@@ -21,7 +21,7 @@ const generateRandomSerialNumber = () => `MSP-JN-${String(Math.floor(Math.random
 export default function HomePage() {
   const [pumps, setPumps] = useState<Pump[]>([]);
   const [filteredPumps, setFilteredPumps] = useState<Pump[]>([]);
-  const [viewMode, setViewMode] = useState<ViewMode>('default'); // Changed from 'detailed' to 'default'
+  const [viewMode, setViewMode] = useState<ViewMode>('default');
   const [filters, setFilters] = useState<Filters>({});
   
   const [isAddPumpModalOpen, setIsAddPumpModalOpen] = useState(false);
@@ -35,6 +35,7 @@ export default function HomePage() {
   const { toast } = useToast();
   
   useEffect(() => {
+    // Client-side only effect to set initial pumps
     const initialSamplePumps: Pump[] = [
       { id: generateId(), model: PUMP_MODELS[0], serialNumber: generateRandomSerialNumber(), customer: CUSTOMER_NAMES[0], poNumber: 'PO123', currentStage: 'open-jobs', notes: 'Initial inspection pending.' },
       { id: generateId(), model: PUMP_MODELS[1], serialNumber: generateRandomSerialNumber(), customer: CUSTOMER_NAMES[1], poNumber: 'PO456', currentStage: 'assembly', notes: 'Waiting for part XYZ.' },
@@ -84,14 +85,15 @@ export default function HomePage() {
       if (quantity === 1 && startSerialNumber && /^MSP-JN-\d{4}$/.test(startSerialNumber)) {
         pumpSerialNumber = startSerialNumber;
       } else if (quantity > 1 && currentSerialNumberNumeric !== -1) {
-        if (currentSerialNumberNumeric + i <= 9999) {
+        if (currentSerialNumberNumeric + i <= 9999) { // Basic check for serial number limit
             pumpSerialNumber = `MSP-JN-${String(currentSerialNumberNumeric + i).padStart(4, '0')}`;
         }
       } else if (quantity > 1 && !startSerialNumber) {
         pumpSerialNumber = undefined;
-      } else if (quantity === 1 && !startSerialNumber) {
-        // This case is handled by form validation making serialNumber required if quantity is 1
-        pumpSerialNumber = undefined;
+      } else if (quantity === 1 && (!startSerialNumber || !/^MSP-JN-\d{4}$/.test(startSerialNumber))) {
+         // This case should be caught by form validation making serialNumber required and valid if quantity is 1
+        console.error("Serial number is required and must be valid for single pump addition.");
+        return; // Or handle error appropriately
       }
 
 
@@ -132,31 +134,73 @@ export default function HomePage() {
       toast({ title: "Pump Moved", description: `${pumpToMove.serialNumber || 'Pump'} moved to ${stageTitle}.` });
     }
   }, [pumps, toast]);
+  
+  const handleMultiplePumpsMove = useCallback((pumpIdsToMove: string[], newStageId: StageId) => {
+    const pumpsToActuallyMove: Pump[] = [];
+    let powderCoatInfoMissing = false;
+
+    for (const pumpId of pumpIdsToMove) {
+      const pump = pumps.find(p => p.id === pumpId);
+      if (pump) {
+        if (newStageId === 'powder-coat' && (!pump.powderCoater || !pump.powderCoatColor)) {
+          powderCoatInfoMissing = true;
+          // For simplicity, we'll only set the first missing pump for the modal, 
+          // but the move will be blocked for all if any are missing.
+          if (!missingInfoPump) { 
+            setMissingInfoPump(pump);
+            setMissingInfoTargetStage(newStageId);
+          }
+        }
+        pumpsToActuallyMove.push(pump);
+      }
+    }
+
+    if (powderCoatInfoMissing && newStageId === 'powder-coat') {
+      toast({
+        variant: "destructive",
+        title: "Move Aborted",
+        description: "One or more pumps require powder coat information before moving to Powder Coat. Please update them individually.",
+      });
+      // Optionally open modal for the first identified missing pump, but actual move is blocked
+      // setIsMissingInfoModalOpen(true); 
+      return; 
+    }
+    
+    setPumps(prev => 
+      prev.map(p => 
+        pumpIdsToMove.includes(p.id) ? { ...p, currentStage: newStageId } : p
+      )
+    );
+    const stageTitle = STAGES.find(s => s.id === newStageId)?.title || newStageId;
+    toast({ title: `${pumpIdsToMove.length} Pump(s) Moved`, description: `Moved to ${stageTitle}.` });
+
+  }, [pumps, toast, missingInfoPump]);
+
 
   const handleSaveMissingInfo = useCallback((pumpId: string, data: Partial<Pump>) => {
     setPumps(prev => prev.map(p => p.id === pumpId ? { ...p, ...data, currentStage: missingInfoTargetStage! } : p));
-    const pump = pumps.find(p => p.id === pumpId);
+    const pump = pumps.find(p => p.id === pumpId); // Find the updated pump
     if (pump && missingInfoTargetStage) {
        const stageTitle = STAGES.find(s => s.id === missingInfoTargetStage)?.title || missingInfoTargetStage;
        toast({ title: "Info Saved & Pump Moved", description: `${pump.serialNumber || 'Pump'} updated and moved to ${stageTitle}.` });
     }
     setMissingInfoPump(null);
     setMissingInfoTargetStage(null);
-  }, [pumps, missingInfoTargetStage, toast]);
+  }, [pumps, missingInfoTargetStage, toast]); // Added pumps to dependency array
 
   const handleCardClick = useCallback((pump: Pump) => {
     setSelectedPump(pump);
     setIsPumpDetailsModalOpen(true);
   }, []);
 
-  const allPumpModels = Array.from(new Set(pumps.map(p => p.model).concat(PUMP_MODELS))).sort();
+  const allPumpModels = PUMP_MODELS; // Directly use the constant
   
   const powderCoatersInPumps = pumps
     .map(p => p.powderCoater)
     .filter((pc): pc is string => typeof pc === 'string' && pc.length > 0);
   const allPowderCoaters = Array.from(new Set(powderCoatersInPumps.concat(POWDER_COATERS))).sort();
   
-  const allCustomerNames = Array.from(new Set(pumps.map(p => p.customer).concat(CUSTOMER_NAMES))).sort();
+  const allCustomerNames = CUSTOMER_NAMES; // Directly use the constant
   
   const allSerialNumbers = Array.from(new Set(pumps.map(p => p.serialNumber).filter((sn): sn is string => !!sn))).sort();
   const allPONumbers = Array.from(new Set(pumps.map(p => p.poNumber))).sort();
@@ -181,6 +225,7 @@ export default function HomePage() {
           pumps={filteredPumps}
           viewMode={viewMode}
           onPumpMove={handlePumpMove}
+          onMultiplePumpsMove={handleMultiplePumpsMove}
           onCardClick={handleCardClick}
         />
       </main>

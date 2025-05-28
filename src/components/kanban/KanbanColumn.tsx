@@ -12,6 +12,7 @@ interface KanbanColumnProps {
   pumps: Pump[];
   viewMode: ViewMode;
   onDragStartCard: (e: React.DragEvent<HTMLDivElement>, pumpId: string) => void;
+  onDragStartGroupCard: (e: React.DragEvent<HTMLButtonElement>, pumpsToDrag: Pump[]) => void; // Changed to pass full pump objects
   onDragOver: (e: React.DragEvent<HTMLDivElement>) => void;
   onDrop: (e: React.DragEvent<HTMLDivElement>, stageId: Stage['id']) => void;
   onCardClick: (pump: Pump) => void;
@@ -22,6 +23,7 @@ export function KanbanColumn({
   pumps,
   viewMode,
   onDragStartCard,
+  onDragStartGroupCard,
   onDragOver,
   onDrop,
   onCardClick,
@@ -29,23 +31,21 @@ export function KanbanColumn({
   const Icon = stage.icon;
 
   const groupedPumpsByModel = React.useMemo(() => {
-    if (viewMode === 'condensed') {
-      return pumps.reduce((acc, pump) => {
-        if (!acc[pump.model]) {
-          acc[pump.model] = [];
-        }
-        acc[pump.model].push(pump);
-        return acc;
-      }, {} as Record<string, Pump[]>);
-    }
-    return {};
-  }, [pumps, viewMode]);
+    // Grouping is always needed for condensed view logic, even if some are rendered individually
+    return pumps.reduce((acc, pump) => {
+      if (!acc[pump.model]) {
+        acc[pump.model] = [];
+      }
+      acc[pump.model].push(pump);
+      return acc;
+    }, {} as Record<string, Pump[]>);
+  }, [pumps]);
 
   return (
     <div
       className="flex-shrink-0 w-80 bg-secondary/50 rounded-lg shadow-sm h-full flex flex-col"
-      onDragOver={viewMode === 'default' ? onDragOver : undefined} 
-      onDrop={viewMode === 'default' ? (e) => onDrop(e, stage.id) : undefined}
+      onDragOver={onDragOver} // Always active
+      onDrop={(e) => onDrop(e, stage.id)} // Always active
       aria-labelledby={`stage-title-${stage.id}`}
     >
       <div className="p-4 border-b border-border flex items-center justify-between sticky top-0 bg-secondary/50 z-10 rounded-t-lg">
@@ -71,7 +71,7 @@ export function KanbanColumn({
               pump={pump}
               onDragStart={onDragStartCard}
               onClick={() => onCardClick(pump)}
-              isDraggable={true} // Explicitly draggable in default view
+              isDraggable={true}
             />
           ))
         ) : ( // viewMode === 'condensed'
@@ -82,6 +82,7 @@ export function KanbanColumn({
                   key={model}
                   model={model}
                   pumpsInGroup={pumpsInGroup}
+                  onDragStartCustomerGroup={onDragStartGroupCard}
                 />
               );
             } else {
@@ -91,9 +92,9 @@ export function KanbanColumn({
                 <KanbanCard
                   key={singlePump.id}
                   pump={singlePump}
-                  onDragStart={onDragStartCard} // Pass handler, but isDraggable will control
+                  onDragStart={onDragStartCard}
                   onClick={() => onCardClick(singlePump)}
-                  isDraggable={false} // Not draggable in condensed view
+                  isDraggable={true} // Individual cards in condensed view are draggable
                 />
               );
             }
