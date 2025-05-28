@@ -9,17 +9,6 @@ import { AddPumpForm } from '@/components/pump/AddPumpForm';
 import { PumpDetailsModal } from '@/components/pump/PumpDetailsModal';
 import { MissingInfoModal } from '@/components/pump/MissingInfoModal';
 import { GroupedPumpDetailsModal } from '@/components/pump/GroupedPumpDetailsModal';
-import {
-  SidebarProvider,
-  Sidebar,
-  SidebarHeader,
-  SidebarContent,
-  SidebarMenu,
-  SidebarMenuItem,
-  SidebarMenuButton,
-  SidebarInset,
-} from '@/components/ui/sidebar';
-import { LayoutDashboard, BarChart2, CalendarDays, BrainCircuit } from 'lucide-react';
 import type { Pump, StageId, ViewMode, Filters, PriorityLevel } from '@/types';
 import { STAGES, POWDER_COATERS, PUMP_MODELS, CUSTOMER_NAMES, DEFAULT_POWDER_COAT_COLORS, PRIORITY_LEVELS } from '@/lib/constants';
 import { useToast } from '@/hooks/use-toast';
@@ -262,8 +251,8 @@ export default function HomePage() {
 
         if (newMode === 'default') { 
             setExplodedGroups(prevExploded => {
-                const newExplodedForStage = new Set(prevExploded[stageId] || []);
-                if (newExplodedForStage.size > 0) { 
+                const currentExplodedForStage = prevExploded[stageId] || new Set();
+                if (currentExplodedForStage.size > 0) { 
                     return {
                         ...prevExploded,
                         [stageId]: new Set<string>(), 
@@ -305,118 +294,72 @@ export default function HomePage() {
   const allPONumbers = Array.from(new Set(pumps.map(p => p.poNumber))).sort();
 
   return (
-    <SidebarProvider>
-      <Sidebar side="left" collapsible="icon" variant="sidebar">
-        <SidebarHeader>
-          <div className="flex items-center gap-2 p-2">
-            <svg width="24" height="24" viewBox="0 0 100 100" className="text-sidebar-primary">
-              <path fill="currentColor" d="M87.7,43.1a6.4,6.4,0,0,0-11.3,0L64,58.2V26.3a6.4,6.4,0,0,0-12.8,0V58.2L38.7,43.1a6.4,6.4,0,0,0-11.3,0L12.3,58.2a6.4,6.4,0,0,0,0,11.3l19.1,19.1a6.4,6.4,0,0,0,11.3,0L55.5,75.8a6.4,6.4,0,0,0,0-11.3L40.4,51.7l9.6-9.6V73.7a6.4,6.4,0,0,0,12.8,0V42.1l9.6,9.6L57.2,64.5a6.4,6.4,0,0,0,0,11.3l12.8,12.8a6.4,6.4,0,0,0,11.3,0l19.1-19.1a6.4,6.4,0,0,0,0-11.3ZM50,12.5a6.3,6.3,0,1,0,6.3,6.2A6.2,6.2,0,0,0,50,12.5Z"/>
-            </svg>
-            <span className="text-lg font-semibold text-sidebar-foreground group-data-[collapsible=icon]:hidden">PumpTrack</span>
-          </div>
-        </SidebarHeader>
-        <SidebarContent>
-          <SidebarMenu>
-            <SidebarMenuItem>
-              <SidebarMenuButton tooltip="Kanban Board" isActive={true} asChild>
-                <Link href="/">
-                  <LayoutDashboard /> Kanban Board
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-            <SidebarMenuItem>
-              <SidebarMenuButton tooltip="Charts and Graphs" asChild>
-                <Link href="#"> {/* Replace # with actual path later */}
-                  <BarChart2 /> Charts and Graphs
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-            <SidebarMenuItem>
-              <SidebarMenuButton tooltip="Calendar and Schedule" asChild>
-                <Link href="#"> {/* Replace # with actual path later */}
-                  <CalendarDays /> Calendar and Schedule
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-            <SidebarMenuItem>
-              <SidebarMenuButton tooltip="A.I. Query" asChild>
-                <Link href="/ai-query">
-                  <BrainCircuit /> A.I. Query
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          </SidebarMenu>
-        </SidebarContent>
-      </Sidebar>
-      <SidebarInset>
-        <div className="flex flex-col h-screen bg-background">
-          <Header
-            onAddPump={() => setIsAddPumpModalOpen(true)}
-            filters={filters}
-            onFiltersChange={setFilters}
-            availablePumpModels={allPumpModels}
-            availablePowderCoaters={allPowderCoaters}
-            availableCustomers={allCustomerNames}
-            availableSerialNumbers={allSerialNumbers}
-            availablePONumbers={allPONumbers}
-            availablePriorities={allPriorities.map(p => ({label: p.label, value: p.value}))}
-          />
-          <main className="flex-grow overflow-hidden">
-            <KanbanBoard
-              pumps={filteredPumps}
-              columnViewModes={columnViewModes}
-              onToggleColumnViewMode={handleToggleColumnViewMode}
-              onPumpMove={handlePumpMove}
-              onMultiplePumpsMove={handleMultiplePumpsMove}
-              onOpenPumpDetailsModal={handleOpenPumpDetailsModal}
-              onOpenGroupDetailsModal={handleOpenGroupDetailsModal}
-              selectedPumpIdsForDrag={selectedPumpIdsForDrag}
-              onPumpCardClick={handlePumpCardClick}
-              explodedGroups={explodedGroups}
-              onToggleExplodeGroup={handleToggleExplodeGroup}
-            />
-          </main>
+    <div className="flex flex-col h-full"> {/* Ensure this container takes full height if needed */}
+      <Header
+        onAddPump={() => setIsAddPumpModalOpen(true)}
+        filters={filters}
+        onFiltersChange={setFilters}
+        availablePumpModels={allPumpModels}
+        availablePowderCoaters={allPowderCoaters}
+        availableCustomers={allCustomerNames}
+        availableSerialNumbers={allSerialNumbers}
+        availablePONumbers={allPONumbers}
+        availablePriorities={allPriorities.map(p => ({label: p.label, value: p.value}))}
+      />
+      <main className="flex-grow overflow-hidden"> {/* This will contain the Kanban board */}
+        <KanbanBoard
+          pumps={filteredPumps}
+          columnViewModes={columnViewModes}
+          onToggleColumnViewMode={handleToggleColumnViewMode}
+          onPumpMove={handlePumpMove}
+          onMultiplePumpsMove={handleMultiplePumpsMove}
+          onOpenPumpDetailsModal={handleOpenPumpDetailsModal}
+          onOpenGroupDetailsModal={handleOpenGroupDetailsModal}
+          selectedPumpIdsForDrag={selectedPumpIdsForDrag}
+          onPumpCardClick={handlePumpCardClick}
+          explodedGroups={explodedGroups}
+          onToggleExplodeGroup={handleToggleExplodeGroup}
+        />
+      </main>
 
-          <AddPumpForm
-            isOpen={isAddPumpModalOpen}
-            onClose={() => setIsAddPumpModalOpen(false)}
-            onAddPump={handleAddPump}
-          />
+      <AddPumpForm
+        isOpen={isAddPumpModalOpen}
+        onClose={() => setIsAddPumpModalOpen(false)}
+        onAddPump={handleAddPump}
+      />
 
-          {selectedPumpForDetails && (
-            <PumpDetailsModal
-              isOpen={isPumpDetailsModalOpen}
-              onClose={() => { setIsPumpDetailsModalOpen(false); setSelectedPumpForDetails(null); }}
-              pump={selectedPumpForDetails}
-              onUpdatePump={handleUpdatePump}
-            />
-          )}
+      {selectedPumpForDetails && (
+        <PumpDetailsModal
+          isOpen={isPumpDetailsModalOpen}
+          onClose={() => { setIsPumpDetailsModalOpen(false); setSelectedPumpForDetails(null); }}
+          pump={selectedPumpForDetails}
+          onUpdatePump={handleUpdatePump}
+        />
+      )}
 
-          {missingInfoPump && (
-            <MissingInfoModal
-              isOpen={isMissingInfoModalOpen}
-              onClose={() => { setIsMissingInfoModalOpen(false); setMissingInfoPump(null); setMissingInfoTargetStage(null);}}
-              pump={missingInfoPump}
-              targetStageId={missingInfoTargetStage}
-              onSave={handleSaveMissingInfo}
-            />
-          )}
+      {missingInfoPump && (
+        <MissingInfoModal
+          isOpen={isMissingInfoModalOpen}
+          onClose={() => { setIsMissingInfoModalOpen(false); setMissingInfoPump(null); setMissingInfoTargetStage(null);}}
+          pump={missingInfoPump}
+          targetStageId={missingInfoTargetStage}
+          onSave={handleSaveMissingInfo}
+        />
+      )}
 
-          {selectedGroupForDetails && (
-            <GroupedPumpDetailsModal
-              isOpen={isGroupDetailsModalOpen}
-              onClose={() => {
-                setIsGroupDetailsModalOpen(false);
-                setSelectedGroupForDetails(null);
-              }}
-              modelName={selectedGroupForDetails.model}
-              pumpsInGroup={selectedGroupForDetails.pumps}
-              onOpenIndividualPumpDetails={handleOpenPumpDetailsModal}
-            />
-          )}
-        </div>
-      </SidebarInset>
-    </SidebarProvider>
+      {selectedGroupForDetails && (
+        <GroupedPumpDetailsModal
+          isOpen={isGroupDetailsModalOpen}
+          onClose={() => {
+            setIsGroupDetailsModalOpen(false);
+            setSelectedGroupForDetails(null);
+          }}
+          modelName={selectedGroupForDetails.model}
+          pumpsInGroup={selectedGroupForDetails.pumps}
+          onOpenIndividualPumpDetails={handleOpenPumpDetailsModal}
+        />
+      )}
+    </div>
   );
 }
     

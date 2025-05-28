@@ -5,9 +5,9 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar'; // Removed AvatarImage
 import { Loader2, Send, User, Bot } from 'lucide-react';
-import { answerPumpDataQuestion } from '@/ai/flows/answer-pump-data-question-flow'; // We'll create this next
+import { answerPumpDataQuestion } from '@/ai/flows/answer-pump-data-question-flow';
 import { useToast } from '@/hooks/use-toast';
 
 interface Message {
@@ -67,15 +67,21 @@ export default function AiQueryPage() {
 
   useEffect(() => {
     if (scrollAreaRef.current) {
+      // Query for the viewport element within the ScrollArea
       const scrollElement = scrollAreaRef.current.querySelector('[data-radix-scroll-area-viewport]');
       if (scrollElement) {
         scrollElement.scrollTop = scrollElement.scrollHeight;
       }
     }
   }, [messages]);
+  
+  // The main layout now provides the global header with the sidebar trigger.
+  // This page's content will be rendered within the SidebarInset.
+  // The h-[calc(100vh-var(--header-height)-env(safe-area-inset-bottom))] with --header-height
+  // was specific to when this page had its own header concept. Now it will be part of the main scrollable area.
 
   return (
-    <div className="flex flex-col h-[calc(100vh-var(--header-height)-env(safe-area-inset-bottom))] p-4 md:p-6 bg-background" style={{'--header-height': '88px'} as React.CSSProperties}>
+    <div className="flex flex-col h-full p-4 md:p-6 bg-background">
       <header className="mb-4">
         <h1 className="text-2xl font-semibold text-primary">A.I. Query</h1>
         <p className="text-muted-foreground">Ask questions about your pump data.</p>
