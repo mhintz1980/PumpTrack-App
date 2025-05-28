@@ -4,13 +4,7 @@
 import React from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import { Combobox } from '@/components/ui/combobox';
 import type { Filters } from '@/types';
 
 interface PumpFilterControlsProps {
@@ -18,7 +12,7 @@ interface PumpFilterControlsProps {
   onFiltersChange: (newFilters: Filters) => void;
   availablePumpModels: string[];
   availablePowderCoaters: string[];
-  availableCustomers: string[]; // Added this prop
+  availableCustomers: string[];
 }
 
 export function PumpFilterControls({
@@ -26,15 +20,19 @@ export function PumpFilterControls({
   onFiltersChange,
   availablePumpModels,
   availablePowderCoaters,
-  availableCustomers, // Destructure new prop
+  availableCustomers,
 }: PumpFilterControlsProps) {
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    onFiltersChange({ ...filters, [e.target.name]: e.target.value });
+    onFiltersChange({ ...filters, [e.target.name]: e.target.value === '' ? undefined : e.target.value });
   };
 
-  const handleSelectChange = (name: keyof Filters, value: string) => {
-    onFiltersChange({ ...filters, [name]: value === 'all' ? undefined : value });
+  const handleComboboxChange = (name: keyof Filters, value: string) => {
+    onFiltersChange({ ...filters, [name]: value === '' ? undefined : value });
   };
+
+  const customerOptions = availableCustomers.map(c => ({ label: c, value: c }));
+  const modelOptions = availablePumpModels.map(m => ({ label: m, value: m }));
+  const powderCoaterOptions = availablePowderCoaters.map(pc => ({ label: pc, value: pc }));
 
   return (
     <div className="space-y-4">
@@ -51,23 +49,15 @@ export function PumpFilterControls({
       </div>
       <div>
         <Label htmlFor="customerFilter" className="text-xs">Customer</Label>
-        <Select
-          name="customer"
-          value={filters.customer || 'all'}
-          onValueChange={(value) => handleSelectChange('customer', value)}
-        >
-          <SelectTrigger className="mt-1 h-8 text-sm">
-            <SelectValue placeholder="Filter by Customer..." />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Customers</SelectItem>
-            {availableCustomers.map((customer) => (
-              <SelectItem key={customer} value={customer}>
-                {customer}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <Combobox
+          options={customerOptions}
+          value={filters.customer || ''}
+          onChange={(value) => handleComboboxChange('customer', value)}
+          placeholder="All Customers"
+          searchPlaceholder="Search customers..."
+          emptyText="No customer found."
+          className="mt-1 h-8 text-sm"
+        />
       </div>
       <div>
         <Label htmlFor="poNumberFilter" className="text-xs">PO Number</Label>
@@ -82,43 +72,27 @@ export function PumpFilterControls({
       </div>
       <div>
         <Label htmlFor="modelFilter" className="text-xs">Model</Label>
-        <Select
-          name="model"
-          value={filters.model || 'all'}
-          onValueChange={(value) => handleSelectChange('model', value)}
-        >
-          <SelectTrigger className="mt-1 h-8 text-sm">
-            <SelectValue placeholder="Filter by Model..." />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Models</SelectItem>
-            {availablePumpModels.map((model) => (
-              <SelectItem key={model} value={model}>
-                {model}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <Combobox
+          options={modelOptions}
+          value={filters.model || ''}
+          onChange={(value) => handleComboboxChange('model', value)}
+          placeholder="All Models"
+          searchPlaceholder="Search models..."
+          emptyText="No model found."
+          className="mt-1 h-8 text-sm"
+        />
       </div>
       <div>
         <Label htmlFor="powderCoaterFilter" className="text-xs">Powder Coater</Label>
-        <Select
-          name="powderCoater"
-          value={filters.powderCoater || 'all'}
-          onValueChange={(value) => handleSelectChange('powderCoater', value)}
-        >
-          <SelectTrigger className="mt-1 h-8 text-sm">
-            <SelectValue placeholder="Filter by Powder Coater..." />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Coaters</SelectItem>
-            {availablePowderCoaters.map((coater) => (
-              <SelectItem key={coater} value={coater}>
-                {coater}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <Combobox
+          options={powderCoaterOptions}
+          value={filters.powderCoater || ''}
+          onChange={(value) => handleComboboxChange('powderCoater', value)}
+          placeholder="All Coaters"
+          searchPlaceholder="Search coaters..."
+          emptyText="No coater found."
+          className="mt-1 h-8 text-sm"
+        />
       </div>
     </div>
   );

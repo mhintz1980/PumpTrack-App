@@ -25,7 +25,7 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Combobox } from '@/components/ui/combobox';
 import type { Pump, StageId } from '@/types';
 import { STAGES, POWDER_COATERS, PUMP_MODELS, DEFAULT_POWDER_COAT_COLORS, CUSTOMER_NAMES } from '@/lib/constants';
 import { AiActions } from '@/components/AiActions';
@@ -91,6 +91,10 @@ export function PumpDetailsModal({ isOpen, onClose, pump, onUpdatePump }: PumpDe
   const relevantStagesForPowderCoatFields: StageId[] = ['fabrication', 'assembly', 'powder-coat', 'testing'];
   const showPowderCoatFields = relevantStagesForPowderCoatFields.includes(pump.currentStage);
 
+  const pumpModelOptions = PUMP_MODELS.map(m => ({ label: m, value: m }));
+  const customerOptions = CUSTOMER_NAMES.map(c => ({ label: c, value: c }));
+  const powderCoaterOptions = POWDER_COATERS.map(pc => ({ label: pc, value: pc }));
+  const powderCoatColorOptions = DEFAULT_POWDER_COAT_COLORS.map(color => ({ label: color, value: color }));
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
@@ -110,20 +114,17 @@ export function PumpDetailsModal({ isOpen, onClose, pump, onUpdatePump }: PumpDe
                   control={form.control}
                   name="model"
                   render={({ field }) => (
-                    <FormItem>
+                    <FormItem className="flex flex-col">
                       <FormLabel>Pump Model</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select a model" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {PUMP_MODELS.map(model => (
-                            <SelectItem key={model} value={model}>{model}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                      <Combobox
+                        options={pumpModelOptions}
+                        value={field.value}
+                        onChange={field.onChange}
+                        placeholder="Select a model"
+                        searchPlaceholder="Search models..."
+                        emptyText="No model found."
+                        disabled={isSubmitting}
+                      />
                       <FormMessage />
                     </FormItem>
                   )}
@@ -135,7 +136,7 @@ export function PumpDetailsModal({ isOpen, onClose, pump, onUpdatePump }: PumpDe
                     <FormItem>
                       <FormLabel>Serial Number</FormLabel>
                       <FormControl>
-                        <Input {...field} />
+                        <Input {...field} disabled={isSubmitting} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -145,20 +146,17 @@ export function PumpDetailsModal({ isOpen, onClose, pump, onUpdatePump }: PumpDe
                   control={form.control}
                   name="customer"
                   render={({ field }) => (
-                    <FormItem>
+                    <FormItem className="flex flex-col">
                       <FormLabel>Customer Name</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select a customer" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {CUSTOMER_NAMES.map(customer => (
-                            <SelectItem key={customer} value={customer}>{customer}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                      <Combobox
+                        options={customerOptions}
+                        value={field.value}
+                        onChange={field.onChange}
+                        placeholder="Select a customer"
+                        searchPlaceholder="Search customers..."
+                        emptyText="No customer found."
+                        disabled={isSubmitting}
+                      />
                       <FormMessage />
                     </FormItem>
                   )}
@@ -170,7 +168,7 @@ export function PumpDetailsModal({ isOpen, onClose, pump, onUpdatePump }: PumpDe
                     <FormItem>
                       <FormLabel>PO Number</FormLabel>
                       <FormControl>
-                        <Input {...field} />
+                        <Input {...field} disabled={isSubmitting} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -182,20 +180,17 @@ export function PumpDetailsModal({ isOpen, onClose, pump, onUpdatePump }: PumpDe
                       control={form.control}
                       name="powderCoater"
                       render={({ field }) => (
-                        <FormItem>
+                        <FormItem className="flex flex-col">
                           <FormLabel>Powder Coater</FormLabel>
-                          <Select onValueChange={field.onChange} defaultValue={field.value || undefined}>
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select a powder coater" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              {POWDER_COATERS.map(coater => (
-                                <SelectItem key={coater} value={coater}>{coater}</SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
+                          <Combobox
+                            options={powderCoaterOptions}
+                            value={field.value || ''}
+                            onChange={field.onChange}
+                            placeholder="Select a powder coater"
+                            searchPlaceholder="Search coaters..."
+                            emptyText="No coater found."
+                            disabled={isSubmitting}
+                          />
                           <FormMessage />
                         </FormItem>
                       )}
@@ -204,25 +199,16 @@ export function PumpDetailsModal({ isOpen, onClose, pump, onUpdatePump }: PumpDe
                       control={form.control}
                       name="powderCoatColor"
                       render={({ field }) => (
-                        <FormItem>
+                        <FormItem className="flex flex-col">
                           <FormLabel>Powder Coat Color</FormLabel>
-                          <Select onValueChange={field.onChange} defaultValue={field.value || undefined}>
-                            <FormControl>
-                               <SelectTrigger>
-                                <SelectValue placeholder="Select or type color" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              {DEFAULT_POWDER_COAT_COLORS.map(color => (
-                                <SelectItem key={color} value={color}>{color}</SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                          <Input 
-                            placeholder="Or type custom color" 
-                            onChange={(e) => field.onChange(e.target.value)} 
+                          <Combobox
+                            options={powderCoatColorOptions}
                             value={field.value || ''}
-                            className="mt-2"
+                            onChange={field.onChange}
+                            placeholder="Select or type color"
+                            searchPlaceholder="Search colors..."
+                            emptyText="No color found. Type to add custom."
+                            disabled={isSubmitting}
                           />
                           <FormMessage />
                         </FormItem>
@@ -238,7 +224,7 @@ export function PumpDetailsModal({ isOpen, onClose, pump, onUpdatePump }: PumpDe
                   <FormItem>
                     <FormLabel>Notes</FormLabel>
                     <FormControl>
-                      <Textarea placeholder="Add any relevant notes for this pump..." {...field} rows={3} />
+                      <Textarea placeholder="Add any relevant notes for this pump..." {...field} rows={3} disabled={isSubmitting}/>
                     </FormControl>
                     <FormMessage />
                   </FormItem>

@@ -24,7 +24,6 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Combobox } from '@/components/ui/combobox';
 import type { Pump } from '@/types';
 import { PUMP_MODELS, CUSTOMER_NAMES } from '@/lib/constants';
@@ -74,6 +73,7 @@ export function AddPumpForm({ isOpen, onClose, onAddPump }: AddPumpFormProps) {
   };
   
   const pumpModelOptions = PUMP_MODELS.map(model => ({ label: model, value: model }));
+  const customerOptions = CUSTOMER_NAMES.map(customer => ({ label: customer, value: customer }));
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => {
@@ -127,20 +127,17 @@ export function AddPumpForm({ isOpen, onClose, onAddPump }: AddPumpFormProps) {
               control={form.control}
               name="customer"
               render={({ field }) => (
-                <FormItem>
+                <FormItem className="flex flex-col">
                   <FormLabel>Customer Name</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value} disabled={isSubmitting}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select a customer" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {CUSTOMER_NAMES.map(customer => (
-                        <SelectItem key={customer} value={customer}>{customer}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <Combobox
+                    options={customerOptions}
+                    value={field.value}
+                    onChange={field.onChange}
+                    placeholder="Select a customer"
+                    searchPlaceholder="Search customers..."
+                    emptyText="No customer found."
+                    disabled={isSubmitting}
+                  />
                   <FormMessage />
                 </FormItem>
               )}
