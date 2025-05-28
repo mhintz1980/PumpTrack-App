@@ -15,19 +15,9 @@ import { useToast } from '@/hooks/use-toast';
 const generateId = () => crypto.randomUUID();
 const generateSerialNumber = () => `MSP-JN-${String(Math.floor(Math.random() * 9000) + 1000)}`;
 
-// Sample initial data
-const initialPumps: Pump[] = [
-  { id: generateId(), model: PUMP_MODELS[0], serialNumber: generateSerialNumber(), customer: CUSTOMER_NAMES[0], poNumber: 'PO123', currentStage: 'open-jobs', notes: 'Initial inspection pending.' },
-  { id: generateId(), model: PUMP_MODELS[1], serialNumber: generateSerialNumber(), customer: CUSTOMER_NAMES[1], poNumber: 'PO456', currentStage: 'assembly', notes: 'Waiting for part XYZ.' },
-  { id: generateId(), model: PUMP_MODELS[2], serialNumber: generateSerialNumber(), customer: CUSTOMER_NAMES[2], poNumber: 'PO789', currentStage: 'testing', powderCoater: POWDER_COATERS[0], powderCoatColor: DEFAULT_POWDER_COAT_COLORS[0], notes: 'High pressure test passed.' },
-  { id: generateId(), model: PUMP_MODELS[3], serialNumber: generateSerialNumber(), customer: CUSTOMER_NAMES[3], poNumber: 'PO124', currentStage: 'powder-coat', powderCoater: POWDER_COATERS[1], powderCoatColor: DEFAULT_POWDER_COAT_COLORS[1] },
-  { id: generateId(), model: PUMP_MODELS[4], serialNumber: generateSerialNumber(), customer: CUSTOMER_NAMES[4], poNumber: 'PO567', currentStage: 'fabrication' },
-];
-
-
 export default function HomePage() {
-  const [pumps, setPumps] = useState<Pump[]>(initialPumps);
-  const [filteredPumps, setFilteredPumps] = useState<Pump[]>(initialPumps);
+  const [pumps, setPumps] = useState<Pump[]>([]); // Initialize as empty
+  const [filteredPumps, setFilteredPumps] = useState<Pump[]>([]); // Initialize as empty
   const [viewMode, setViewMode] = useState<ViewMode>('detailed');
   const [filters, setFilters] = useState<Filters>({});
   
@@ -40,6 +30,19 @@ export default function HomePage() {
   const [isMissingInfoModalOpen, setIsMissingInfoModalOpen] = useState(false);
 
   const { toast } = useToast();
+
+  // Effect to load initial sample data on client-side
+  useEffect(() => {
+    const initialSamplePumps: Pump[] = [
+      { id: generateId(), model: PUMP_MODELS[0], serialNumber: generateSerialNumber(), customer: CUSTOMER_NAMES[0], poNumber: 'PO123', currentStage: 'open-jobs', notes: 'Initial inspection pending.' },
+      { id: generateId(), model: PUMP_MODELS[1], serialNumber: generateSerialNumber(), customer: CUSTOMER_NAMES[1], poNumber: 'PO456', currentStage: 'assembly', notes: 'Waiting for part XYZ.' },
+      { id: generateId(), model: PUMP_MODELS[2], serialNumber: generateSerialNumber(), customer: CUSTOMER_NAMES[2], poNumber: 'PO789', currentStage: 'testing', powderCoater: POWDER_COATERS[0], powderCoatColor: DEFAULT_POWDER_COAT_COLORS[0], notes: 'High pressure test passed.' },
+      { id: generateId(), model: PUMP_MODELS[3], serialNumber: generateSerialNumber(), customer: CUSTOMER_NAMES[3], poNumber: 'PO124', currentStage: 'powder-coat', powderCoater: POWDER_COATERS[1], powderCoatColor: DEFAULT_POWDER_COAT_COLORS[1] },
+      { id: generateId(), model: PUMP_MODELS[4], serialNumber: generateSerialNumber(), customer: CUSTOMER_NAMES[4], poNumber: 'PO567', currentStage: 'fabrication' },
+    ];
+    setPumps(initialSamplePumps);
+  }, []); // Empty dependency array ensures this runs once on mount (client-side)
+
 
   // Filter pumps based on current filters
   useEffect(() => {
@@ -110,7 +113,6 @@ export default function HomePage() {
 
   const allPumpModels = Array.from(new Set(pumps.map(p => p.model).concat(PUMP_MODELS))).sort();
   
-  // Refactored allPowderCoaters derivation
   const powderCoatersInPumps = pumps
     .map(p => p.powderCoater)
     .filter((pc): pc is string => typeof pc === 'string' && pc.length > 0);
