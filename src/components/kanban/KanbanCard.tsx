@@ -11,14 +11,15 @@ interface KanbanCardProps {
   pump: Pump;
   onDragStart: (e: React.DragEvent<HTMLDivElement>, pumpId: string) => void;
   onClick: () => void;
+  isDraggable?: boolean; // New prop
 }
 
-export function KanbanCard({ pump, onDragStart, onClick }: KanbanCardProps) {
+export function KanbanCard({ pump, onDragStart, onClick, isDraggable = true }: KanbanCardProps) {
   const displaySerialNumber = pump.serialNumber || 'N/A';
   return (
     <Card
-      draggable
-      onDragStart={(e) => onDragStart(e, pump.id)}
+      draggable={isDraggable} // Use prop
+      onDragStart={isDraggable ? (e) => onDragStart(e, pump.id) : undefined} // Conditionally attach handler
       className="mb-3 shadow-md hover:shadow-lg hover:scale-[1.02] transition-all duration-150 ease-in-out bg-card group"
       aria-label={`Pump Model: ${pump.model}, Customer: ${pump.customer}, S/N: ${displaySerialNumber}`}
     >
@@ -44,12 +45,13 @@ export function KanbanCard({ pump, onDragStart, onClick }: KanbanCardProps) {
           >
             <Eye className="h-4 w-4" />
           </Button>
-          <div className="cursor-grab" aria-label="Drag pump">
-            <GripVertical className="h-5 w-5 text-muted-foreground" />
-          </div>
+          {isDraggable && ( // Conditionally show drag handle
+            <div className="cursor-grab" aria-label="Drag pump">
+              <GripVertical className="h-5 w-5 text-muted-foreground" />
+            </div>
+          )}
         </div>
       </CardHeader>
-      {/* Removed detailed view section with image and extra fields. Details are in the modal. */}
     </Card>
   );
 }

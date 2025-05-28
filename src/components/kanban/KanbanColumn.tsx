@@ -44,8 +44,8 @@ export function KanbanColumn({
   return (
     <div
       className="flex-shrink-0 w-80 bg-secondary/50 rounded-lg shadow-sm h-full flex flex-col"
-      onDragOver={viewMode === 'default' ? onDragOver : undefined} // Only allow drag over for default view
-      onDrop={viewMode === 'default' ? (e) => onDrop(e, stage.id) : undefined} // Only allow drop for default view
+      onDragOver={viewMode === 'default' ? onDragOver : undefined} 
+      onDrop={viewMode === 'default' ? (e) => onDrop(e, stage.id) : undefined}
       aria-labelledby={`stage-title-${stage.id}`}
     >
       <div className="p-4 border-b border-border flex items-center justify-between sticky top-0 bg-secondary/50 z-10 rounded-t-lg">
@@ -71,17 +71,33 @@ export function KanbanColumn({
               pump={pump}
               onDragStart={onDragStartCard}
               onClick={() => onCardClick(pump)}
+              isDraggable={true} // Explicitly draggable in default view
             />
           ))
         ) : ( // viewMode === 'condensed'
-          Object.entries(groupedPumpsByModel).map(([model, pumpsInGroup]) => (
-            <GroupedKanbanCard
-              key={model}
-              model={model}
-              pumpsInGroup={pumpsInGroup}
-              // onCardClick prop is not passed here as grouped card interaction is different
-            />
-          ))
+          Object.entries(groupedPumpsByModel).map(([model, pumpsInGroup]) => {
+            if (pumpsInGroup.length > 1) {
+              return (
+                <GroupedKanbanCard
+                  key={model}
+                  model={model}
+                  pumpsInGroup={pumpsInGroup}
+                />
+              );
+            } else {
+              // Render individual KanbanCard if only one pump in the group
+              const singlePump = pumpsInGroup[0];
+              return (
+                <KanbanCard
+                  key={singlePump.id}
+                  pump={singlePump}
+                  onDragStart={onDragStartCard} // Pass handler, but isDraggable will control
+                  onClick={() => onCardClick(singlePump)}
+                  isDraggable={false} // Not draggable in condensed view
+                />
+              );
+            }
+          })
         )}
       </ScrollArea>
     </div>
