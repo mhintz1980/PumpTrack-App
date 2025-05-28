@@ -54,23 +54,23 @@ export default function HomePage() {
 
   useEffect(() => {
     let tempPumps = [...pumps];
-    if (filters.serialNumber) {
-      tempPumps = tempPumps.filter(p => p.serialNumber?.toLowerCase().includes(filters.serialNumber!.toLowerCase()));
+    if (filters.serialNumber && filters.serialNumber.length > 0) {
+      tempPumps = tempPumps.filter(p => p.serialNumber && filters.serialNumber!.some(sn => p.serialNumber!.toLowerCase().includes(sn.toLowerCase())));
     }
-    if (filters.customer) {
-      tempPumps = tempPumps.filter(p => p.customer === filters.customer);
+    if (filters.customer && filters.customer.length > 0) {
+      tempPumps = tempPumps.filter(p => filters.customer!.includes(p.customer));
     }
-    if (filters.poNumber) {
-      tempPumps = tempPumps.filter(p => p.poNumber.toLowerCase().includes(filters.poNumber!.toLowerCase()));
+    if (filters.poNumber && filters.poNumber.length > 0) {
+      tempPumps = tempPumps.filter(p => filters.poNumber!.some(po => p.poNumber.toLowerCase().includes(po.toLowerCase())));
     }
-    if (filters.model) {
-      tempPumps = tempPumps.filter(p => p.model === filters.model);
+    if (filters.model && filters.model.length > 0) {
+      tempPumps = tempPumps.filter(p => filters.model!.includes(p.model));
     }
-    if (filters.powderCoater) {
-      tempPumps = tempPumps.filter(p => p.powderCoater === filters.powderCoater);
+    if (filters.powderCoater && filters.powderCoater.length > 0) {
+      tempPumps = tempPumps.filter(p => p.powderCoater && filters.powderCoater!.includes(p.powderCoater));
     }
-    if (filters.priority) {
-      tempPumps = tempPumps.filter(p => (p.priority || 'normal') === filters.priority);
+    if (filters.priority && filters.priority.length > 0) {
+      tempPumps = tempPumps.filter(p => filters.priority!.includes(p.priority || 'normal'));
     }
     setFilteredPumps(tempPumps);
   }, [pumps, filters]);
