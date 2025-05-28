@@ -18,6 +18,7 @@ interface PumpFilterControlsProps {
   onFiltersChange: (newFilters: Filters) => void;
   availablePumpModels: string[];
   availablePowderCoaters: string[];
+  availableCustomers: string[]; // Added this prop
 }
 
 export function PumpFilterControls({
@@ -25,6 +26,7 @@ export function PumpFilterControls({
   onFiltersChange,
   availablePumpModels,
   availablePowderCoaters,
+  availableCustomers, // Destructure new prop
 }: PumpFilterControlsProps) {
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     onFiltersChange({ ...filters, [e.target.name]: e.target.value });
@@ -49,14 +51,23 @@ export function PumpFilterControls({
       </div>
       <div>
         <Label htmlFor="customerFilter" className="text-xs">Customer</Label>
-        <Input
-          id="customerFilter"
+        <Select
           name="customer"
-          value={filters.customer || ''}
-          onChange={handleInputChange}
-          placeholder="Filter by Customer..."
-          className="mt-1 h-8 text-sm"
-        />
+          value={filters.customer || 'all'}
+          onValueChange={(value) => handleSelectChange('customer', value)}
+        >
+          <SelectTrigger className="mt-1 h-8 text-sm">
+            <SelectValue placeholder="Filter by Customer..." />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Customers</SelectItem>
+            {availableCustomers.map((customer) => (
+              <SelectItem key={customer} value={customer}>
+                {customer}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
       <div>
         <Label htmlFor="poNumberFilter" className="text-xs">PO Number</Label>

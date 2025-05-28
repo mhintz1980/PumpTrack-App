@@ -2,23 +2,19 @@
 import type { Stage } from '@/types';
 import {
   ListTodo,
-  Hammer, // Changed from Archive
+  Hammer,
   Wrench,
   TestTube2,
   SprayCan,
   Truck,
-  // CheckCircle2, // Removed
-  // Package, // Removed
 } from 'lucide-react';
 
 export const STAGES: Stage[] = [
   { id: 'open-jobs', title: 'Open Jobs', icon: ListTodo },
-  { id: 'fabrication', title: 'Fabrication', icon: Hammer }, // Was 'parts-staged' with Archive
-  { id: 'powder-coat', title: 'Powder Coat', icon: SprayCan }, // Moved up
+  { id: 'fabrication', title: 'Fabrication', icon: Hammer },
+  { id: 'powder-coat', title: 'Powder Coat', icon: SprayCan },
   { id: 'assembly', title: 'Assembly', icon: Wrench },
   { id: 'testing', title: 'Testing', icon: TestTube2 },
-  // { id: 'final-qc', title: 'Final QC', icon: CheckCircle2 }, // Removed
-  // { id: 'ready-to-ship', title: 'Ready to Ship', icon: Package }, // Removed
   { id: 'shipped', title: 'Shipped', icon: Truck },
 ];
 
@@ -30,11 +26,23 @@ export const POWDER_COATERS: string[] = [
 ];
 
 export const PUMP_MODELS: string[] = [
-  'Model X100',
-  'Model Y200',
-  'Model Z300 Pro',
-  'CompactFlow 50',
-  'HeavyDuty 5000',
+  'DD4SE',
+  'DD6',
+  'DD6-SAFE',
+  'DV6',
+  'RL200',
+  'RL200-SAFE',
+  'RL300',
+  'RL300-SAFE',
+  'HC150-SAFE',
+];
+
+export const CUSTOMER_NAMES: string[] = [
+  'United Rentals',
+  'Herc',
+  'Sunbelt Rentals',
+  'Rain for Rent',
+  'Ring Power',
 ];
 
 export const DEFAULT_POWDER_COAT_COLORS: string[] = [

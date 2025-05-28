@@ -27,13 +27,13 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import type { Pump, StageId } from '@/types';
-import { STAGES, POWDER_COATERS, PUMP_MODELS, DEFAULT_POWDER_COAT_COLORS } from '@/lib/constants';
+import { STAGES, POWDER_COATERS, PUMP_MODELS, DEFAULT_POWDER_COAT_COLORS, CUSTOMER_NAMES } from '@/lib/constants';
 import { AiActions } from '@/components/AiActions';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
 const pumpDetailsSchema = z.object({
   model: z.string().min(1, "Model is required"),
-  serialNumber: z.string().min(1, "Serial number is required"),
+  serialNumber: z.string().regex(/^MSP-JN-\d{4}$/, "Serial number must be in MSP-JN-XXXX format (e.g., MSP-JN-1234)"),
   customer: z.string().min(1, "Customer name is required"),
   poNumber: z.string().min(1, "PO number is required"),
   powderCoater: z.string().optional(),
@@ -147,9 +147,18 @@ export function PumpDetailsModal({ isOpen, onClose, pump, onUpdatePump }: PumpDe
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Customer Name</FormLabel>
-                      <FormControl>
-                        <Input {...field} />
-                      </FormControl>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select a customer" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {CUSTOMER_NAMES.map(customer => (
+                            <SelectItem key={customer} value={customer}>{customer}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                       <FormMessage />
                     </FormItem>
                   )}

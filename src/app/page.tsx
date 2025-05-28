@@ -8,18 +8,20 @@ import { AddPumpForm } from '@/components/pump/AddPumpForm';
 import { PumpDetailsModal } from '@/components/pump/PumpDetailsModal';
 import { MissingInfoModal } from '@/components/pump/MissingInfoModal';
 import type { Pump, StageId, ViewMode, Filters } from '@/types';
-import { STAGES, POWDER_COATERS, PUMP_MODELS } from '@/lib/constants'; // Ensure PUMP_MODELS is exported
+import { STAGES, POWDER_COATERS, PUMP_MODELS, CUSTOMER_NAMES, DEFAULT_POWDER_COAT_COLORS } from '@/lib/constants';
 import { useToast } from '@/hooks/use-toast';
 
 // Helper to generate unique IDs
 const generateId = () => crypto.randomUUID();
+const generateSerialNumber = () => `MSP-JN-${String(Math.floor(Math.random() * 9000) + 1000)}`;
 
 // Sample initial data
 const initialPumps: Pump[] = [
-  { id: generateId(), model: 'Model X100', serialNumber: 'SN001', customer: 'Customer A', poNumber: 'PO123', currentStage: 'open-jobs', notes: 'Initial inspection pending.' },
-  { id: generateId(), model: 'Model Y200', serialNumber: 'SN002', customer: 'Customer B', poNumber: 'PO456', currentStage: 'assembly', notes: 'Waiting for part XYZ.' },
-  { id: generateId(), model: 'Model Z300 Pro', serialNumber: 'SN003', customer: 'Customer C', poNumber: 'PO789', currentStage: 'testing', powderCoater: 'Acme Powder Coating', powderCoatColor: 'RAL 9005 (Jet Black)', notes: 'High pressure test passed.' },
-  { id: generateId(), model: 'CompactFlow 50', serialNumber: 'SN004', customer: 'Customer A', poNumber: 'PO124', currentStage: 'powder-coat', powderCoater: 'Best Finishers Inc.', powderCoatColor: 'RAL 7035 (Light Grey)' },
+  { id: generateId(), model: PUMP_MODELS[0], serialNumber: generateSerialNumber(), customer: CUSTOMER_NAMES[0], poNumber: 'PO123', currentStage: 'open-jobs', notes: 'Initial inspection pending.' },
+  { id: generateId(), model: PUMP_MODELS[1], serialNumber: generateSerialNumber(), customer: CUSTOMER_NAMES[1], poNumber: 'PO456', currentStage: 'assembly', notes: 'Waiting for part XYZ.' },
+  { id: generateId(), model: PUMP_MODELS[2], serialNumber: generateSerialNumber(), customer: CUSTOMER_NAMES[2], poNumber: 'PO789', currentStage: 'testing', powderCoater: POWDER_COATERS[0], powderCoatColor: DEFAULT_POWDER_COAT_COLORS[0], notes: 'High pressure test passed.' },
+  { id: generateId(), model: PUMP_MODELS[3], serialNumber: generateSerialNumber(), customer: CUSTOMER_NAMES[3], poNumber: 'PO124', currentStage: 'powder-coat', powderCoater: POWDER_COATERS[1], powderCoatColor: DEFAULT_POWDER_COAT_COLORS[1] },
+  { id: generateId(), model: PUMP_MODELS[4], serialNumber: generateSerialNumber(), customer: CUSTOMER_NAMES[4], poNumber: 'PO567', currentStage: 'fabrication' },
 ];
 
 
@@ -46,7 +48,7 @@ export default function HomePage() {
       tempPumps = tempPumps.filter(p => p.serialNumber.toLowerCase().includes(filters.serialNumber!.toLowerCase()));
     }
     if (filters.customer) {
-      tempPumps = tempPumps.filter(p => p.customer.toLowerCase().includes(filters.customer!.toLowerCase()));
+      tempPumps = tempPumps.filter(p => p.customer === filters.customer);
     }
     if (filters.poNumber) {
       tempPumps = tempPumps.filter(p => p.poNumber.toLowerCase().includes(filters.poNumber!.toLowerCase()));
@@ -79,7 +81,6 @@ export default function HomePage() {
     const pumpToMove = pumps.find(p => p.id === pumpId);
     if (!pumpToMove) return;
 
-    // Check for missing info for 'powder-coat' stage
     if (newStageId === 'powder-coat' && (!pumpToMove.powderCoater || !pumpToMove.powderCoatColor)) {
       setMissingInfoPump(pumpToMove);
       setMissingInfoTargetStage(newStageId);
@@ -108,7 +109,14 @@ export default function HomePage() {
   }, []);
 
   const allPumpModels = Array.from(new Set(pumps.map(p => p.model).concat(PUMP_MODELS))).sort();
-  const allPowderCoaters = Array.from(new Set(pumps.map(p => p.powderCoater).filter(Boolean).concat(POWDER_COATERS))).sort();
+  
+  // Refactored allPowderCoaters derivation
+  const powderCoatersInPumps = pumps
+    .map(p => p.powderCoater)
+    .filter((pc): pc is string => typeof pc === 'string' && pc.length > 0);
+  const allPowderCoaters = Array.from(new Set(powderCoatersInPumps.concat(POWDER_COATERS))).sort();
+  
+  const allCustomerNames = Array.from(new Set(pumps.map(p => p.customer).concat(CUSTOMER_NAMES))).sort();
 
 
   return (
@@ -121,6 +129,7 @@ export default function HomePage() {
         onFiltersChange={setFilters}
         availablePumpModels={allPumpModels}
         availablePowderCoaters={allPowderCoaters}
+        availableCustomers={allCustomerNames}
       />
       <main className="flex-grow overflow-hidden">
         <KanbanBoard
@@ -158,4 +167,3 @@ export default function HomePage() {
     </div>
   );
 }
-

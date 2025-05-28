@@ -3,7 +3,7 @@
 
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { PlusCircle, Settings2, FilterX } from 'lucide-react'; // Added FilterX
+import { PlusCircle, Settings2, FilterX } from 'lucide-react';
 import type { ViewMode, Filters } from '@/types';
 import { PumpFilterControls } from '@/components/pump/PumpFilterControls';
 import { Switch } from '@/components/ui/switch';
@@ -20,7 +20,7 @@ import {
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "@/components/ui/tooltip"; // Added Tooltip components
+} from "@/components/ui/tooltip";
 
 interface HeaderProps {
   onAddPump: () => void;
@@ -30,6 +30,7 @@ interface HeaderProps {
   onFiltersChange: (filters: Filters) => void;
   availablePumpModels: string[];
   availablePowderCoaters: string[];
+  availableCustomers: string[]; // Added this prop
 }
 
 export function Header({
@@ -40,6 +41,7 @@ export function Header({
   onFiltersChange,
   availablePumpModels,
   availablePowderCoaters,
+  availableCustomers, // Destructure new prop
 }: HeaderProps) {
   const activeFilterCount = Object.values(filters).filter(value => value !== undefined && value !== '').length;
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -57,7 +59,7 @@ export function Header({
           </svg>
           <h1 className="text-2xl font-bold text-primary">PumpTrack</h1>
         </div>
-        <div className="flex items-center gap-2 sm:gap-3 flex-wrap justify-center sm:justify-end"> {/* Adjusted gap */}
+        <div className="flex items-center gap-2 sm:gap-3 flex-wrap justify-center sm:justify-end">
           <DropdownMenu open={isMenuOpen} onOpenChange={setIsMenuOpen}>
             <DropdownMenuTrigger asChild>
               <Button
@@ -74,9 +76,10 @@ export function Header({
               <DropdownMenuSeparator />
               <PumpFilterControls
                 filters={filters}
-                onFiltersChange={onFiltersChange} // Pass onFiltersChange directly
+                onFiltersChange={onFiltersChange}
                 availablePumpModels={availablePumpModels}
                 availablePowderCoaters={availablePowderCoaters}
+                availableCustomers={availableCustomers} // Pass new prop
               />
             </DropdownMenuContent>
           </DropdownMenu>
@@ -89,7 +92,7 @@ export function Header({
                     variant="ghost"
                     size="icon"
                     onClick={handleClearFilters}
-                    className="h-9 w-9" // Match size of filter button
+                    className="h-9 w-9"
                     aria-label="Clear all filters"
                   >
                     <FilterX className="h-4 w-4" />
