@@ -1,5 +1,6 @@
 
 import type { LucideIcon } from 'lucide-react';
+import type { PRIORITY_LEVELS } from '@/lib/constants';
 
 export type StageId =
   | 'open-jobs'
@@ -8,6 +9,8 @@ export type StageId =
   | 'testing'
   | 'powder-coat'
   | 'shipped';
+
+export type PriorityLevel = typeof PRIORITY_LEVELS[number]['value'];
 
 export interface Pump {
   id: string;
@@ -19,6 +22,7 @@ export interface Pump {
   powderCoater?: string;
   powderCoatColor?: string;
   notes?: string;
+  priority?: PriorityLevel;
 }
 
 export interface Stage {
@@ -27,7 +31,7 @@ export interface Stage {
   icon: LucideIcon;
 }
 
-export type ViewMode = 'default' | 'condensed'; // Updated
+export type ViewMode = 'default' | 'condensed';
 
 export interface Filters {
   serialNumber?: string;
@@ -35,4 +39,6 @@ export interface Filters {
   poNumber?: string;
   model?: string;
   powderCoater?: string;
+  priority?: PriorityLevel;
 }
+

@@ -7,9 +7,9 @@ import { KanbanBoard } from '@/components/kanban/KanbanBoard';
 import { AddPumpForm } from '@/components/pump/AddPumpForm';
 import { PumpDetailsModal } from '@/components/pump/PumpDetailsModal';
 import { MissingInfoModal } from '@/components/pump/MissingInfoModal';
-import { GroupedPumpDetailsModal } from '@/components/pump/GroupedPumpDetailsModal'; // Added import
-import type { Pump, StageId, ViewMode, Filters } from '@/types';
-import { STAGES, POWDER_COATERS, PUMP_MODELS, CUSTOMER_NAMES, DEFAULT_POWDER_COAT_COLORS } from '@/lib/constants';
+import { GroupedPumpDetailsModal } from '@/components/pump/GroupedPumpDetailsModal';
+import type { Pump, StageId, ViewMode, Filters, PriorityLevel } from '@/types';
+import { STAGES, POWDER_COATERS, PUMP_MODELS, CUSTOMER_NAMES, DEFAULT_POWDER_COAT_COLORS, PRIORITY_LEVELS } from '@/lib/constants';
 import { useToast } from '@/hooks/use-toast';
 
 const generateId = () => crypto.randomUUID();
@@ -32,7 +32,6 @@ export default function HomePage() {
 
   const [selectedPumpIdsForDrag, setSelectedPumpIdsForDrag] = useState<string[]>([]);
 
-  // State for GroupedPumpDetailsModal
   const [selectedGroupForDetails, setSelectedGroupForDetails] = useState<{ model: string; pumps: Pump[] } | null>(null);
   const [isGroupDetailsModalOpen, setIsGroupDetailsModalOpen] = useState(false);
 
@@ -41,14 +40,14 @@ export default function HomePage() {
   
   useEffect(() => {
     const initialSamplePumps: Pump[] = [
-      { id: generateId(), model: PUMP_MODELS[0], serialNumber: generateRandomSerialNumber(), customer: CUSTOMER_NAMES[0], poNumber: 'PO123', currentStage: 'open-jobs', notes: 'Initial inspection pending.' },
-      { id: generateId(), model: PUMP_MODELS[1], serialNumber: generateRandomSerialNumber(), customer: CUSTOMER_NAMES[1], poNumber: 'PO456', currentStage: 'assembly', notes: 'Waiting for part XYZ.' },
-      { id: generateId(), model: PUMP_MODELS[0], serialNumber: generateRandomSerialNumber(), customer: CUSTOMER_NAMES[0], poNumber: 'PO788', currentStage: 'open-jobs', notes: 'Urgent.' },
-      { id: generateId(), model: PUMP_MODELS[2], serialNumber: generateRandomSerialNumber(), customer: CUSTOMER_NAMES[2], poNumber: 'PO789', currentStage: 'testing', powderCoater: POWDER_COATERS[0], powderCoatColor: DEFAULT_POWDER_COAT_COLORS[0], notes: 'High pressure test passed.' },
-      { id: generateId(), model: PUMP_MODELS[3], serialNumber: generateRandomSerialNumber(), customer: CUSTOMER_NAMES[3], poNumber: 'PO124', currentStage: 'powder-coat', powderCoater: POWDER_COATERS[1], powderCoatColor: DEFAULT_POWDER_COAT_COLORS[1] },
-      { id: generateId(), model: PUMP_MODELS[0], serialNumber: generateRandomSerialNumber(), customer: CUSTOMER_NAMES[1], poNumber: 'PO101', currentStage: 'open-jobs', notes: 'Needs quick turnaround' },
-      { id: generateId(), model: PUMP_MODELS[4], serialNumber: generateRandomSerialNumber(), customer: CUSTOMER_NAMES[4], poNumber: 'PO567', currentStage: 'fabrication' },
-      { id: generateId(), model: PUMP_MODELS[0], serialNumber: generateRandomSerialNumber(), customer: CUSTOMER_NAMES[2], poNumber: 'PO202', currentStage: 'open-jobs' },
+      { id: generateId(), model: PUMP_MODELS[0], serialNumber: generateRandomSerialNumber(), customer: CUSTOMER_NAMES[0], poNumber: 'PO123', currentStage: 'open-jobs', notes: 'Initial inspection pending.', priority: 'normal' },
+      { id: generateId(), model: PUMP_MODELS[1], serialNumber: generateRandomSerialNumber(), customer: CUSTOMER_NAMES[1], poNumber: 'PO456', currentStage: 'assembly', notes: 'Waiting for part XYZ.', priority: 'high' },
+      { id: generateId(), model: PUMP_MODELS[0], serialNumber: generateRandomSerialNumber(), customer: CUSTOMER_NAMES[0], poNumber: 'PO788', currentStage: 'open-jobs', notes: 'Urgent.', priority: 'urgent' },
+      { id: generateId(), model: PUMP_MODELS[2], serialNumber: generateRandomSerialNumber(), customer: CUSTOMER_NAMES[2], poNumber: 'PO789', currentStage: 'testing', powderCoater: POWDER_COATERS[0], powderCoatColor: DEFAULT_POWDER_COAT_COLORS[0], notes: 'High pressure test passed.', priority: 'normal' },
+      { id: generateId(), model: PUMP_MODELS[3], serialNumber: generateRandomSerialNumber(), customer: CUSTOMER_NAMES[3], poNumber: 'PO124', currentStage: 'powder-coat', powderCoater: POWDER_COATERS[1], powderCoatColor: DEFAULT_POWDER_COAT_COLORS[1], priority: 'high' },
+      { id: generateId(), model: PUMP_MODELS[0], serialNumber: generateRandomSerialNumber(), customer: CUSTOMER_NAMES[1], poNumber: 'PO101', currentStage: 'open-jobs', notes: 'Needs quick turnaround', priority: 'urgent' },
+      { id: generateId(), model: PUMP_MODELS[4], serialNumber: generateRandomSerialNumber(), customer: CUSTOMER_NAMES[4], poNumber: 'PO567', currentStage: 'fabrication', priority: 'normal' },
+      { id: generateId(), model: PUMP_MODELS[0], serialNumber: generateRandomSerialNumber(), customer: CUSTOMER_NAMES[2], poNumber: 'PO202', currentStage: 'open-jobs', priority: 'normal' },
     ];
     setPumps(initialSamplePumps);
   }, []);
@@ -70,11 +69,14 @@ export default function HomePage() {
     if (filters.powderCoater) {
       tempPumps = tempPumps.filter(p => p.powderCoater === filters.powderCoater);
     }
+    if (filters.priority) {
+      tempPumps = tempPumps.filter(p => (p.priority || 'normal') === filters.priority);
+    }
     setFilteredPumps(tempPumps);
   }, [pumps, filters]);
 
-  const handleAddPump = useCallback((newPumpData: Omit<Pump, 'id' | 'currentStage'> & { quantity: number; serialNumber?: string }) => {
-    const { quantity, serialNumber: startSerialNumberInput, ...basePumpData } = newPumpData;
+  const handleAddPump = useCallback((newPumpData: Omit<Pump, 'id' | 'currentStage'> & { quantity: number; serialNumber?: string; priority?: PriorityLevel }) => {
+    const { quantity, serialNumber: startSerialNumberInput, priority, ...basePumpData } = newPumpData;
     const newPumps: Pump[] = [];
     let currentSerialNumberNumeric = -1;
     const startSerialNumber = startSerialNumberInput?.trim() === '' ? undefined : startSerialNumberInput;
@@ -95,8 +97,9 @@ export default function HomePage() {
       } else if (quantity > 1 && !startSerialNumber) {
         // Serial number remains undefined for batch add without starting SN
       } else if (quantity === 1 && (!startSerialNumber || !/^MSP-JN-\d{4}$/.test(startSerialNumber))) {
+        // This case should be caught by form validation, but as a safeguard:
         console.error("Serial number is required and must be valid for single pump addition.");
-        toast({ variant: "destructive", title: "Validation Error", description: "Serial number is required and must be in MSP-JN-XXXX format for single pump addition." });
+        toast({ variant: "destructive", title: "Validation Error", description: "Serial number is required for single pump addition." });
         return; 
       }
 
@@ -106,6 +109,7 @@ export default function HomePage() {
         serialNumber: pumpSerialNumber,
         currentStage: 'open-jobs',
         notes: basePumpData.notes || undefined,
+        priority: priority || 'normal',
       };
       newPumps.push(newPump);
     }
@@ -164,6 +168,7 @@ export default function HomePage() {
         setMissingInfoTargetStage(newStageId);
         setIsMissingInfoModalOpen(true);
       }
+      // Do not move any pumps if any are missing info for powder coat stage
       toast({
         variant: "destructive",
         title: "Move Aborted",
@@ -205,16 +210,20 @@ export default function HomePage() {
       event.preventDefault();
       setSelectedPumpIdsForDrag(prevSelectedIds => {
         const firstSelectedPump = pumps.find(p => p.id === prevSelectedIds[0]);
-        if (firstSelectedPump && firstSelectedPump.currentStage !== clickedPump.currentStage) {
-          return [clickedPump.id];
-        }
+        // Allow selection across different stages when using CTRL/Meta
         if (prevSelectedIds.includes(clickedPump.id)) {
           return prevSelectedIds.filter(id => id !== clickedPump.id);
         } else {
+          // If the new click is on a card from a different stage than the currently selected ones,
+          // OR if no cards are selected yet, start a new selection group.
+          if (prevSelectedIds.length === 0 || (firstSelectedPump && firstSelectedPump.currentStage !== clickedPump.currentStage)) {
+            return [clickedPump.id];
+          }
           return [...prevSelectedIds, clickedPump.id];
         }
       });
     } else {
+      // Normal click without CTRL/Meta always starts a new selection with just the clicked card
       setSelectedPumpIdsForDrag([clickedPump.id]);
     }
   }, [pumps]);
@@ -236,6 +245,7 @@ export default function HomePage() {
   
   const allSerialNumbers = Array.from(new Set(pumps.map(p => p.serialNumber).filter((sn): sn is string => !!sn))).sort();
   const allPONumbers = Array.from(new Set(pumps.map(p => p.poNumber))).sort();
+  const allPriorities = PRIORITY_LEVELS;
 
 
   return (
@@ -251,6 +261,7 @@ export default function HomePage() {
         availableCustomers={allCustomerNames}
         availableSerialNumbers={allSerialNumbers}
         availablePONumbers={allPONumbers}
+        availablePriorities={allPriorities.map(p => ({label: p.label, value: p.value}))}
       />
       <main className="flex-grow overflow-hidden">
         <KanbanBoard
@@ -259,7 +270,7 @@ export default function HomePage() {
           onPumpMove={handlePumpMove}
           onMultiplePumpsMove={handleMultiplePumpsMove}
           onOpenPumpDetailsModal={handleOpenPumpDetailsModal}
-          onOpenGroupDetailsModal={handleOpenGroupDetailsModal} // Pass down new handler
+          onOpenGroupDetailsModal={handleOpenGroupDetailsModal}
           selectedPumpIdsForDrag={selectedPumpIdsForDrag}
           onPumpCardClick={handlePumpCardClick}
         />

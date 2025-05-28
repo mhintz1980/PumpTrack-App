@@ -26,21 +26,22 @@ import {
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Combobox } from '@/components/ui/combobox';
-import type { Pump, StageId } from '@/types';
-import { STAGES, POWDER_COATERS, PUMP_MODELS, DEFAULT_POWDER_COAT_COLORS, CUSTOMER_NAMES } from '@/lib/constants';
+import type { Pump, StageId, PriorityLevel } from '@/types';
+import { STAGES, POWDER_COATERS, PUMP_MODELS, DEFAULT_POWDER_COAT_COLORS, CUSTOMER_NAMES, PRIORITY_LEVELS } from '@/lib/constants';
 import { AiActions } from '@/components/AiActions';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
 const pumpDetailsSchema = z.object({
   model: z.string().min(1, "Model is required"),
   serialNumber: z.string().optional().refine(val => {
-    if (val === undefined || val.trim() === '') return true; // Optional, so empty/undefined is fine
+    if (val === undefined || val.trim() === '') return true; 
     return /^MSP-JN-\d{4}$/.test(val);
   }, { message: "Serial number must be in MSP-JN-XXXX format if provided." }),
   customer: z.string().min(1, "Customer name is required"),
   poNumber: z.string().min(1, "PO number is required"),
   powderCoater: z.string().optional(),
   powderCoatColor: z.string().optional(),
+  priority: z.enum(PRIORITY_LEVELS.map(p => p.value) as [PriorityLevel, ...PriorityLevel[]]).default('normal'),
   notes: z.string().optional(),
 });
 
@@ -67,10 +68,11 @@ export function PumpDetailsModal({ isOpen, onClose, pump, onUpdatePump }: PumpDe
         poNumber: pump.poNumber,
         powderCoater: pump.powderCoater || '',
         powderCoatColor: pump.powderCoatColor || '',
+        priority: pump.priority || 'normal',
         notes: pump.notes || '',
       });
     }
-  }, [pump, form, isOpen]); // Added isOpen to deps to ensure reset when modal reopens with same pump
+  }, [pump, form, isOpen]); 
   
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -84,6 +86,7 @@ export function PumpDetailsModal({ isOpen, onClose, pump, onUpdatePump }: PumpDe
       serialNumber: data.serialNumber?.trim() === '' ? undefined : data.serialNumber,
       powderCoater: data.powderCoater?.trim() === '' ? undefined : data.powderCoater,
       powderCoatColor: data.powderCoatColor?.trim() === '' ? undefined : data.powderCoatColor,
+      priority: data.priority,
       notes: data.notes?.trim() === '' ? undefined : data.notes,
     };
     onUpdatePump(updatedPumpData);
@@ -99,6 +102,7 @@ export function PumpDetailsModal({ isOpen, onClose, pump, onUpdatePump }: PumpDe
   const customerOptions = CUSTOMER_NAMES.map(c => ({ label: c, value: c }));
   const powderCoaterOptions = POWDER_COATERS.map(pc => ({ label: pc, value: pc }));
   const powderCoatColorOptions = DEFAULT_POWDER_COAT_COLORS.map(color => ({ label: color, value: color }));
+  const priorityOptions = PRIORITY_LEVELS.map(p => ({ label: p.label, value: p.value }));
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => {if (!open) onClose()}}>
@@ -110,9 +114,9 @@ export function PumpDetailsModal({ isOpen, onClose, pump, onUpdatePump }: PumpDe
             View or edit pump information below.
           </DialogDescription>
         </DialogHeader>
-        <ScrollArea className="flex-grow pr-6 -mr-6"> {/* Added pr-6 -mr-6 for scrollbar visibility */}
+        <ScrollArea className="flex-grow pr-6 -mr-6">
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 py-2"> {/* Added py-2 */}
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 py-2">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
@@ -178,6 +182,25 @@ export function PumpDetailsModal({ isOpen, onClose, pump, onUpdatePump }: PumpDe
                     </FormItem>
                   )}
                 />
+                 <FormField
+                    control={form.control}
+                    name="priority"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-col">
+                        <FormLabel>Priority</FormLabel>
+                        <Combobox
+                          options={priorityOptions}
+                          value={field.value}
+                          onChange={field.onChange}
+                          placeholder="Select priority"
+                          searchPlaceholder="Search priorities..."
+                          emptyText="No priority found."
+                          disabled={isSubmitting}
+                        />
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
                  {showPowderCoatFields && (
                   <>
                     <FormField
@@ -212,7 +235,7 @@ export function PumpDetailsModal({ isOpen, onClose, pump, onUpdatePump }: PumpDe
                             placeholder="Select or type color"
                             searchPlaceholder="Search colors..."
                             emptyText="No color found. Type to add."
-                            allowCustomValue={true} // Assuming Combobox supports this prop or behavior
+                            allowCustomValue={true} 
                             disabled={isSubmitting}
                           />
                           <FormMessage />

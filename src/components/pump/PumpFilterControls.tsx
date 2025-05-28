@@ -14,6 +14,7 @@ interface PumpFilterControlsProps {
   availableCustomers: string[];
   availableSerialNumbers: string[];
   availablePONumbers: string[];
+  availablePriorities: { label: string; value: string }[];
 }
 
 export function PumpFilterControls({
@@ -24,6 +25,7 @@ export function PumpFilterControls({
   availableCustomers,
   availableSerialNumbers,
   availablePONumbers,
+  availablePriorities,
 }: PumpFilterControlsProps) {
 
   const handleComboboxChange = (name: keyof Filters, value: string) => {
@@ -35,6 +37,7 @@ export function PumpFilterControls({
   const powderCoaterOptions = availablePowderCoaters.map(pc => ({ label: pc, value: pc }));
   const serialNumberOptions = availableSerialNumbers.map(sn => ({ label: sn, value: sn}));
   const poNumberOptions = availablePONumbers.map(po => ({ label: po, value: po }));
+  // availablePriorities is already in { label, value } format
 
   return (
     <div className="space-y-4">
@@ -95,6 +98,18 @@ export function PumpFilterControls({
           placeholder="All Coaters"
           searchPlaceholder="Search coaters..."
           emptyText="No coater found."
+          className="mt-1 h-8 text-sm"
+        />
+      </div>
+      <div>
+        <Label htmlFor="priorityFilter" className="text-xs">Priority</Label>
+        <Combobox
+          options={availablePriorities}
+          value={filters.priority || ''}
+          onChange={(value) => handleComboboxChange('priority', value as Filters['priority'])}
+          placeholder="All Priorities"
+          searchPlaceholder="Search priorities..."
+          emptyText="No priority found."
           className="mt-1 h-8 text-sm"
         />
       </div>

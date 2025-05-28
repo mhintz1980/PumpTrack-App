@@ -34,9 +34,20 @@ export function KanbanCard({
   const displaySerialNumber = pump.serialNumber || 'N/A';
 
   const handleEyeClick = (e: React.MouseEvent) => {
-    e.stopPropagation(); // Prevent card's onClick from firing
+    e.stopPropagation(); 
     if (onOpenDetailsModal) {
       onOpenDetailsModal();
+    }
+  };
+
+  const priorityClass = () => {
+    switch (pump.priority) {
+      case 'high':
+        return 'border-orange-500';
+      case 'urgent':
+        return 'border-red-600';
+      default:
+        return '';
     }
   };
 
@@ -47,9 +58,10 @@ export function KanbanCard({
       onClick={onCardClick}
       className={cn(
         "mb-3 shadow-md hover:shadow-lg hover:scale-[1.02] transition-all duration-150 ease-in-out bg-card group cursor-pointer",
-        isSelected && "ring-2 ring-primary ring-offset-1 border-primary"
+        priorityClass(),
+        isSelected && "ring-2 ring-primary ring-offset-1" // Selection ring, border controlled by priority or default
       )}
-      aria-label={`Pump Model: ${pump.model}, Customer: ${pump.customer}, S/N: ${displaySerialNumber}`}
+      aria-label={`Pump Model: ${pump.model}, Customer: ${pump.customer}, S/N: ${displaySerialNumber}, Priority: ${pump.priority || 'normal'}`}
     >
       <CardHeader className="p-3 flex flex-row items-start justify-between space-y-0">
         <div className="flex-grow pr-2">

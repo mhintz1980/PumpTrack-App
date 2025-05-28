@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useEffect } from 'react';
+import React from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -25,8 +25,8 @@ import {
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Combobox } from '@/components/ui/combobox';
-import type { Pump } from '@/types';
-import { PUMP_MODELS, CUSTOMER_NAMES } from '@/lib/constants';
+import type { Pump, PriorityLevel } from '@/types';
+import { PUMP_MODELS, CUSTOMER_NAMES, PRIORITY_LEVELS } from '@/lib/constants';
 
 const pumpFormSchemaBase = z.object({
   model: z.string().min(1, "Model is required"),
@@ -35,6 +35,7 @@ const pumpFormSchemaBase = z.object({
   notes: z.string().optional(),
   quantity: z.number().min(1, "Quantity must be at least 1").int("Quantity must be an integer").default(1),
   serialNumber: z.string().optional(),
+  priority: z.enum(PRIORITY_LEVELS.map(p => p.value) as [PriorityLevel, ...PriorityLevel[]]).default('normal'),
 });
 
 const pumpFormSchema = pumpFormSchemaBase.superRefine((data, ctx) => {
@@ -69,7 +70,7 @@ type PumpFormValues = z.infer<typeof pumpFormSchema>;
 interface AddPumpFormProps {
   isOpen: boolean;
   onClose: () => void;
-  onAddPump: (newPumpData: Omit<Pump, 'id' | 'currentStage'> & { quantity: number; serialNumber?: string }) => void;
+  onAddPump: (newPumpData: Omit<Pump, 'id' | 'currentStage'> & { quantity: number; serialNumber?: string; priority?: PriorityLevel }) => void;
 }
 
 export function AddPumpForm({ isOpen, onClose, onAddPump }: AddPumpFormProps) {
@@ -77,11 +78,12 @@ export function AddPumpForm({ isOpen, onClose, onAddPump }: AddPumpFormProps) {
     resolver: zodResolver(pumpFormSchema),
     defaultValues: {
       model: '',
-      serialNumber: '', // Default to empty string
+      serialNumber: '',
       customer: '',
       poNumber: '',
       notes: '',
       quantity: 1,
+      priority: 'normal',
     },
   });
 
@@ -91,11 +93,12 @@ export function AddPumpForm({ isOpen, onClose, onAddPump }: AddPumpFormProps) {
   const handleClose = () => {
     form.reset({
       model: '',
-      serialNumber: '', // Reset to empty string
+      serialNumber: '',
       customer: '',
       poNumber: '',
       notes: '',
       quantity: 1,
+      priority: 'normal',
     });
     onClose();
   };
@@ -108,7 +111,8 @@ export function AddPumpForm({ isOpen, onClose, onAddPump }: AddPumpFormProps) {
       poNumber: data.poNumber,
       notes: data.notes,
       quantity: data.quantity,
-      serialNumber: data.serialNumber?.trim() === '' ? undefined : data.serialNumber // Ensure empty string is passed as undefined
+      serialNumber: data.serialNumber?.trim() === '' ? undefined : data.serialNumber,
+      priority: data.priority,
     });
     setIsSubmitting(false);
     handleClose();
@@ -116,6 +120,7 @@ export function AddPumpForm({ isOpen, onClose, onAddPump }: AddPumpFormProps) {
   
   const pumpModelOptions = PUMP_MODELS.map(model => ({ label: model, value: model }));
   const customerOptions = CUSTOMER_NAMES.map(customer => ({ label: customer, value: customer }));
+  const priorityOptions = PRIORITY_LEVELS.map(p => ({ label: p.label, value: p.value }));
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => { if (!open) handleClose(); }}>
@@ -204,7 +209,7 @@ export function AddPumpForm({ isOpen, onClose, onAddPump }: AddPumpFormProps) {
                     <Input 
                       placeholder={
                         quantity > 1 
-                          ? "MSP-JN-XXXX (optional, e.g., MSP-JN-1001)" 
+                          ? "MSP-JN-XXXX (e.g., MSP-JN-1001)" 
                           : "MSP-JN-XXXX (e.g., MSP-JN-1234)"
                       } 
                       {...field} 
@@ -212,6 +217,25 @@ export function AddPumpForm({ isOpen, onClose, onAddPump }: AddPumpFormProps) {
                       disabled={isSubmitting} 
                     />
                   </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="priority"
+              render={({ field }) => (
+                <FormItem className="flex flex-col">
+                  <FormLabel>Priority</FormLabel>
+                  <Combobox
+                    options={priorityOptions}
+                    value={field.value}
+                    onChange={field.onChange}
+                    placeholder="Select priority"
+                    searchPlaceholder="Search priorities..."
+                    emptyText="No priority found."
+                    disabled={isSubmitting}
+                  />
                   <FormMessage />
                 </FormItem>
               )}

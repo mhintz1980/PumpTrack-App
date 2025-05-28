@@ -52,3 +52,9 @@ export const DEFAULT_POWDER_COAT_COLORS: string[] = [
   'RAL 3020 (Traffic Red)',
   'RAL 6018 (Yellow Green)',
 ];
+
+export const PRIORITY_LEVELS = [
+  { value: 'normal', label: 'Normal' },
+  { value: 'high', label: 'High' },
+  { value: 'urgent', label: 'Urgent' },
+] as const;

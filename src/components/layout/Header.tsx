@@ -33,6 +33,7 @@ interface HeaderProps {
   availableCustomers: string[];
   availableSerialNumbers: string[];
   availablePONumbers: string[];
+  availablePriorities: { label: string; value: string }[];
 }
 
 export function Header({
@@ -46,6 +47,7 @@ export function Header({
   availableCustomers,
   availableSerialNumbers,
   availablePONumbers,
+  availablePriorities,
 }: HeaderProps) {
   const activeFilterCount = Object.values(filters).filter(value => value !== undefined && value !== '').length;
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -94,6 +96,7 @@ export function Header({
                   availableCustomers={availableCustomers}
                   availableSerialNumbers={availableSerialNumbers}
                   availablePONumbers={availablePONumbers}
+                  availablePriorities={availablePriorities}
                 />
               </DropdownMenuContent>
             </DropdownMenu>
