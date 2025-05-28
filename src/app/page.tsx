@@ -18,7 +18,7 @@ import {
   SidebarMenuButton,
   SidebarInset,
 } from '@/components/ui/sidebar';
-import { Home, Mail, NotebookText, AppWindow, FolderKanban } from 'lucide-react';
+import { LayoutDashboard, BarChart2, CalendarDays, BrainCircuit } from 'lucide-react';
 import type { Pump, StageId, ViewMode, Filters, PriorityLevel } from '@/types';
 import { STAGES, POWDER_COATERS, PUMP_MODELS, CUSTOMER_NAMES, DEFAULT_POWDER_COAT_COLORS, PRIORITY_LEVELS } from '@/lib/constants';
 import { useToast } from '@/hooks/use-toast';
@@ -306,19 +306,16 @@ export default function HomePage() {
         <SidebarContent>
           <SidebarMenu>
             <SidebarMenuItem>
-              <SidebarMenuButton tooltip="My Actions"><Home /> My Actions</SidebarMenuButton>
+              <SidebarMenuButton tooltip="Kanban Board"><LayoutDashboard /> Kanban Board</SidebarMenuButton>
             </SidebarMenuItem>
             <SidebarMenuItem>
-              <SidebarMenuButton tooltip="Mail"><Mail /> Mail</SidebarMenuButton>
+              <SidebarMenuButton tooltip="Charts and Graphs"><BarChart2 /> Charts and Graphs</SidebarMenuButton>
             </SidebarMenuItem>
             <SidebarMenuItem>
-              <SidebarMenuButton tooltip="Notes"><NotebookText /> Notes</SidebarMenuButton>
+              <SidebarMenuButton tooltip="Calendar and Schedule"><CalendarDays /> Calendar and Schedule</SidebarMenuButton>
             </SidebarMenuItem>
             <SidebarMenuItem>
-              <SidebarMenuButton tooltip="Apps"><AppWindow /> Apps</SidebarMenuButton>
-            </SidebarMenuItem>
-            <SidebarMenuItem>
-              <SidebarMenuButton tooltip="Projects"><FolderKanban /> Projects</SidebarMenuButton>
+              <SidebarMenuButton tooltip="A.I. Query"><BrainCircuit /> A.I. Query</SidebarMenuButton>
             </SidebarMenuItem>
           </SidebarMenu>
         </SidebarContent>
