@@ -23,7 +23,9 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Combobox } from '@/components/ui/combobox';
 import type { Pump } from '@/types';
 import { PUMP_MODELS, CUSTOMER_NAMES } from '@/lib/constants';
 
@@ -32,6 +34,7 @@ const pumpFormSchema = z.object({
   serialNumber: z.string().regex(/^MSP-JN-\d{4}$/, "Serial number must be in MSP-JN-XXXX format (e.g., MSP-JN-1234)"),
   customer: z.string().min(1, "Customer name is required"),
   poNumber: z.string().min(1, "PO number is required"),
+  notes: z.string().optional(),
 });
 
 type PumpFormValues = z.infer<typeof pumpFormSchema>;
@@ -50,6 +53,7 @@ export function AddPumpForm({ isOpen, onClose, onAddPump }: AddPumpFormProps) {
       serialNumber: 'MSP-JN-', 
       customer: '',
       poNumber: '',
+      notes: '',
     },
   });
 
@@ -62,17 +66,20 @@ export function AddPumpForm({ isOpen, onClose, onAddPump }: AddPumpFormProps) {
         model: '', 
         serialNumber: 'MSP-JN-', 
         customer: '', 
-        poNumber: '' 
+        poNumber: '',
+        notes: '', 
     });
     setIsSubmitting(false);
     onClose();
   };
+  
+  const pumpModelOptions = PUMP_MODELS.map(model => ({ label: model, value: model }));
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => {
       if (!open) {
         onClose();
-        form.reset({ model: '', serialNumber: 'MSP-JN-', customer: '', poNumber: '' });
+        form.reset({ model: '', serialNumber: 'MSP-JN-', customer: '', poNumber: '', notes: '' });
       }
     }}>
       <DialogContent className="sm:max-w-[425px]">
@@ -88,20 +95,17 @@ export function AddPumpForm({ isOpen, onClose, onAddPump }: AddPumpFormProps) {
               control={form.control}
               name="model"
               render={({ field }) => (
-                <FormItem>
+                <FormItem className="flex flex-col">
                   <FormLabel>Pump Model</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select a model" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {PUMP_MODELS.map(model => (
-                        <SelectItem key={model} value={model}>{model}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <Combobox
+                    options={pumpModelOptions}
+                    value={field.value}
+                    onChange={field.onChange}
+                    placeholder="Select a model"
+                    searchPlaceholder="Search models..."
+                    emptyText="No model found."
+                    disabled={isSubmitting}
+                  />
                   <FormMessage />
                 </FormItem>
               )}
@@ -113,7 +117,7 @@ export function AddPumpForm({ isOpen, onClose, onAddPump }: AddPumpFormProps) {
                 <FormItem>
                   <FormLabel>Serial Number</FormLabel>
                   <FormControl>
-                    <Input placeholder="Enter last 4 digits (e.g., 1234)" {...field} />
+                    <Input placeholder="Enter last 4 digits (e.g., 1234)" {...field} disabled={isSubmitting} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -125,7 +129,7 @@ export function AddPumpForm({ isOpen, onClose, onAddPump }: AddPumpFormProps) {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Customer Name</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <Select onValueChange={field.onChange} defaultValue={field.value} disabled={isSubmitting}>
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Select a customer" />
@@ -148,7 +152,25 @@ export function AddPumpForm({ isOpen, onClose, onAddPump }: AddPumpFormProps) {
                 <FormItem>
                   <FormLabel>PO Number</FormLabel>
                   <FormControl>
-                    <Input placeholder="e.g., PO-67890" {...field} />
+                    <Input placeholder="e.g., PO-67890" {...field} disabled={isSubmitting} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="notes"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Notes</FormLabel>
+                  <FormControl>
+                    <Textarea
+                      placeholder="Add any relevant notes for this pump..."
+                      className="resize-none"
+                      {...field}
+                      disabled={isSubmitting}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -157,7 +179,7 @@ export function AddPumpForm({ isOpen, onClose, onAddPump }: AddPumpFormProps) {
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => {
                 onClose();
-                form.reset({ model: '', serialNumber: 'MSP-JN-', customer: '', poNumber: '' });
+                form.reset({ model: '', serialNumber: 'MSP-JN-', customer: '', poNumber: '', notes: '' });
               }} disabled={isSubmitting}>
                 Cancel
               </Button>

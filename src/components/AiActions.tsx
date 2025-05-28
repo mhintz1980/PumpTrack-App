@@ -5,6 +5,8 @@ import React, { useState } from 'react';
 import type { Pump } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
+import { Input } from '@/components/ui/input'; // Added Input import
+import { Label } from '@/components/ui/label'; // Added Label import
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Loader2, Wand2, ListChecks, Mail } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
@@ -164,10 +166,3 @@ export function AiActions({ pump }: AiActionsProps) {
     </div>
   );
 }
-
-// Need to add Label component if not already globally available or imported
-const Label = ({ htmlFor, className, children }: { htmlFor?: string, className?: string, children: React.ReactNode }) => (
-  <label htmlFor={htmlFor} className={`text-sm font-medium text-foreground ${className}`}>
-    {children}
-  </label>
-);
