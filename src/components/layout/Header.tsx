@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useState } from 'react'; // Added useState
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { PlusCircle, Settings2 } from 'lucide-react';
 import type { ViewMode, Filters } from '@/types';
@@ -38,11 +38,13 @@ export function Header({
   const activeFilterCount = Object.values(filters).filter(value => value !== undefined && value !== '').length;
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
-  const handleFilterButtonClick = () => {
+  // This handler is for the Button's onClick.
+  // It will clear filters if any are active.
+  // The DropdownMenu's onOpenChange will handle toggling isMenuOpen.
+  const handleButtonClick = () => {
     if (activeFilterCount > 0) {
       onFiltersChange({}); // Clear filters
     }
-    setIsMenuOpen(prev => !prev); // Toggle menu visibility
   };
 
   return (
@@ -60,22 +62,20 @@ export function Header({
               <Button
                 variant="outline"
                 size="sm"
-                onClick={handleFilterButtonClick} // Use the new handler
+                onClick={handleButtonClick} // Use the simplified handler
                 aria-label={activeFilterCount > 0 ? `Clear ${activeFilterCount} filters and toggle menu` : "Open filters menu"}
               >
                 <Settings2 className="mr-2 h-4 w-4" />
                 {activeFilterCount > 0 ? `Filters (${activeFilterCount} Applied)` : "Filters"}
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent className="w-72 p-4" align="end"> {/* Added align="end" for better positioning */}
+            <DropdownMenuContent className="w-72 p-4" align="end">
               <DropdownMenuLabel>Filter Pumps</DropdownMenuLabel>
               <DropdownMenuSeparator />
               <PumpFilterControls
                 filters={filters}
                 onFiltersChange={(newFilters) => {
                   onFiltersChange(newFilters);
-                  // Optionally keep menu open after applying a filter from controls
-                  // setIsMenuOpen(true); 
                 }}
                 availablePumpModels={availablePumpModels}
                 availablePowderCoaters={availablePowderCoaters}
