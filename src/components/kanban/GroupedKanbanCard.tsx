@@ -4,20 +4,24 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Layers } from 'lucide-react'; // Or Ungroup, or similar
 import type { Pump } from '@/types';
 
 interface GroupedKanbanCardProps {
   model: string;
   pumpsInGroup: Pump[];
   onDragStartCustomerGroup: (event: React.DragEvent<HTMLButtonElement>, pumpsToDrag: Pump[]) => void;
-  onOpenGroupDetailsModal?: (model: string, pumpsInGroup: Pump[]) => void; // Added prop
+  onOpenGroupDetailsModal?: (model: string, pumpsInGroup: Pump[]) => void;
+  onToggleExplode?: () => void;
 }
 
 export function GroupedKanbanCard({ 
   model, 
   pumpsInGroup, 
   onDragStartCustomerGroup,
-  onOpenGroupDetailsModal, // Destructure new prop
+  onOpenGroupDetailsModal,
+  onToggleExplode,
 }: GroupedKanbanCardProps) {
   const totalQuantity = pumpsInGroup.length;
 
@@ -37,16 +41,43 @@ export function GroupedKanbanCard({
     }
   };
 
+  const handleExplodeClick = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent double click from firing
+    if (onToggleExplode) {
+      onToggleExplode();
+    }
+  };
+
   return (
     <Card 
       className="mb-3 shadow-md bg-card cursor-pointer"
-      onDoubleClick={handleDoubleClick} // Added onDoubleClick handler
+      onDoubleClick={handleDoubleClick}
       aria-label={`Grouped pumps for model ${model}, total ${totalQuantity}. Double-click to see details.`}
     >
-      <CardHeader className="p-3">
+      <CardHeader className="p-3 flex items-center justify-between">
         <CardTitle className="text-base font-semibold">
           {model} (Total: {totalQuantity})
         </CardTitle>
+        {onToggleExplode && (
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-7 w-7 text-muted-foreground hover:text-primary"
+                  onClick={handleExplodeClick}
+                  aria-label="Show individual pumps"
+                >
+                  <Layers className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Show individual pumps</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        )}
       </CardHeader>
       <CardContent className="p-3 pt-0 flex flex-wrap gap-2">
         {Object.entries(customerCounts).map(([customer, count]) => (
@@ -66,3 +97,5 @@ export function GroupedKanbanCard({
     </Card>
   );
 }
+
+    

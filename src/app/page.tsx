@@ -35,10 +35,12 @@ export default function HomePage() {
   const [selectedGroupForDetails, setSelectedGroupForDetails] = useState<{ model: string; pumps: Pump[] } | null>(null);
   const [isGroupDetailsModalOpen, setIsGroupDetailsModalOpen] = useState(false);
 
+  const [explodedGroups, setExplodedGroups] = useState<Record<StageId, Set<string>>>({});
 
   const { toast } = useToast();
   
   useEffect(() => {
+    // This effect runs once on the client after initial hydration
     const initialSamplePumps: Pump[] = [
       { id: generateId(), model: PUMP_MODELS[0], serialNumber: generateRandomSerialNumber(), customer: CUSTOMER_NAMES[0], poNumber: 'PO123', currentStage: 'open-jobs', notes: 'Initial inspection pending.', priority: 'normal' },
       { id: generateId(), model: PUMP_MODELS[1], serialNumber: generateRandomSerialNumber(), customer: CUSTOMER_NAMES[1], poNumber: 'PO456', currentStage: 'assembly', notes: 'Waiting for part XYZ.', priority: 'high' },
@@ -124,7 +126,7 @@ export default function HomePage() {
 
   const handleUpdatePump = useCallback((updatedPump: Pump) => {
     setPumps(prev => prev.map(p => p.id === updatedPump.id ? updatedPump : p));
-    setSelectedPumpIdsForDrag([]);
+    setSelectedPumpIdsForDrag([]); // Clear selection after update
     toast({ title: "Pump Updated", description: `Details for ${updatedPump.serialNumber || 'Pump'} saved.` });
   }, [toast]);
 
@@ -164,16 +166,16 @@ export default function HomePage() {
 
     if (powderCoatInfoMissing && newStageId === 'powder-coat') {
       if (firstMissingPumpForModal) {
-        setMissingInfoPump(firstMissingPumpForModal);
+        setMissingInfoPump(firstMissingPumpForModal); // Only show modal for the first pump with missing info in the batch for now
         setMissingInfoTargetStage(newStageId);
         setIsMissingInfoModalOpen(true);
       }
-      // Do not move any pumps if any are missing info for powder coat stage
       toast({
         variant: "destructive",
         title: "Move Aborted",
         description: "One or more pumps require powder coat information. Please update them or resolve via the prompted modal.",
       });
+      setSelectedPumpIdsForDrag([]); // Clear selection if move is aborted
       return; 
     }
     
@@ -210,15 +212,14 @@ export default function HomePage() {
       event.preventDefault();
       setSelectedPumpIdsForDrag(prevSelectedIds => {
         const firstSelectedPump = pumps.find(p => p.id === prevSelectedIds[0]);
-        // Allow selection across different stages when using CTRL/Meta
+        // Only allow selection within the same stage when using CTRL/Meta
+        if (prevSelectedIds.length > 0 && firstSelectedPump && firstSelectedPump.currentStage !== clickedPump.currentStage) {
+          return [clickedPump.id]; // Start new selection if stage differs
+        }
+
         if (prevSelectedIds.includes(clickedPump.id)) {
           return prevSelectedIds.filter(id => id !== clickedPump.id);
         } else {
-          // If the new click is on a card from a different stage than the currently selected ones,
-          // OR if no cards are selected yet, start a new selection group.
-          if (prevSelectedIds.length === 0 || (firstSelectedPump && firstSelectedPump.currentStage !== clickedPump.currentStage)) {
-            return [clickedPump.id];
-          }
           return [...prevSelectedIds, clickedPump.id];
         }
       });
@@ -233,27 +234,45 @@ export default function HomePage() {
     setIsGroupDetailsModalOpen(true);
   }, []);
 
+  const handleViewModeChange = useCallback((newMode: ViewMode) => {
+    setViewMode(newMode);
+    setExplodedGroups({}); // Reset exploded state when changing view mode
+  }, []);
+
+  const handleToggleExplodeGroup = useCallback((stageId: StageId, model: string) => {
+    setExplodedGroups(prev => {
+      const newExplodedForStage = new Set(prev[stageId] || []);
+      if (newExplodedForStage.has(model)) {
+        newExplodedForStage.delete(model);
+      } else {
+        newExplodedForStage.add(model);
+      }
+      return {
+        ...prev,
+        [stageId]: newExplodedForStage,
+      };
+    });
+  }, []);
+
 
   const allPumpModels = PUMP_MODELS;
-  
+  const allCustomerNames = CUSTOMER_NAMES;
+  const allPriorities = PRIORITY_LEVELS;
+
   const powderCoatersInPumps = pumps
     .map(p => p.powderCoater)
     .filter((pc): pc is string => typeof pc === 'string' && pc.length > 0);
   const allPowderCoaters = Array.from(new Set(powderCoatersInPumps.concat(POWDER_COATERS))).sort();
-  
-  const allCustomerNames = CUSTOMER_NAMES;
-  
+
   const allSerialNumbers = Array.from(new Set(pumps.map(p => p.serialNumber).filter((sn): sn is string => !!sn))).sort();
   const allPONumbers = Array.from(new Set(pumps.map(p => p.poNumber))).sort();
-  const allPriorities = PRIORITY_LEVELS;
-
 
   return (
     <div className="flex flex-col h-screen bg-background">
       <Header
         onAddPump={() => setIsAddPumpModalOpen(true)}
         viewMode={viewMode}
-        onViewModeChange={setViewMode}
+        onViewModeChange={handleViewModeChange}
         filters={filters}
         onFiltersChange={setFilters}
         availablePumpModels={allPumpModels}
@@ -273,6 +292,8 @@ export default function HomePage() {
           onOpenGroupDetailsModal={handleOpenGroupDetailsModal}
           selectedPumpIdsForDrag={selectedPumpIdsForDrag}
           onPumpCardClick={handlePumpCardClick}
+          explodedGroups={explodedGroups}
+          onToggleExplodeGroup={handleToggleExplodeGroup}
         />
       </main>
 
@@ -316,3 +337,5 @@ export default function HomePage() {
     </div>
   );
 }
+
+    

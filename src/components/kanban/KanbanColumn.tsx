@@ -2,7 +2,7 @@
 "use client";
 
 import React from 'react';
-import type { Pump, Stage, ViewMode } from '@/types';
+import type { Pump, Stage, ViewMode, StageId } from '@/types';
 import { KanbanCard } from './KanbanCard';
 import { GroupedKanbanCard } from './GroupedKanbanCard';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -16,9 +16,11 @@ interface KanbanColumnProps {
   onDragOver: (e: React.DragEvent<HTMLDivElement>) => void;
   onDrop: (e: React.DragEvent<HTMLDivElement>, stageId: Stage['id']) => void;
   onOpenPumpDetailsModal: (pump: Pump) => void;
-  onOpenGroupDetailsModal?: (model: string, pumpsInGroup: Pump[]) => void; // Added prop
+  onOpenGroupDetailsModal?: (model: string, pumpsInGroup: Pump[]) => void;
   selectedPumpIdsForDrag: string[];
   onPumpCardClick: (pump: Pump, event: React.MouseEvent<HTMLDivElement>) => void;
+  explodedModelsInStage: Set<string>;
+  onToggleExplodeGroupForModel: (model: string) => void;
 }
 
 export function KanbanColumn({
@@ -30,9 +32,11 @@ export function KanbanColumn({
   onDragOver,
   onDrop,
   onOpenPumpDetailsModal,
-  onOpenGroupDetailsModal, // Destructure new prop
+  onOpenGroupDetailsModal,
   selectedPumpIdsForDrag,
   onPumpCardClick,
+  explodedModelsInStage,
+  onToggleExplodeGroupForModel,
 }: KanbanColumnProps) {
   const Icon = stage.icon;
 
@@ -83,29 +87,44 @@ export function KanbanColumn({
           ))
         ) : ( // viewMode === 'condensed'
           Object.entries(groupedPumpsByModel).map(([model, pumpsInGroup]) => {
-            if (pumpsInGroup.length > 1) {
-              return (
-                <GroupedKanbanCard
-                  key={model}
-                  model={model}
-                  pumpsInGroup={pumpsInGroup}
-                  onDragStartCustomerGroup={onDragStartGroupCard}
-                  onOpenGroupDetailsModal={onOpenGroupDetailsModal} // Pass down new prop
-                />
-              );
-            } else {
-              const singlePump = pumpsInGroup[0];
-              return (
+            if (explodedModelsInStage.has(model)) {
+              return pumpsInGroup.map((pump) => (
                 <KanbanCard
-                  key={singlePump.id}
-                  pump={singlePump}
+                  key={pump.id}
+                  pump={pump}
                   onDragStart={onDragStartCard}
-                  onCardClick={(event) => onPumpCardClick(singlePump, event)}
-                  onOpenDetailsModal={() => onOpenPumpDetailsModal(singlePump)}
+                  onCardClick={(event) => onPumpCardClick(pump, event)}
+                  onOpenDetailsModal={() => onOpenPumpDetailsModal(pump)}
                   isDraggable={true} 
-                  isSelected={selectedPumpIdsForDrag.includes(singlePump.id)}
+                  isSelected={selectedPumpIdsForDrag.includes(pump.id)}
                 />
-              );
+              ));
+            } else {
+              if (pumpsInGroup.length > 1) {
+                return (
+                  <GroupedKanbanCard
+                    key={model}
+                    model={model}
+                    pumpsInGroup={pumpsInGroup}
+                    onDragStartCustomerGroup={onDragStartGroupCard}
+                    onOpenGroupDetailsModal={onOpenGroupDetailsModal}
+                    onToggleExplode={() => onToggleExplodeGroupForModel(model)}
+                  />
+                );
+              } else { // Single pump in the model group
+                const singlePump = pumpsInGroup[0];
+                return (
+                  <KanbanCard
+                    key={singlePump.id}
+                    pump={singlePump}
+                    onDragStart={onDragStartCard}
+                    onCardClick={(event) => onPumpCardClick(singlePump, event)}
+                    onOpenDetailsModal={() => onOpenPumpDetailsModal(singlePump)}
+                    isDraggable={true} 
+                    isSelected={selectedPumpIdsForDrag.includes(singlePump.id)}
+                  />
+                );
+              }
             }
           })
         )}
@@ -113,3 +132,5 @@ export function KanbanColumn({
     </div>
   );
 }
+
+    
