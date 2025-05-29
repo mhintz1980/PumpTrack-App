@@ -57,11 +57,11 @@ export function Header({
     <TooltipProvider>
       {/* This header is specific to the Kanban page, rendered below the global header but sticky within its scroll container */}
       <div className="bg-card p-4 shadow-md sticky top-0 z-20">
-        <div className="container mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div className="container mx-auto flex flex-col sm:flex-row items-center justify-start gap-4"> {/* Changed justify-between to justify-start */}
           <div className="flex items-center gap-2">
             <h1 className="text-2xl font-bold text-primary">PumpTrack Workflow</h1>
           </div>
-          <div className="flex items-center gap-2 sm:gap-3 flex-wrap justify-center sm:justify-end">
+          <div className="flex items-center gap-2 sm:gap-3 flex-wrap justify-center"> {/* Removed sm:justify-end */}
             <DropdownMenu open={isMenuOpen} onOpenChange={setIsMenuOpen}>
               <Tooltip>
                 <TooltipTrigger asChild>
