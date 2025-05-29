@@ -6,7 +6,6 @@ import { Button } from '@/components/ui/button';
 import { PlusCircle, Settings2, FilterX } from 'lucide-react';
 import type { Filters } from '@/types';
 import { PumpFilterControls } from '@/components/pump/PumpFilterControls';
-// import { SidebarTrigger } from '@/components/ui/sidebar'; // Removed, handled globally
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -51,17 +50,15 @@ export function Header({
 
   const handleClearFilters = () => {
     onFiltersChange({});
-    setIsMenuOpen(false); // Close menu after clearing filters
+    // setIsMenuOpen(false); // Optionally close menu after clearing filters
   };
 
   return (
     <TooltipProvider>
-      {/* This header is now specific to the Kanban page, rendered below the global header */}
-      <div className="bg-card p-4 shadow-md sticky top-0 z-20"> {/* Lower z-index than global header */}
+      {/* This header is specific to the Kanban page, rendered below the global header but sticky within its scroll container */}
+      <div className="bg-card p-4 shadow-md sticky top-0 z-20">
         <div className="container mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2">
-            {/* SidebarTrigger removed from here */}
-            {/* App title can also be part of the global header or page specific */}
             <h1 className="text-2xl font-bold text-primary">PumpTrack Workflow</h1>
           </div>
           <div className="flex items-center gap-2 sm:gap-3 flex-wrap justify-center sm:justify-end">

@@ -2,16 +2,15 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from 'react';
-import Link from 'next/link';
+import type { Pump, StageId, ViewMode, Filters, PriorityLevel } from '@/types';
+import { STAGES, POWDER_COATERS, PUMP_MODELS, CUSTOMER_NAMES, DEFAULT_POWDER_COAT_COLORS, PRIORITY_LEVELS } from '@/lib/constants';
+import { useToast } from '@/hooks/use-toast';
 import { Header } from '@/components/layout/Header';
 import { KanbanBoard } from '@/components/kanban/KanbanBoard';
 import { AddPumpForm } from '@/components/pump/AddPumpForm';
 import { PumpDetailsModal } from '@/components/pump/PumpDetailsModal';
 import { MissingInfoModal } from '@/components/pump/MissingInfoModal';
 import { GroupedPumpDetailsModal } from '@/components/pump/GroupedPumpDetailsModal';
-import type { Pump, StageId, ViewMode, Filters, PriorityLevel } from '@/types';
-import { STAGES, POWDER_COATERS, PUMP_MODELS, CUSTOMER_NAMES, DEFAULT_POWDER_COAT_COLORS, PRIORITY_LEVELS } from '@/lib/constants';
-import { useToast } from '@/hooks/use-toast';
 
 const generateId = () => crypto.randomUUID();
 
@@ -66,7 +65,7 @@ export default function HomePage() {
       tempPumps = tempPumps.filter(p => filters.customer!.includes(p.customer));
     }
     if (filters.poNumber && filters.poNumber.length > 0) {
-      tempPumps = tempPumps.filter(p => filters.poNumber!.some(po => p.poNumber.toLowerCase().includes(po.toLowerCase())));
+      tempPumps = tempPumps.filter(p => p.poNumber && filters.poNumber!.some(po => p.poNumber.toLowerCase().includes(po.toLowerCase())));
     }
     if (filters.model && filters.model.length > 0) {
       tempPumps = tempPumps.filter(p => filters.model!.includes(p.model));
@@ -87,7 +86,6 @@ export default function HomePage() {
     const startSerialNumber = startSerialNumberInput?.trim() === '' ? undefined : startSerialNumberInput;
     const now = new Date().toISOString();
 
-
     if (quantity > 1 && startSerialNumber && /^MSP-JN-\d{4}$/.test(startSerialNumber)) {
       currentSerialNumberNumeric = parseInt(startSerialNumber.substring(7), 10);
     }
@@ -100,11 +98,8 @@ export default function HomePage() {
         if (currentSerialNumberNumeric + i <= 9999) { 
             pumpSerialNumber = `MSP-JN-${String(currentSerialNumberNumeric + i).padStart(4, '0')}`;
         }
-      } else if (quantity > 1 && !startSerialNumber) {
-        // Serial number remains undefined for batch add without starting SN
       } else if (quantity === 1 && (!startSerialNumber || !/^MSP-JN-\d{4}$/.test(startSerialNumber))) {
-        console.error("Serial number is required and must be valid for single pump addition.");
-        toast({ variant: "destructive", title: "Validation Error", description: "Serial number is required for single pump addition." });
+        toast({ variant: "destructive", title: "Validation Error", description: "Serial number is required and must be valid for single pump addition." });
         return; 
       }
 
@@ -147,7 +142,6 @@ export default function HomePage() {
       setIsMissingInfoModalOpen(true);
     } else {
       setPumps(prev => prev.map(p => p.id === pumpId ? { ...p, currentStage: newStageId, updatedAt: now } : p));
-      // TODO: Save PumpMovement record to Firestore here
       const stageTitle = STAGES.find(s => s.id === newStageId)?.title || newStageId;
       toast({ title: "Pump Moved", description: `${pumpToMove.serialNumber || 'Pump'} moved to ${stageTitle}.` });
     }
@@ -155,7 +149,6 @@ export default function HomePage() {
   }, [pumps, toast]);
   
   const handleMultiplePumpsMove = useCallback((pumpIdsToMove: string[], newStageId: StageId) => {
-    const pumpsToActuallyMove: Pump[] = [];
     let powderCoatInfoMissing = false;
     let firstMissingPumpForModal: Pump | null = null;
     const now = new Date().toISOString();
@@ -169,23 +162,21 @@ export default function HomePage() {
             firstMissingPumpForModal = pump;
           }
         }
-        pumpsToActuallyMove.push(pump);
       }
     }
 
-    if (powderCoatInfoMissing && newStageId === 'powder-coat') {
-      if (firstMissingPumpForModal) {
+    if (powderCoatInfoMissing && newStageId === 'powder-coat' && firstMissingPumpForModal) {
         setMissingInfoPump(firstMissingPumpForModal); 
         setMissingInfoTargetStage(newStageId);
         setIsMissingInfoModalOpen(true);
-      }
-      toast({
-        variant: "destructive",
-        title: "Move Aborted",
-        description: "One or more pumps require powder coat information. Please update them or resolve via the prompted modal.",
-      });
-      setSelectedPumpIdsForDrag([]); 
-      return; 
+        // Do not proceed with the move for any pumps if one is missing info for powder coat
+        toast({
+          variant: "destructive",
+          title: "Move Halted",
+          description: "One or more pumps require powder coat information. Please update the prompted pump or cancel the move.",
+        });
+        setSelectedPumpIdsForDrag([]); 
+        return; 
     }
     
     setPumps(prev => 
@@ -193,7 +184,6 @@ export default function HomePage() {
         pumpIdsToMove.includes(p.id) ? { ...p, currentStage: newStageId, updatedAt: now } : p
       )
     );
-    // TODO: Save PumpMovement records to Firestore here for each pump moved
     const stageTitle = STAGES.find(s => s.id === newStageId)?.title || newStageId;
     toast({ title: `${pumpIdsToMove.length} Pump(s) Moved`, description: `Moved to ${stageTitle}.` });
     setSelectedPumpIdsForDrag([]);
@@ -203,7 +193,6 @@ export default function HomePage() {
   const handleSaveMissingInfo = useCallback((pumpId: string, data: Partial<Pump>) => {
     const now = new Date().toISOString();
     setPumps(prev => prev.map(p => p.id === pumpId ? { ...p, ...data, currentStage: missingInfoTargetStage!, updatedAt: now } : p));
-    // TODO: Save PumpMovement record to Firestore here
     const pump = pumps.find(p => p.id === pumpId); 
     if (pump && missingInfoTargetStage) {
        const stageTitle = STAGES.find(s => s.id === missingInfoTargetStage)?.title || missingInfoTargetStage;
@@ -280,7 +269,6 @@ export default function HomePage() {
     });
   }, []);
 
-
   const allPumpModels = PUMP_MODELS;
   const allCustomerNames = CUSTOMER_NAMES;
   const allPriorities = PRIORITY_LEVELS;
@@ -291,10 +279,11 @@ export default function HomePage() {
   const allPowderCoaters = Array.from(new Set(powderCoatersInPumps.concat(POWDER_COATERS))).sort();
 
   const allSerialNumbers = Array.from(new Set(pumps.map(p => p.serialNumber).filter((sn): sn is string => !!sn))).sort();
-  const allPONumbers = Array.from(new Set(pumps.map(p => p.poNumber))).sort();
+  const allPONumbers = Array.from(new Set(pumps.map(p => p.poNumber).filter(Boolean as unknown as (value: string | undefined) => value is string))).sort();
+
 
   return (
-    <div className="flex flex-col h-full"> {/* Ensure this container takes full height if needed */}
+    <div className="flex flex-col h-full">
       <Header
         onAddPump={() => setIsAddPumpModalOpen(true)}
         filters={filters}
@@ -306,7 +295,7 @@ export default function HomePage() {
         availablePONumbers={allPONumbers}
         availablePriorities={allPriorities.map(p => ({label: p.label, value: p.value}))}
       />
-      <main className="flex-grow overflow-hidden"> {/* This will contain the Kanban board */}
+      <main className="flex-grow overflow-hidden">
         <KanbanBoard
           pumps={filteredPumps}
           columnViewModes={columnViewModes}
