@@ -19,6 +19,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { SidebarTrigger } from '@/components/ui/sidebar'; // Import SidebarTrigger
 
 interface HeaderProps {
   onAddPump: () => void;
@@ -50,18 +51,17 @@ export function Header({
 
   const handleClearFilters = () => {
     onFiltersChange({});
-    // setIsMenuOpen(false); // Optionally close menu after clearing filters
   };
 
   return (
     <TooltipProvider>
-      {/* This header is specific to the Kanban page, rendered below the global header but sticky within its scroll container */}
       <div className="bg-card p-4 shadow-md sticky top-0 z-20">
-        <div className="container mx-auto flex flex-col sm:flex-row items-center justify-start gap-4"> {/* Changed justify-between to justify-start */}
+        <div className="container mx-auto flex flex-col sm:flex-row items-center justify-start gap-4">
           <div className="flex items-center gap-2">
+            <SidebarTrigger className="h-7 w-7" /> {/* Moved SidebarTrigger here */}
             <h1 className="text-2xl font-bold text-primary">PumpTrack Workflow</h1>
           </div>
-          <div className="flex items-center gap-2 sm:gap-3 flex-wrap justify-center"> {/* Removed sm:justify-end */}
+          <div className="flex items-center gap-2 sm:gap-3 flex-wrap justify-center">
             <DropdownMenu open={isMenuOpen} onOpenChange={setIsMenuOpen}>
               <Tooltip>
                 <TooltipTrigger asChild>

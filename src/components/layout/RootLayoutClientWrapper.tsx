@@ -13,7 +13,7 @@ import {
   SidebarMenuItem,
   SidebarMenuButton,
   SidebarInset,
-  SidebarTrigger,
+  SidebarTrigger, // Keep this import if it's used elsewhere or for reference, but it's removed from this specific header
 } from '@/components/ui/sidebar';
 import { LayoutDashboard, BarChart2, CalendarDays, BrainCircuit } from 'lucide-react';
 
@@ -56,11 +56,8 @@ export function RootLayoutClientWrapper({ children }: { children: ReactNode }) {
         </SidebarContent>
       </Sidebar>
       <SidebarInset>
-        <header className="bg-card p-3 shadow-sm sticky top-0 z-30 flex items-center gap-2 border-b h-[57px]"> {/* Approx height of old header */}
-          <SidebarTrigger />
-          {/* <h1 className="text-xl font-semibold text-primary">PumpTrack</h1> */} {/* Title can be in page-specific headers */}
-        </header>
-        <div className="h-[calc(100vh-57px)] overflow-y-auto"> {/* Adjust height to account for new global header */}
+        {/* The minimal global header that was here has been removed. */}
+        <div className="h-full overflow-y-auto"> {/* Adjusted height */}
           {children}
         </div>
       </SidebarInset>
