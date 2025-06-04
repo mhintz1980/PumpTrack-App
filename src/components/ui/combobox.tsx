@@ -31,7 +31,7 @@ interface ComboboxProps {
   className?: string;
   disabled?: boolean;
   multiple?: boolean;
-  allowCustomValue?: boolean; // To add new values not in options list
+  allowCustomValue?: boolean;
 }
 
 export function Combobox({
@@ -47,20 +47,20 @@ export function Combobox({
   allowCustomValue = false,
 }: ComboboxProps) {
   const [open, setOpen] = React.useState(false);
-  const [inputValue, setInputValue] = React.useState(""); 
+  const [inputValue, setInputValue] = React.useState("");
   const triggerRef = React.useRef<HTMLButtonElement>(null);
   const inputRef = React.useRef<HTMLInputElement>(null);
-
 
   const getButtonLabel = () => {
     if (multiple) {
       const selectedValues = Array.isArray(value) ? value : [];
       if (selectedValues.length === 0) return placeholder;
+      // Badges will be rendered, so placeholder or a generic message is fine for the button text itself
       if (selectedValues.length === 1) {
-        const selectedOption = options.find((option) => option.value === selectedValues[0]);
-        return selectedOption?.label || selectedValues[0];
+         const selectedOption = options.find((option) => option.value === selectedValues[0]);
+         return selectedOption?.label || selectedValues[0];
       }
-      return `${selectedValues.length} selected`;
+      return `${selectedValues.length} selected`; // Fallback if badges aren't visible enough
     } else {
       const selectedOption = options.find((option) => option.value === value);
       return selectedOption?.label || (typeof value === 'string' && value ? value : placeholder);
@@ -77,13 +77,13 @@ export function Combobox({
         currentSelected.push(optionValue);
       }
       onChange(currentSelected);
-      setInputValue(""); 
-      // For multi-select, keep focus on input to keep popover open
+      setInputValue("");
+      // Keep focus on input to allow popover to stay open
       inputRef.current?.focus();
     } else {
-      onChange(optionValue === value ? "" : optionValue); 
+      onChange(optionValue === value ? "" : optionValue);
       setInputValue("");
-      setOpen(false); 
+      setOpen(false); // Explicitly close for single select
     }
   };
 
@@ -95,22 +95,23 @@ export function Combobox({
         if (!currentSelected.includes(newValue)) {
           onChange([...currentSelected, newValue]);
         }
-        inputRef.current?.focus(); // Keep focus
+        inputRef.current?.focus();
       } else {
         onChange(newValue);
-        setOpen(false); // Close popover if single select
+        setOpen(false);
       }
-      setInputValue(""); 
+      setInputValue("");
     }
   };
-  
-  const removeSelectedItem = (itemToRemove: string, e: React.MouseEvent) => {
-    e.preventDefault(); // Prevent any default action
-    e.stopPropagation(); // Prevent popover from toggling
+
+  const removeSelectedItem = (itemToRemove: string, e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
     if (multiple && Array.isArray(value)) {
       onChange(value.filter(v => v !== itemToRemove));
     }
-    // Do not close popover, allow further interaction
+    // Attempt to keep the popover open by re-focusing the input
+    inputRef.current?.focus();
   };
 
   const displayedValue = getButtonLabel();
@@ -122,32 +123,36 @@ export function Combobox({
           variant="outline"
           role="combobox"
           aria-expanded={open}
-          className={cn("w-full justify-between h-10", (!value || (Array.isArray(value) && value.length === 0)) && "text-muted-foreground", className)}
+          className={cn("w-full justify-between h-10", (!value || (Array.isArray(value) && value.length === 0) && !multiple) && "text-muted-foreground", className)}
           disabled={disabled}
         >
-          <span className="truncate">
+          <span className="truncate flex-grow text-left">
             {multiple && Array.isArray(value) && value.length > 0 ? (
               <div className="flex flex-wrap gap-1 items-center">
-                {value.slice(0, 2).map(val => { 
+                {value.slice(0, 3).map(val => { // Show up to 3 badges
                   const option = options.find(opt => opt.value === val);
                   return (
                     <Badge
                       key={val}
                       variant="secondary"
-                      className="px-1.5 py-0.5 text-xs"
+                      className="px-1.5 py-0.5 text-xs flex items-center"
                     >
-                      {option?.label || val}
-                      <X
-                        className="ml-1 h-3 w-3 cursor-pointer hover:text-destructive"
+                      <span className="truncate max-w-[100px]">{option?.label || val}</span>
+                      <button
+                        type="button"
+                        className="ml-1 rounded-full outline-none ring-offset-background focus-visible:ring-1 focus-visible:ring-ring focus-visible:ring-offset-1 flex-shrink-0"
                         onClick={(e) => removeSelectedItem(val, e)}
+                        onPointerDown={(e) => e.stopPropagation()} // Prevent popover close
                         aria-label={`Remove ${option?.label || val}`}
-                      />
+                      >
+                        <X className="h-3 w-3 text-muted-foreground hover:text-foreground" />
+                      </button>
                     </Badge>
                   );
                 })}
-                {value.length > 2 && (
+                {value.length > 3 && (
                   <Badge variant="outline" className="px-1.5 py-0.5 text-xs">
-                    +{value.length - 2} more
+                    +{value.length - 3} more
                   </Badge>
                 )}
               </div>
@@ -156,12 +161,11 @@ export function Combobox({
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent 
-        className="w-[--radix-popover-trigger-width] p-0" 
+      <PopoverContent
+        className="w-[--radix-popover-trigger-width] p-0"
         align="start"
         style={{ width: triggerRef.current?.offsetWidth ? `${triggerRef.current.offsetWidth}px` : 'auto' }}
         onOpenAutoFocus={(e) => {
-          // Prevent default focus on PopoverContent itself, direct to input
           e.preventDefault();
           inputRef.current?.focus();
         }}
@@ -179,8 +183,9 @@ export function Combobox({
                 ? (
                   <CommandItem
                     key="__custom_add__"
-                    value={`add-${inputValue.trim()}`} 
+                    value={`add-${inputValue.trim()}`}
                     onSelect={handleCustomValueAdd}
+                    onPointerDown={(e) => { if (multiple) e.stopPropagation();}}
                   >
                     Add "{inputValue.trim()}"
                   </CommandItem>
@@ -191,8 +196,17 @@ export function Combobox({
               {options.map((option) => (
                 <CommandItem
                   key={option.value}
-                  value={option.label} 
-                  onSelect={() => handleSelect(option.value)} 
+                  value={option.label}
+                  onSelect={() => {
+                    handleSelect(option.value);
+                  }}
+                  onPointerDown={(e) => {
+                    if (multiple) {
+                      // This is key to prevent Popover from closing on item selection in multi-select mode
+                      e.preventDefault(); 
+                      e.stopPropagation();
+                    }
+                  }}
                   className="flex items-center justify-between"
                 >
                   <span className="truncate">{option.label}</span>
