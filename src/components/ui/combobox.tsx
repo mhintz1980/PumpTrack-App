@@ -55,12 +55,11 @@ export function Combobox({
     if (multiple) {
       const selectedValues = Array.isArray(value) ? value : [];
       if (selectedValues.length === 0) return placeholder;
-      // Badges will be rendered, so placeholder or a generic message is fine for the button text itself
       if (selectedValues.length === 1) {
          const selectedOption = options.find((option) => option.value === selectedValues[0]);
          return selectedOption?.label || selectedValues[0];
       }
-      return `${selectedValues.length} selected`; // Fallback if badges aren't visible enough
+      return `${selectedValues.length} selected`;
     } else {
       const selectedOption = options.find((option) => option.value === value);
       return selectedOption?.label || (typeof value === 'string' && value ? value : placeholder);
@@ -77,13 +76,12 @@ export function Combobox({
         currentSelected.push(optionValue);
       }
       onChange(currentSelected);
-      setInputValue("");
-      // Keep focus on input to allow popover to stay open
-      inputRef.current?.focus();
+      setInputValue(""); 
+      inputRef.current?.focus(); 
     } else {
-      onChange(optionValue === value ? "" : optionValue);
+      onChange(optionValue === value ? "" : optionValue); 
       setInputValue("");
-      setOpen(false); // Explicitly close for single select
+      setOpen(false); 
     }
   };
 
@@ -104,13 +102,10 @@ export function Combobox({
     }
   };
 
-  const removeSelectedItem = (itemToRemove: string, e: React.MouseEvent<HTMLButtonElement>) => {
-    e.preventDefault();
-    e.stopPropagation();
+  const removeSelectedItem = (itemToRemove: string) => {
     if (multiple && Array.isArray(value)) {
       onChange(value.filter(v => v !== itemToRemove));
     }
-    // Attempt to keep the popover open by re-focusing the input
     inputRef.current?.focus();
   };
 
@@ -129,7 +124,7 @@ export function Combobox({
           <span className="truncate flex-grow text-left">
             {multiple && Array.isArray(value) && value.length > 0 ? (
               <div className="flex flex-wrap gap-1 items-center">
-                {value.slice(0, 3).map(val => { // Show up to 3 badges
+                {value.slice(0, 3).map(val => { 
                   const option = options.find(opt => opt.value === val);
                   return (
                     <Badge
@@ -141,8 +136,15 @@ export function Combobox({
                       <button
                         type="button"
                         className="ml-1 rounded-full outline-none ring-offset-background focus-visible:ring-1 focus-visible:ring-ring focus-visible:ring-offset-1 flex-shrink-0"
-                        onClick={(e) => removeSelectedItem(val, e)}
-                        onPointerDown={(e) => e.stopPropagation()} // Prevent popover close
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          removeSelectedItem(val);
+                        }}
+                        onPointerDown={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                        }}
                         aria-label={`Remove ${option?.label || val}`}
                       >
                         <X className="h-3 w-3 text-muted-foreground hover:text-foreground" />
@@ -169,6 +171,11 @@ export function Combobox({
           e.preventDefault();
           inputRef.current?.focus();
         }}
+        onPointerDownCapture={(e) => {
+          if (multiple && (e.target as HTMLElement).closest('[cmdk-item]')) {
+            e.stopPropagation();
+          }
+        }}
       >
         <Command>
           <CommandInput
@@ -185,7 +192,6 @@ export function Combobox({
                     key="__custom_add__"
                     value={`add-${inputValue.trim()}`}
                     onSelect={handleCustomValueAdd}
-                    onPointerDown={(e) => { if (multiple) e.stopPropagation();}}
                   >
                     Add "{inputValue.trim()}"
                   </CommandItem>
@@ -196,16 +202,9 @@ export function Combobox({
               {options.map((option) => (
                 <CommandItem
                   key={option.value}
-                  value={option.label}
+                  value={option.label} 
                   onSelect={() => {
                     handleSelect(option.value);
-                  }}
-                  onPointerDown={(e) => {
-                    if (multiple) {
-                      // This is key to prevent Popover from closing on item selection in multi-select mode
-                      e.preventDefault(); 
-                      e.stopPropagation();
-                    }
                   }}
                   className="flex items-center justify-between"
                 >
