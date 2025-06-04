@@ -2,7 +2,7 @@
 "use client";
 
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { Calendar as CalendarIcon, Package, Clock, Filter, Users, FileText, GripVertical, XCircle, RotateCcw, SearchIcon } from 'lucide-react';
+import { Calendar as CalendarIcon, Package, Clock, Users, FileText, GripVertical, XCircle, RotateCcw, SearchIcon, FilterX } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -10,10 +10,9 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
-import { Label } from "@/components/ui/label";
 import { Combobox } from '@/components/ui/combobox';
 import type { Pump, PriorityLevel } from '@/types';
-import { PUMP_MODELS, CUSTOMER_NAMES, PRIORITY_LEVELS, STAGES } from '@/lib/constants';
+import { PUMP_MODELS, CUSTOMER_NAMES, PRIORITY_LEVELS } from '@/lib/constants';
 import { useToast } from '@/hooks/use-toast';
 
 interface PlannablePump extends Pump {
@@ -21,14 +20,21 @@ interface PlannablePump extends Pump {
 }
 
 interface ScheduledPump extends PlannablePump {
-  scheduledOnDayIndex: number; 
-  instanceId: string; 
+  scheduledOnDayIndex: number;
+  instanceId: string;
 }
 
 interface ScheduleTimelineEntry extends ScheduledPump {
   startDay: number;
   endDay: number;
-  duration: number; 
+  duration: number;
+}
+
+interface ScheduleFilters {
+  customer: string[];
+  poNumber: string[];
+  model: string[];
+  priority: string[];
 }
 
 const generateId = () => crypto.randomUUID();
@@ -38,7 +44,7 @@ const getDaysPerUnit = (model: string): number => {
   if (model.includes('DD4') || model.includes('RL200')) return 2;
   if (model.includes('DD6') || model.includes('RL300')) return 3;
   if (model.includes('HC150') || model.includes('DV6')) return 4;
-  return 2; 
+  return 2;
 };
 
 export default function SchedulePage() {
@@ -46,15 +52,15 @@ export default function SchedulePage() {
   const [initialPumps, setInitialPumps] = useState<Pump[]>([]);
   const [plannableItems, setPlannableItems] = useState<PlannablePump[]>([]);
   const [scheduledItems, setScheduledItems] = useState<ScheduledPump[]>([]);
-  
+
   const [globalSearchTerm, setGlobalSearchTerm] = useState('');
-  const [filters, setFilters] = useState<{ customer: string[]; poNumber: string[]; model: string[]; priority: string[] }>({
+  const [filters, setFilters] = useState<ScheduleFilters>({
     customer: [],
     poNumber: [],
     model: [],
     priority: [],
   });
-  
+
   const [draggedItem, setDraggedItem] = useState<PlannablePump | ScheduledPump | null>(null);
   const [draggedItemType, setDraggedItemType] = useState<'plannable' | 'scheduled' | null>(null);
 
@@ -67,7 +73,7 @@ export default function SchedulePage() {
       { id: generateId(), model: PUMP_MODELS[0], serialNumber: generateRandomSerialNumber(), customer: CUSTOMER_NAMES[2], poNumber: 'PO-PLAN-004', currentStage: 'testing', powderCoater: 'Acme Powder Coating', powderCoatColor: 'RAL 9005', priority: 'normal', createdAt: now, updatedAt: now },
       { id: generateId(), model: PUMP_MODELS[3], serialNumber: generateRandomSerialNumber(), customer: CUSTOMER_NAMES[3], poNumber: 'PO-PLAN-005', currentStage: 'powder-coat', powderCoater: 'Best Finishers Inc.', powderCoatColor: 'RAL 7035', priority: 'high', createdAt: now, updatedAt: now },
       { id: generateId(), model: PUMP_MODELS[4], serialNumber: generateRandomSerialNumber(), customer: CUSTOMER_NAMES[1], poNumber: 'PO-PLAN-006', currentStage: 'open-jobs', priority: 'normal', notes: 'Needs special part', createdAt: now, updatedAt: now },
-      { id: generateId(), model: PUMP_MODELS[1], serialNumber: generateRandomSerialNumber(), customer: CUSTOMER_NAMES[0], poNumber: 'PO-PLAN-001', currentStage: 'open-jobs', priority: 'high', createdAt: now, updatedAt: now }, 
+      { id: generateId(), model: PUMP_MODELS[1], serialNumber: generateRandomSerialNumber(), customer: CUSTOMER_NAMES[0], poNumber: 'PO-PLAN-001', currentStage: 'open-jobs', priority: 'high', createdAt: now, updatedAt: now },
     ];
     setInitialPumps(samplePumps);
   }, []);
@@ -76,7 +82,7 @@ export default function SchedulePage() {
     const nonShippedPumps = initialPumps.filter(p => p.currentStage !== 'shipped');
     const augmentedPumps: PlannablePump[] = nonShippedPumps
       .map(p => ({ ...p, daysPerUnit: getDaysPerUnit(p.model) }))
-      .filter(p => !scheduledItems.some(sp => sp.id === p.id));
+      .filter(p => !scheduledItems.some(sp => sp.id === p.id)); // Filter out already scheduled items by original ID
     setPlannableItems(augmentedPumps);
   }, [initialPumps, scheduledItems]);
 
@@ -94,7 +100,7 @@ export default function SchedulePage() {
 
     return tempItems.filter(item =>
       (filters.customer.length === 0 || filters.customer.includes(item.customer)) &&
-      (filters.poNumber.length === 0 || filters.poNumber.some(po => item.poNumber.toLowerCase().includes(po.toLowerCase()))) && 
+      (filters.poNumber.length === 0 || filters.poNumber.some(po => item.poNumber.toLowerCase().includes(po.toLowerCase()))) &&
       (filters.model.length === 0 || filters.model.includes(item.model)) &&
       (filters.priority.length === 0 || filters.priority.includes(item.priority || 'normal'))
     );
@@ -104,8 +110,8 @@ export default function SchedulePage() {
     const days = [];
     const today = new Date();
     const startDate = new Date(today);
-    startDate.setDate(today.getDate() - today.getDay()); 
-    for (let i = 0; i < 42; i++) { 
+    startDate.setDate(today.getDate() - today.getDay());
+    for (let i = 0; i < 42; i++) {
       const date = new Date(startDate);
       date.setDate(startDate.getDate() + i);
       days.push(date);
@@ -115,10 +121,10 @@ export default function SchedulePage() {
 
   const scheduleTimeline = useMemo(() => {
     const timeline: ScheduleTimelineEntry[] = [];
-    scheduledItems.sort((a,b) => a.scheduledOnDayIndex - b.scheduledOnDayIndex).forEach(item => {
+    scheduledItems.sort((a, b) => a.scheduledOnDayIndex - b.scheduledOnDayIndex).forEach(item => {
       const startDay = item.scheduledOnDayIndex;
       const duration = item.daysPerUnit;
-      
+
       timeline.push({
         ...item,
         startDay: startDay,
@@ -126,9 +132,9 @@ export default function SchedulePage() {
         duration,
       });
     });
-    return timeline.sort((a,b) => a.startDay - b.startDay);
+    return timeline.sort((a, b) => a.startDay - b.startDay);
   }, [scheduledItems]);
-  
+
   const totalScheduledDaysDuration = useMemo(() => {
     return scheduledItems.reduce((sum, item) => sum + item.daysPerUnit, 0);
   }, [scheduledItems]);
@@ -161,9 +167,9 @@ export default function SchedulePage() {
       const newScheduledItem: ScheduledPump = {
         ...plannableDraggedItem,
         scheduledOnDayIndex: targetDayIndex,
-        instanceId: crypto.randomUUID(),
+        instanceId: crypto.randomUUID(), // Unique ID for this scheduled instance
       };
-      setScheduledItems(prev => [...prev, newScheduledItem].sort((a,b) => a.scheduledOnDayIndex - b.scheduledOnDayIndex));
+      setScheduledItems(prev => [...prev, newScheduledItem].sort((a, b) => a.scheduledOnDayIndex - b.scheduledOnDayIndex));
       toast({ title: "Pump Scheduled", description: `${plannableDraggedItem.serialNumber || plannableDraggedItem.model} added to schedule.` });
     } else if (draggedItemType === 'scheduled') {
       const scheduledDraggedItem = draggedItem as ScheduledPump;
@@ -171,19 +177,20 @@ export default function SchedulePage() {
         si.instanceId === scheduledDraggedItem.instanceId
           ? { ...si, scheduledOnDayIndex: targetDayIndex }
           : si
-      ).sort((a,b) => a.scheduledOnDayIndex - b.scheduledOnDayIndex));
+      ).sort((a, b) => a.scheduledOnDayIndex - b.scheduledOnDayIndex));
       toast({ title: "Schedule Updated", description: `Rescheduled ${scheduledDraggedItem.serialNumber || scheduledDraggedItem.model}.` });
     }
     setDraggedItem(null);
     setDraggedItemType(null);
   }, [draggedItem, draggedItemType, toast]);
-  
+
   const handleDropOnPlannableList = useCallback((e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     if (!draggedItem || draggedItemType !== 'scheduled') return;
 
     const scheduledDraggedItem = draggedItem as ScheduledPump;
     setScheduledItems(prev => prev.filter(item => item.instanceId !== scheduledDraggedItem.instanceId));
+    // The item will reappear in plannableItems via the useEffect dependency on scheduledItems
     toast({ title: "Pump Unscheduled", description: `${scheduledDraggedItem.serialNumber || scheduledDraggedItem.model} removed from schedule.` });
     setDraggedItem(null);
     setDraggedItemType(null);
@@ -196,25 +203,36 @@ export default function SchedulePage() {
       toast({ title: "Pump Unscheduled", description: `${itemToRemove.serialNumber || itemToRemove.model} removed from schedule.` });
     }
   }, [scheduledItems, toast]);
-  
+
   const resetSchedule = useCallback(() => {
     setScheduledItems([]);
     toast({ title: "Schedule Reset", description: "All pumps removed from schedule and returned to plannable list." });
   }, [toast]);
 
+  const handleClearFilters = useCallback(() => {
+    setGlobalSearchTerm('');
+    setFilters({
+      customer: [],
+      poNumber: [],
+      model: [],
+      priority: [],
+    });
+    toast({ title: "Filters Cleared" });
+  }, [toast]);
+
   const getPriorityBadgeVariant = (priority?: PriorityLevel): "default" | "secondary" | "destructive" | "outline" => {
     switch (priority) {
       case 'urgent': return 'destructive';
-      case 'high': return 'default'; 
+      case 'high': return 'default';
       case 'normal': return 'secondary';
       default: return 'outline';
     }
   };
-  
+
   const modelColors = PUMP_MODELS.reduce((acc, model, index) => {
     const colorClasses = [
-      'bg-sky-500/80 border-sky-600', 
-      'bg-emerald-500/80 border-emerald-600', 
+      'bg-sky-500/80 border-sky-600',
+      'bg-emerald-500/80 border-emerald-600',
       'bg-amber-500/80 border-amber-600',
       'bg-rose-500/80 border-rose-600',
       'bg-indigo-500/80 border-indigo-600',
@@ -233,10 +251,12 @@ export default function SchedulePage() {
 
   const availableCustomers = useMemo(() => [...new Set(initialPumps.map(p => p.customer))].map(c => ({ label: c, value: c })), [initialPumps]);
   const availableModels = useMemo(() => PUMP_MODELS.map(m => ({ label: m, value: m })), []);
-  const availablePriorities = useMemo(() => PRIORITY_LEVELS.map(p => ({label: p.label, value: p.value})), []);
-  const availablePONumbers = useMemo(() => [...new Set(initialPumps.map(p => p.poNumber))].map(po => ({ label: po, value: po})), [initialPumps]);
+  const availablePriorities = useMemo(() => PRIORITY_LEVELS.map(p => ({ label: p.label, value: p.value })), []);
+  const availablePONumbers = useMemo(() => [...new Set(initialPumps.map(p => p.poNumber))].map(po => ({ label: po, value: po })), [initialPumps]);
 
   const totalPlannablePumps = plannableItems.length;
+  const isAnyFilterActive = globalSearchTerm !== '' || Object.values(filters).some(f => f.length > 0);
+
 
   const PlannablePumpsTable = () => (
     <Card>
@@ -246,22 +266,22 @@ export default function SchedulePage() {
       </CardHeader>
       <CardContent>
         <div className="mb-4">
-            <div className="relative">
-                <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                    type="text"
-                    placeholder="Search all fields..."
-                    value={globalSearchTerm}
-                    onChange={(e) => setGlobalSearchTerm(e.target.value)}
-                    className="pl-10 w-full"
-                />
-            </div>
+          <div className="relative">
+            <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              type="text"
+              placeholder="Search all fields..."
+              value={globalSearchTerm}
+              onChange={(e) => setGlobalSearchTerm(e.target.value)}
+              className="pl-10 w-full"
+            />
+          </div>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
           <Combobox
             options={availableCustomers}
             value={filters.customer}
-            onChange={(value) => setFilters(prev => ({...prev, customer: value as string[]}))}
+            onChange={(value) => setFilters(prev => ({ ...prev, customer: value as string[] }))}
             placeholder="Filter by Customer"
             searchPlaceholder="Search customers..."
             emptyText="No customer found."
@@ -270,77 +290,84 @@ export default function SchedulePage() {
           <Combobox
             options={availableModels}
             value={filters.model}
-            onChange={(value) => setFilters(prev => ({...prev, model: value as string[]}))}
+            onChange={(value) => setFilters(prev => ({ ...prev, model: value as string[] }))}
             placeholder="Filter by Model"
             searchPlaceholder="Search models..."
             emptyText="No model found."
             multiple
           />
-          <Combobox 
+          <Combobox
             options={availablePONumbers}
             value={filters.poNumber}
-            onChange={(value) => setFilters(prev => ({...prev, poNumber: value as string[]}))}
+            onChange={(value) => setFilters(prev => ({ ...prev, poNumber: value as string[] }))}
             placeholder="Filter by PO Number"
             searchPlaceholder="Search POs..."
             emptyText="No PO found."
             multiple
-            allowCustomValue 
+            allowCustomValue // Assuming you want to allow typing PO numbers
           />
           <Combobox
             options={availablePriorities}
             value={filters.priority}
-            onChange={(value) => setFilters(prev => ({...prev, priority: value as string[]}))}
+            onChange={(value) => setFilters(prev => ({ ...prev, priority: value as string[] }))}
             placeholder="Filter by Priority"
             searchPlaceholder="Search priorities..."
             emptyText="No priority found."
             multiple
           />
         </div>
-        
-        <ScrollArea 
+        {isAnyFilterActive && (
+          <div className="mb-4">
+            <Button variant="outline" size="sm" onClick={handleClearFilters}>
+              <FilterX className="mr-2 h-4 w-4" /> Clear All Filters
+            </Button>
+          </div>
+        )}
+
+        <ScrollArea
           className="h-[400px] border rounded-md"
-          onDragOver={handleDragOver} 
-          onDrop={handleDropOnPlannableList} 
+          onDragOver={handleDragOver}
+          onDrop={handleDropOnPlannableList}
         >
           <div className="p-1">
             {filteredPlannableItems.length === 0 ? (
               <p className="text-center p-4 text-muted-foreground">No plannable items match filters or all are scheduled.</p>
             ) : (
-            <table className="w-full text-sm">
-              <thead className="sticky top-0 bg-muted z-10">
-                <tr className="border-b">
-                  <th className="p-1 w-8"></th>
-                  <th className="text-left p-2 font-semibold">S/N</th>
-                  <th className="text-left p-2 font-semibold">Customer</th>
-                  <th className="text-left p-2 font-semibold">PO</th>
-                  <th className="text-left p-2 font-semibold">Model</th>
-                  <th className="text-right p-2 font-semibold">Days/Unit</th>
-                  <th className="text-center p-2 font-semibold">Priority</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredPlannableItems.map(item => (
-                  <tr 
-                    key={item.id} 
-                    className="border-b hover:bg-secondary/30 cursor-grab"
-                    draggable
-                    onDragStart={(e) => handleDragStartPlannableItem(e, item)}
-                  >
-                    <td className="p-1 text-center text-muted-foreground"><GripVertical className="h-4 w-4 inline-block" /></td>
-                    <td className="p-2">{item.serialNumber || 'N/A'}</td>
-                    <td className="p-2">{item.customer}</td>
-                    <td className="p-2">{item.poNumber}</td>
-                    <td className="p-2">{item.model}</td>
-                    <td className="p-2 text-right">{item.daysPerUnit}</td>
-                    <td className="p-2 text-center">
-                      <Badge variant={getPriorityBadgeVariant(item.priority)} className="text-xs">
-                        {PRIORITY_LEVELS.find(p => p.value === item.priority)?.label || item.priority}
-                      </Badge>
-                    </td>
+              <table className="w-full text-sm">
+                <thead className="sticky top-0 bg-muted z-10">
+                  <tr className="border-b">
+                    <th className="p-1 w-8"></th>
+                    <th className="text-left p-2 font-semibold">S/N</th>
+                    <th className="text-left p-2 font-semibold">Customer</th>
+                    <th className="text-left p-2 font-semibold">PO</th>
+                    <th className="text-left p-2 font-semibold">Model</th>
+                    <th className="text-right p-2 font-semibold">Days/Unit</th>
+                    <th className="text-center p-2 font-semibold">Priority</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {filteredPlannableItems.map(item => (
+                    <tr
+                      key={item.id} // Use original pump ID as key for stable identity if item is re-added
+                      className="border-b hover:bg-secondary/30 cursor-grab"
+                      draggable
+                      onDragStart={(e) => handleDragStartPlannableItem(e, item)}
+                    >
+                      <td className="p-1 text-center text-muted-foreground"><GripVertical className="h-4 w-4 inline-block" /></td>
+                      <td className="p-2">{item.serialNumber || 'N/A'}</td>
+                      <td className="p-2">{item.customer}</td>
+                      <td className="p-2">{item.poNumber}</td>
+                      <td className="p-2">{item.model}</td>
+                      <td className="p-2 text-right">{item.daysPerUnit}</td>
+                      <td className="p-2 text-center">
+                        <Badge variant={getPriorityBadgeVariant(item.priority)} className="text-xs">
+                          {PRIORITY_LEVELS.find(p => p.value === item.priority)?.label || item.priority}
+                        </Badge>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             )}
           </div>
         </ScrollArea>
@@ -352,15 +379,15 @@ export default function SchedulePage() {
     <Card>
       <CardHeader>
         <div className="flex justify-between items-center">
-            <div>
-                <CardTitle>Production Schedule</CardTitle>
-                <CardDescription>
-                Total duration of scheduled items: {totalScheduledDaysDuration} days.
-                </CardDescription>
-            </div>
-            <Button variant="outline" size="sm" onClick={resetSchedule} title="Clear all items from schedule">
-                <RotateCcw className="mr-2 h-4 w-4" /> Reset Schedule
-            </Button>
+          <div>
+            <CardTitle>Production Schedule</CardTitle>
+            <CardDescription>
+              Total duration of scheduled items: {totalScheduledDaysDuration} days.
+            </CardDescription>
+          </div>
+          <Button variant="outline" size="sm" onClick={resetSchedule} title="Clear all items from schedule">
+            <RotateCcw className="mr-2 h-4 w-4" /> Reset Schedule
+          </Button>
         </div>
       </CardHeader>
       <CardContent>
@@ -369,7 +396,7 @@ export default function SchedulePage() {
             <div key={day} className="p-1 rounded-sm bg-muted/50">{day}</div>
           ))}
         </div>
-        
+
         <div className="grid grid-cols-7 gap-1 min-h-[300px]">
           {calendarDays.map((date, dayIndex) => {
             const dayString = date.toDateString();
@@ -386,44 +413,46 @@ export default function SchedulePage() {
                 <div className={cn("font-medium pb-0.5 text-right", date.toDateString() === new Date().toDateString() && "text-primary font-bold")}>{date.getDate()}</div>
                 <ScrollArea className="flex-grow space-y-0.5">
                   {scheduleTimeline
-                    .filter(item => dayIndex >= item.startDay && dayIndex <= item.endDay) 
+                    .filter(item => dayIndex >= item.startDay && dayIndex <= item.endDay)
                     .map(item => {
-                      if (dayIndex === item.startDay) { 
+                      if (dayIndex === item.startDay) { // Render the full card only on the start day
                         return (
                           <div
-                            key={item.instanceId}
+                            key={item.instanceId} // Use unique instanceId here
                             draggable
                             onDragStart={(e) => handleDragStartScheduledItem(e, item)}
                             title={`${item.model} - ${item.serialNumber || 'N/A'}\nCustomer: ${item.customer}\nPO: ${item.poNumber}\nDuration: ${item.duration} days`}
                             className={cn(
                               "text-[10px] p-1 rounded mb-0.5 cursor-grab text-primary-foreground leading-tight border",
                               getColorForModelOnCalendar(item.model),
+                              "overflow-hidden" // Add overflow hidden
                             )}
-                            style={{ 
-                              height: `${item.duration * 1.5}rem`, 
-                              minHeight: '1.5rem',
-                            }} 
+                            // Dynamic height based on duration is tricky with fixed cell height
+                            // For simplicity, fixed height for now, or use a visual indicator for multi-day span
+                            style={{
+                              height: `calc(${item.duration * 1.5}rem - 2px)`, // Basic attempt, might need refinement
+                              minHeight: '1.4rem', // Minimum height
+                              maxHeight: 'calc(100% - 1.25rem)', // Ensure it doesn't overflow date number
+                            }}
                           >
                             <p className="font-semibold truncate">{item.model}</p>
                             <p className="truncate text-xs">{item.serialNumber || 'N/A'}</p>
                             <p className="truncate text-[9px] opacity-80">{item.customer}</p>
                           </div>
                         );
-                      } else { 
-                         return (
-                           <div
-                             key={`${item.instanceId}-span-${dayIndex}`}
-                             className={cn("text-[9px] p-0.5 rounded-sm mb-0.5 opacity-60 h-3", getColorForModelOnCalendar(item.model))}
-                           ></div>
-                         );
+                      } else { // For subsequent days of a multi-day item, render a placeholder or nothing
+                        // This simple version doesn't visually span items across days in the cell grid well.
+                        // A more complex approach would involve absolute positioning or a different grid structure.
+                        // For now, we only render the "card" on the start day.
+                        return null;
                       }
-                  })}
+                    })}
                 </ScrollArea>
               </div>
             );
           })}
         </div>
-        
+
         {scheduledItems.length > 0 && (
           <div className="mt-6">
             <h4 className="font-medium mb-2 text-base">Currently Scheduled Items ({scheduledItems.length}):</h4>
@@ -432,9 +461,9 @@ export default function SchedulePage() {
                 <Card key={item.instanceId} className="p-2 shadow-sm bg-card hover:shadow-md">
                   <div className="flex items-center justify-between">
                     <div>
-                        <p className="text-xs font-semibold">{item.model} - {item.serialNumber || 'N/A'}</p>
-                        <p className="text-[10px] text-muted-foreground">Cust: {item.customer} | PO: {item.poNumber} | Days: {item.daysPerUnit}</p>
-                        <p className="text-[10px] text-muted-foreground">Scheduled on: {calendarDays[item.scheduledOnDayIndex]?.toLocaleDateString() || 'N/A'}</p>
+                      <p className="text-xs font-semibold">{item.model} - {item.serialNumber || 'N/A'}</p>
+                      <p className="text-[10px] text-muted-foreground">Cust: {item.customer} | PO: {item.poNumber} | Days: {item.daysPerUnit}</p>
+                      <p className="text-[10px] text-muted-foreground">Scheduled on: {calendarDays[item.scheduledOnDayIndex]?.toLocaleDateString() || 'N/A'}</p>
                     </div>
                     <Button
                       variant="ghost"
@@ -473,15 +502,11 @@ export default function SchedulePage() {
 
       <ScrollArea className="flex-grow">
         <div className="space-y-6">
-          {/* Removed summary cards section */}
           <Separator className="my-6" />
-
           <section>
             <PlannablePumpsTable />
           </section>
-
           <Separator className="my-6" />
-          
           <section>
             <CalendarView />
           </section>
@@ -490,4 +515,3 @@ export default function SchedulePage() {
     </div>
   );
 }
-    

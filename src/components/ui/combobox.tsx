@@ -2,7 +2,7 @@
 "use client"
 
 import * as React from "react"
-import { Check, ChevronsUpDown } from "lucide-react"
+import { Check, ChevronsUpDown, X } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
@@ -19,18 +19,19 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover"
+import { Badge } from "@/components/ui/badge"
 
 interface ComboboxProps {
   options: { label: string; value: string }[];
-  value?: string | string[]; // Can be single string or array of strings for multi-select
-  onChange: (value: string | string[]) => void; // Passes back string or array
+  value?: string | string[];
+  onChange: (value: string | string[]) => void;
   placeholder?: string;
   searchPlaceholder?: string;
   emptyText?: string;
   className?: string;
   disabled?: boolean;
-  multiple?: boolean; // New prop for multi-select
-  allowCustomValue?: boolean; // Retain existing prop
+  multiple?: boolean;
+  allowCustomValue?: boolean; // To add new values not in options list
 }
 
 export function Combobox({
@@ -43,10 +44,12 @@ export function Combobox({
   className,
   disabled = false,
   multiple = false,
-  allowCustomValue = false, // Retain existing prop
+  allowCustomValue = false,
 }: ComboboxProps) {
-  const [open, setOpen] = React.useState(false)
-  const [inputValue, setInputValue] = React.useState("") // For custom value input
+  const [open, setOpen] = React.useState(false);
+  const [inputValue, setInputValue] = React.useState(""); // For custom value input / search term
+  const triggerRef = React.useRef<HTMLButtonElement>(null);
+
 
   const getButtonLabel = () => {
     if (multiple) {
@@ -54,8 +57,10 @@ export function Combobox({
       if (selectedValues.length === 0) return placeholder;
       if (selectedValues.length === 1) {
         const selectedOption = options.find((option) => option.value === selectedValues[0]);
-        return selectedOption?.label || selectedValues[0]; // Fallback to value if label not found (e.g. custom)
+        return selectedOption?.label || selectedValues[0];
       }
+      // For multiple items, show badges inside the trigger if there's space, or "X selected"
+      // This part needs careful UI consideration for responsiveness. For now, let's keep it simple.
       return `${selectedValues.length} selected`;
     } else {
       const selectedOption = options.find((option) => option.value === value);
@@ -73,90 +78,122 @@ export function Combobox({
         currentSelected.push(optionValue);
       }
       onChange(currentSelected);
-      // Do not close popover for multi-select
+      setInputValue(""); // Clear search input after selection
+      // Keep popover open for multi-select
     } else {
-      onChange(optionValue === value ? "" : optionValue);
-      setOpen(false);
-    }
-    setInputValue(""); // Reset input after selection
-  };
-  
-  const handleCustomValueBlur = () => {
-    if (allowCustomValue && inputValue.trim() !== "" && !options.some(opt => opt.value === inputValue.trim())) {
-      if (multiple) {
-        const currentSelected = Array.isArray(value) ? [...value] : [];
-        if (!currentSelected.includes(inputValue.trim())) {
-          onChange([...currentSelected, inputValue.trim()]);
-        }
-      } else {
-        onChange(inputValue.trim());
-      }
-       // setOpen(false); // Optionally close popover after custom input
+      onChange(optionValue === value ? "" : optionValue); // Allow deselect by clicking current value
+      setInputValue("");
+      setOpen(false); // Close on single select
     }
   };
 
+  const handleCustomValueAdd = () => {
+    if (allowCustomValue && inputValue.trim() !== "" && !options.some(opt => opt.value.toLowerCase() === inputValue.trim().toLowerCase())) {
+      const newValue = inputValue.trim();
+      if (multiple) {
+        const currentSelected = Array.isArray(value) ? [...value] : [];
+        if (!currentSelected.includes(newValue)) {
+          onChange([...currentSelected, newValue]);
+        }
+      } else {
+        onChange(newValue);
+      }
+      setInputValue(""); // Clear input after adding
+      if (!multiple) setOpen(false); // Close popover if single select
+    }
+  };
+  
+  const removeSelectedItem = (itemToRemove: string, e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent popover from opening/closing
+    if (multiple && Array.isArray(value)) {
+      onChange(value.filter(v => v !== itemToRemove));
+    }
+  };
+
+  const displayedValue = getButtonLabel();
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
+      <PopoverTrigger asChild ref={triggerRef}>
         <Button
           variant="outline"
           role="combobox"
           aria-expanded={open}
-          className={cn("w-full justify-between", (!value || (Array.isArray(value) && value.length === 0)) && "text-muted-foreground", className)}
+          className={cn("w-full justify-between h-10", (!value || (Array.isArray(value) && value.length === 0)) && "text-muted-foreground", className)}
           disabled={disabled}
         >
           <span className="truncate">
-            {getButtonLabel()}
+            {multiple && Array.isArray(value) && value.length > 0 ? (
+              <div className="flex flex-wrap gap-1 items-center">
+                {value.slice(0, 2).map(val => { // Show max 2 badges, then count
+                  const option = options.find(opt => opt.value === val);
+                  return (
+                    <Badge
+                      key={val}
+                      variant="secondary"
+                      className="px-1.5 py-0.5 text-xs"
+                    >
+                      {option?.label || val}
+                      <X
+                        className="ml-1 h-3 w-3 cursor-pointer hover:text-destructive"
+                        onClick={(e) => removeSelectedItem(val, e)}
+                      />
+                    </Badge>
+                  );
+                })}
+                {value.length > 2 && (
+                  <Badge variant="outline" className="px-1.5 py-0.5 text-xs">
+                    +{value.length - 2} more
+                  </Badge>
+                )}
+              </div>
+            ) : displayedValue}
           </span>
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+      <PopoverContent 
+        className="w-[--radix-popover-trigger-width] p-0" 
+        align="start"
+        style={{ width: triggerRef.current?.offsetWidth ? `${triggerRef.current.offsetWidth}px` : 'auto' }}
+      >
         <Command>
-          <CommandInput 
+          <CommandInput
             placeholder={searchPlaceholder}
             value={inputValue}
             onValueChange={setInputValue}
-            onBlur={allowCustomValue && !multiple ? handleCustomValueBlur : undefined} // Blur for custom value only if not multi & allowCustom
           />
           <CommandList>
             <CommandEmpty>
               {allowCustomValue && inputValue.trim() !== "" && !options.some(opt => opt.label.toLowerCase().includes(inputValue.toLowerCase()))
-                ? `Add "${inputValue.trim()}"` 
+                ? (
+                  <CommandItem
+                    key="__custom_add__"
+                    value={`add-${inputValue.trim()}`} // Unique value for selection
+                    onSelect={handleCustomValueAdd}
+                  >
+                    Add "{inputValue.trim()}"
+                  </CommandItem>
+                )
                 : emptyText}
             </CommandEmpty>
             <CommandGroup>
               {options.map((option) => (
                 <CommandItem
                   key={option.value}
-                  value={option.label} // Search by label
-                  onSelect={() => handleSelect(option.value)}
+                  value={option.label} // Search/filter by label
+                  onSelect={() => handleSelect(option.value)} // Actual selection uses option.value
+                  className="flex items-center justify-between"
                 >
-                  <Check
-                    className={cn(
-                      "mr-2 h-4 w-4",
-                      multiple
-                        ? (Array.isArray(value) && value.includes(option.value) ? "opacity-100" : "opacity-0")
-                        : (value === option.value ? "opacity-100" : "opacity-0")
-                    )}
-                  />
-                  {option.label}
+                  <span className="truncate">{option.label}</span>
+                  {multiple && Array.isArray(value) && value.includes(option.value) && (
+                    <Check className="h-4 w-4 text-primary" />
+                  )}
+                  {!multiple && value === option.value && (
+                     <Check className="h-4 w-4 text-primary" />
+                  )}
                 </CommandItem>
               ))}
-              {allowCustomValue && inputValue.trim() !== "" && !options.some(opt => opt.label.toLowerCase() === inputValue.toLowerCase().trim()) && (
-                 <CommandItem
-                    key={inputValue.trim()}
-                    value={inputValue.trim()}
-                    onSelect={() => {
-                        handleSelect(inputValue.trim());
-                        if (!multiple) setOpen(false);
-                    }}
-                 >
-                    <Check className={cn("mr-2 h-4 w-4", "opacity-0")} /> {/* Custom items are not 'checked' in the list initially */}
-                    Add "{inputValue.trim()}"
-                 </CommandItem>
-              )}
             </CommandGroup>
           </CommandList>
         </Command>
