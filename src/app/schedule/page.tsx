@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { Checkbox } from '@/components/ui/checkbox'; // Import Checkbox
+import { Checkbox } from '@/components/ui/checkbox';
 import { cn } from '@/lib/utils';
 import { Combobox } from '@/components/ui/combobox';
 import type { Pump, PriorityLevel } from '@/types';
@@ -22,7 +22,7 @@ interface PlannablePump extends Pump {
 
 interface ScheduledPump extends PlannablePump {
   scheduledOnDayIndex: number;
-  instanceId: string;
+  instanceId: string; // Unique ID for this specific scheduled instance
 }
 
 interface ScheduleTimelineEntry extends ScheduledPump {
@@ -51,7 +51,7 @@ const getDaysPerUnit = (model: string): number => {
   if (model.includes('DD4') || model.includes('RL200')) return 2;
   if (model.includes('DD6') || model.includes('RL300')) return 3;
   if (model.includes('HC150') || model.includes('DV6')) return 4;
-  return 2;
+  return 2; // Default
 };
 
 export default function SchedulePage() {
@@ -90,7 +90,7 @@ export default function SchedulePage() {
     const nonShippedPumps = initialPumps.filter(p => p.currentStage !== 'shipped');
     const augmentedPumps: PlannablePump[] = nonShippedPumps
       .map(p => ({ ...p, daysPerUnit: getDaysPerUnit(p.model) }))
-      .filter(p => !scheduledItems.some(sp => sp.id === p.id));
+      .filter(p => !scheduledItems.some(sp => sp.id === p.id)); // Filter out pumps whose ID is in scheduledItems
     setPlannableItems(augmentedPumps);
   }, [initialPumps, scheduledItems]);
 
@@ -108,7 +108,7 @@ export default function SchedulePage() {
 
     return tempItems.filter(item =>
       (filters.customer.length === 0 || filters.customer.includes(item.customer)) &&
-      (filters.poNumber.length === 0 || filters.poNumber.some(po => item.poNumber.toLowerCase().includes(po.toLowerCase()))) &&
+      (filters.poNumber.length === 0 || filters.poNumber.some(po => item.poNumber && item.poNumber.toLowerCase().includes(po.toLowerCase()))) &&
       (filters.model.length === 0 || filters.model.includes(item.model)) &&
       (filters.priority.length === 0 || filters.priority.includes(item.priority || 'normal'))
     );
@@ -157,35 +157,28 @@ export default function SchedulePage() {
 
   const handleToggleSelectAllPlannableItems = useCallback(() => {
     const allFilteredIds = filteredPlannableItems.map(item => item.id);
-    const allCurrentlySelected = selectedPlannableItemIds.length > 0 && allFilteredIds.every(id => selectedPlannableItemIds.includes(id));
+    const allCurrentlySelected = selectedPlannableItemIds.length > 0 && filteredPlannableItems.every(id => selectedPlannableItemIds.includes(id));
 
     if (allCurrentlySelected) {
-      // Deselect all filtered items
       setSelectedPlannableItemIds(prev => prev.filter(id => !allFilteredIds.includes(id)));
     } else {
-      // Select all filtered items (add to existing selection without removing others)
       setSelectedPlannableItemIds(prev => Array.from(new Set([...prev, ...allFilteredIds])));
     }
   }, [filteredPlannableItems, selectedPlannableItemIds]);
 
 
   const handleDragStartPlannableItem = useCallback((e: React.DragEvent, item: PlannablePump) => {
-    // If the dragged item is selected and multiple items are selected, drag the batch
     if (selectedPlannableItemIds.includes(item.id) && selectedPlannableItemIds.length > 1) {
       const batchItemsToDrag = plannableItems.filter(p => selectedPlannableItemIds.includes(p.id));
       setDraggedItemData({ type: 'plannable-batch', items: batchItemsToDrag });
       e.dataTransfer.setData('application/pumptrack-item-ids', JSON.stringify(batchItemsToDrag.map(bi => bi.id)));
     } else {
-      // Otherwise, drag the single item
+      setSelectedPlannableItemIds([item.id]); // Ensure the dragged item is selected for single drag
       setDraggedItemData({ type: 'plannable-single', item });
       e.dataTransfer.setData('application/pumptrack-item-id', item.id);
-      // Ensure only this item is 'selected' for the purpose of this drag if it wasn't part of a multi-select
-      if (!selectedPlannableItemIds.includes(item.id)) {
-          setSelectedPlannableItemIds([item.id]);
-      }
     }
     e.dataTransfer.effectAllowed = 'move';
-  }, [selectedPlannableItemIds, plannableItems]);
+  }, [selectedPlannableItemIds, plannableItems, setSelectedPlannableItemIds]);
 
 
   const handleDragStartScheduledItem = useCallback((e: React.DragEvent, item: ScheduledPump) => {
@@ -201,56 +194,64 @@ export default function SchedulePage() {
 
   const handleDropOnCalendar = useCallback((e: React.DragEvent<HTMLDivElement>, targetDayIndex: number) => {
     e.preventDefault();
-    if (!draggedItemData) return;
-
-    let itemsToSchedule: PlannablePump[] = [];
-    let toastMessage = "";
-
-    if (draggedItemData.type === 'plannable-single') {
-      itemsToSchedule = [draggedItemData.item];
-      toastMessage = `${draggedItemData.item.serialNumber || draggedItemData.item.model} added to schedule.`;
-    } else if (draggedItemData.type === 'plannable-batch') {
-      itemsToSchedule = draggedItemData.items;
-      toastMessage = `${draggedItemData.items.length} pumps added to schedule.`;
-    } else if (draggedItemData.type === 'scheduled') {
-      const scheduledDraggedItem = draggedItemData.item;
-      setScheduledItems(prev => prev.map(si =>
-        si.instanceId === scheduledDraggedItem.instanceId
-          ? { ...si, scheduledOnDayIndex: targetDayIndex }
-          : si
-      ).sort((a, b) => a.scheduledOnDayIndex - b.scheduledOnDayIndex));
-      toast({ title: "Schedule Updated", description: `Rescheduled ${scheduledDraggedItem.serialNumber || scheduledDraggedItem.model}.` });
-      setDraggedItemData(null);
+    if (!draggedItemData) {
       return;
     }
 
-    if (itemsToSchedule.length > 0) {
-      const newScheduledItems: ScheduledPump[] = itemsToSchedule.map(item => ({
+    if (draggedItemData.type === 'plannable-single') {
+      const itemToSchedule = draggedItemData.item;
+      // Ensure item with same original ID is removed if already scheduled, then add new instance
+      setScheduledItems(prev => 
+        [...prev.filter(si => si.id !== itemToSchedule.id), {
+          ...itemToSchedule,
+          scheduledOnDayIndex: targetDayIndex,
+          instanceId: crypto.randomUUID(),
+        }].sort((a,b) => a.scheduledOnDayIndex - b.scheduledOnDayIndex)
+      );
+      toast({ title: "Pump Scheduled", description: `${itemToSchedule.serialNumber || itemToSchedule.model} added to schedule.` });
+      setSelectedPlannableItemIds([]);
+    } else if (draggedItemData.type === 'plannable-batch') {
+      const itemsToSchedule = draggedItemData.items;
+      const newScheduledInstances: ScheduledPump[] = itemsToSchedule.map(item => ({
         ...item,
-        scheduledOnDayIndex: targetDayIndex, // All items in batch start on the same target day for now
+        scheduledOnDayIndex: targetDayIndex, // Batch items start on same day for now
         instanceId: crypto.randomUUID(),
       }));
-
-      setScheduledItems(prev => [...prev, ...newScheduledItems].sort((a, b) => a.scheduledOnDayIndex - b.scheduledOnDayIndex));
-      // Plannable items will be updated via useEffect dependency on scheduledItems
-      toast({ title: "Pumps Scheduled", description: toastMessage });
-      setSelectedPlannableItemIds([]); // Clear selection after scheduling
+      
+      const newScheduledIds = new Set(newScheduledInstances.map(item => item.id));
+      setScheduledItems(prev => 
+        [...prev.filter(si => !newScheduledIds.has(si.id)), ...newScheduledInstances]
+        .sort((a,b) => a.scheduledOnDayIndex - b.scheduledOnDayIndex)
+      );
+      toast({ title: "Pumps Scheduled", description: `${itemsToSchedule.length} pumps added to schedule.` });
+      setSelectedPlannableItemIds([]);
+    } else if (draggedItemData.type === 'scheduled') {
+      const itemToMove = draggedItemData.item;
+      setScheduledItems(prev => prev.map(si =>
+        si.instanceId === itemToMove.instanceId
+          ? { ...si, scheduledOnDayIndex: targetDayIndex }
+          : si
+      ).sort((a,b) => a.scheduledOnDayIndex - b.scheduledOnDayIndex));
+      toast({ title: "Schedule Updated", description: `Rescheduled ${itemToMove.serialNumber || itemToMove.model}.` });
     }
 
     setDraggedItemData(null);
-  }, [draggedItemData, toast, plannableItems]);
+  }, [draggedItemData, toast, setScheduledItems, setSelectedPlannableItemIds, scheduledItems]);
 
 
   const handleDropOnPlannableList = useCallback((e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
-    if (!draggedItemData || draggedItemData.type !== 'scheduled') return;
+    if (!draggedItemData || draggedItemData.type !== 'scheduled') {
+      return;
+    }
 
-    const scheduledDraggedItem = draggedItemData.item;
-    setScheduledItems(prev => prev.filter(item => item.instanceId !== scheduledDraggedItem.instanceId));
-    toast({ title: "Pump Unscheduled", description: `${scheduledDraggedItem.serialNumber || scheduledDraggedItem.model} removed from schedule.` });
+    const itemToRemoveFromSchedule = draggedItemData.item;
+    setScheduledItems(prev => prev.filter(item => item.instanceId !== itemToRemoveFromSchedule.instanceId));
+    toast({ title: "Pump Unscheduled", description: `${itemToRemoveFromSchedule.serialNumber || itemToRemoveFromSchedule.model} removed from schedule.` });
+    
     setDraggedItemData(null);
     setSelectedPlannableItemIds([]);
-  }, [draggedItemData, toast]);
+  }, [draggedItemData, toast, setScheduledItems, setSelectedPlannableItemIds]);
 
   const removeFromSchedule = useCallback((instanceIdToRemove: string) => {
     const itemToRemove = scheduledItems.find(si => si.instanceId === instanceIdToRemove);
@@ -259,13 +260,13 @@ export default function SchedulePage() {
       toast({ title: "Pump Unscheduled", description: `${itemToRemove.serialNumber || itemToRemove.model} removed from schedule.` });
     }
     setSelectedPlannableItemIds([]);
-  }, [scheduledItems, toast]);
+  }, [scheduledItems, toast, setScheduledItems]);
 
   const resetSchedule = useCallback(() => {
     setScheduledItems([]);
     setSelectedPlannableItemIds([]);
     toast({ title: "Schedule Reset", description: "All pumps removed from schedule and returned to plannable list." });
-  }, [toast]);
+  }, [toast, setScheduledItems, setSelectedPlannableItemIds]);
 
   const handleClearFilters = useCallback(() => {
     setGlobalSearchTerm('');
@@ -310,7 +311,13 @@ export default function SchedulePage() {
   const availableCustomers = useMemo(() => [...new Set(initialPumps.map(p => p.customer))].map(c => ({ label: c, value: c })), [initialPumps]);
   const availableModels = useMemo(() => PUMP_MODELS.map(m => ({ label: m, value: m })), []);
   const availablePriorities = useMemo(() => PRIORITY_LEVELS.map(p => ({ label: p.label, value: p.value })), []);
-  const availablePONumbers = useMemo(() => [...new Set(initialPumps.map(p => p.poNumber))].map(po => ({ label: po, value: po })), [initialPumps]);
+  
+  const availablePONumbers = useMemo(() => {
+    const poNumbers = initialPumps
+        .map(p => p.poNumber)
+        .filter((po): po is string => typeof po === 'string' && po.trim() !== '');
+    return [...new Set(poNumbers)].map(po => ({label: po, value: po}));
+  }, [initialPumps]);
 
   const totalPlannablePumps = plannableItems.length;
   const isAnyFilterActive = globalSearchTerm !== '' || Object.values(filters).some(f => f.length > 0);
@@ -318,8 +325,6 @@ export default function SchedulePage() {
 
   const PlannablePumpsTable = () => {
     const allFilteredVisibleSelected = filteredPlannableItems.length > 0 && filteredPlannableItems.every(item => selectedPlannableItemIds.includes(item.id));
-    // For indeterminate state, we'd need a more complex Checkbox or an icon
-    // For now, SelectAllCheckbox is checked if all visible are selected.
     
     return (
     <Card>
@@ -424,16 +429,16 @@ export default function SchedulePage() {
                         "border-b hover:bg-secondary/30 cursor-grab",
                         selectedPlannableItemIds.includes(item.id) && "bg-primary/10"
                       )}
-                      draggable
+                      draggable={true}
                       onDragStart={(e) => handleDragStartPlannableItem(e, item)}
-                      onClick={() => handleTogglePlannableItemSelect(item.id)} // Allow clicking row to select
+                      onClick={() => handleTogglePlannableItemSelect(item.id)}
                     >
                       <td className="p-2 text-center">
                         <Checkbox
                           id={`select-item-${item.id}`}
                           checked={selectedPlannableItemIds.includes(item.id)}
                           onCheckedChange={() => handleTogglePlannableItemSelect(item.id)}
-                          onClick={(e) => e.stopPropagation()} // Prevent row click from also firing
+                          onClick={(e) => e.stopPropagation()}
                           aria-label={`Select item ${item.serialNumber || item.model}`}
                         />
                       </td>
@@ -483,10 +488,14 @@ export default function SchedulePage() {
 
         <div className="grid grid-cols-7 gap-1 min-h-[300px]">
           {calendarDays.map((date, dayIndex) => {
-            const dayString = date.toDateString();
+            // Find all items that *start* on this dayIndex for rendering
+            const itemsStartingThisDay = scheduleTimeline
+              .filter(item => item.startDay === dayIndex)
+              .sort((a,b) => (a.priority === 'urgent' ? -1 : b.priority === 'urgent' ? 1 : 0)); // simple sort, can be more complex
+
             return (
               <div
-                key={dayString}
+                key={date.toDateString()}
                 className={cn(
                   "h-32 border rounded-sm p-1 text-xs relative flex flex-col overflow-hidden bg-background hover:bg-muted/30",
                   date.getMonth() !== new Date().getMonth() && "bg-muted/20 text-muted-foreground/60"
@@ -496,36 +505,28 @@ export default function SchedulePage() {
               >
                 <div className={cn("font-medium pb-0.5 text-right", date.toDateString() === new Date().toDateString() && "text-primary font-bold")}>{date.getDate()}</div>
                 <ScrollArea className="flex-grow space-y-0.5">
-                  {scheduleTimeline
-                    .filter(item => dayIndex >= item.startDay && dayIndex <= item.endDay)
-                    .map(item => {
-                      if (dayIndex === item.startDay) { 
-                        return (
-                          <div
-                            key={item.instanceId} 
-                            draggable
-                            onDragStart={(e) => handleDragStartScheduledItem(e, item)}
-                            title={`${item.model} - ${item.serialNumber || 'N/A'}\nCustomer: ${item.customer}\nPO: ${item.poNumber}\nDuration: ${item.duration} days`}
-                            className={cn(
-                              "text-[10px] p-1 rounded mb-0.5 cursor-grab text-primary-foreground leading-tight border",
-                              getColorForModelOnCalendar(item.model),
-                              "overflow-hidden" 
-                            )}
-                            style={{
-                              height: `calc(${item.duration * 1.5}rem - 2px)`, 
-                              minHeight: '1.4rem',
-                              maxHeight: 'calc(100% - 1.25rem)',
-                            }}
-                          >
-                            <p className="font-semibold truncate">{item.model}</p>
-                            <p className="truncate text-xs">{item.serialNumber || 'N/A'}</p>
-                            <p className="truncate text-[9px] opacity-80">{item.customer}</p>
-                          </div>
-                        );
-                      } else { 
-                        return null;
-                      }
-                    })}
+                  {itemsStartingThisDay.map(item => (
+                     <div
+                        key={item.instanceId} 
+                        draggable={true}
+                        onDragStart={(e) => handleDragStartScheduledItem(e, item)}
+                        title={`${item.model} - ${item.serialNumber || 'N/A'}\nCustomer: ${item.customer}\nPO: ${item.poNumber}\nDuration: ${item.duration} days`}
+                        className={cn(
+                          "text-[10px] p-1 rounded mb-0.5 cursor-grab text-primary-foreground leading-tight border",
+                          getColorForModelOnCalendar(item.model),
+                          "overflow-hidden" 
+                        )}
+                        style={{
+                          height: `calc(${item.duration * 1.5}rem - 2px)`, 
+                          minHeight: '1.4rem',
+                          maxHeight: 'calc(100% - 1.25rem)', // Ensure it fits within the cell
+                        }}
+                      >
+                        <p className="font-semibold truncate">{item.model}</p>
+                        <p className="truncate text-xs">{item.serialNumber || 'N/A'}</p>
+                        <p className="truncate text-[9px] opacity-80">{item.customer}</p>
+                      </div>
+                  ))}
                 </ScrollArea>
               </div>
             );
@@ -536,7 +537,7 @@ export default function SchedulePage() {
           <div className="mt-6">
             <h4 className="font-medium mb-2 text-base">Currently Scheduled Items ({scheduledItems.length}):</h4>
             <ScrollArea className="h-[200px] border rounded-md p-2 space-y-2">
-              {scheduledItems.map((item) => (
+              {scheduledItems.sort((a,b) => a.scheduledOnDayIndex - b.scheduledOnDayIndex).map((item) => (
                 <Card key={item.instanceId} className="p-2 shadow-sm bg-card hover:shadow-md">
                   <div className="flex items-center justify-between">
                     <div>
@@ -595,3 +596,5 @@ export default function SchedulePage() {
   );
 }
 
+
+    
