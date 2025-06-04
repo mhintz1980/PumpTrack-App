@@ -77,12 +77,11 @@ export function Combobox({
       }
       onChange(currentSelected);
       setInputValue("");
-      // Do not call setOpen(false) here for multiple
-      // Re-focusing input is handled in CommandItem's onSelect or here for custom values
+      inputRef.current?.focus(); // Keep focus for multi-select
     } else {
       onChange(optionValue === value ? "" : optionValue);
       setInputValue("");
-      setOpen(false); // Close for single select
+      setOpen(false);
     }
   };
 
@@ -94,10 +93,10 @@ export function Combobox({
         if (!currentSelected.includes(newValue)) {
           onChange([...currentSelected, newValue]);
         }
-        inputRef.current?.focus(); // Keep focus for multi-select
+        inputRef.current?.focus(); 
       } else {
         onChange(newValue);
-        setOpen(false); // Close for single select
+        setOpen(false); 
       }
       setInputValue("");
     }
@@ -107,7 +106,7 @@ export function Combobox({
     if (multiple && Array.isArray(value)) {
       onChange(value.filter(v => v !== itemToRemove));
     }
-    inputRef.current?.focus(); // Try to keep popover open by focusing input
+    inputRef.current?.focus();
   };
 
   const displayedValue = getButtonLabel();
@@ -134,23 +133,29 @@ export function Combobox({
                       className="px-1.5 py-0.5 text-xs flex items-center"
                     >
                       <span className="truncate max-w-[100px]">{option?.label || val}</span>
-                      <button
-                        type="button"
-                        className="ml-1 rounded-full outline-none ring-offset-background focus-visible:ring-1 focus-visible:ring-ring focus-visible:ring-offset-1 flex-shrink-0"
+                      <div
+                        role="button"
+                        tabIndex={0}
+                        className="ml-1 rounded-full outline-none ring-offset-background focus-visible:ring-1 focus-visible:ring-ring focus-visible:ring-offset-1 flex-shrink-0 cursor-pointer"
                         onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation(); // Stop propagation to parent PopoverTrigger
+                          e.preventDefault(); // Prevent any default action if this div were, for example, a link
+                          e.stopPropagation(); // Stop event from bubbling to parent PopoverTrigger
                           removeSelectedItem(val);
                         }}
-                        onPointerDown={(e) => {
-                            // Prevent popover from closing on pointer down, critical for Radix
-                            e.preventDefault(); 
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault();
                             e.stopPropagation();
+                            removeSelectedItem(val);
+                          }
+                        }}
+                        onPointerDown={(e) => {
+                            e.stopPropagation(); // Crucial to prevent popover from closing
                         }}
                         aria-label={`Remove ${option?.label || val}`}
                       >
                         <X className="h-3 w-3 text-muted-foreground hover:text-foreground" />
-                      </button>
+                      </div>
                     </Badge>
                   );
                 })}
@@ -170,9 +175,20 @@ export function Combobox({
         align="start"
         style={{ width: triggerRef.current?.offsetWidth ? `${triggerRef.current.offsetWidth}px` : 'auto' }}
         onOpenAutoFocus={(e) => {
-          // When popover opens, focus the command input
           e.preventDefault();
           inputRef.current?.focus();
+        }}
+         onPointerDownCapture={(e) => { // Changed from onInteractOutside
+          if (multiple) {
+            // Check if the click is on a command item or inside the command input
+            const target = e.target as HTMLElement;
+            if (target.closest('[cmdk-item="true"]') || target.closest('[cmdk-input="true"]')) {
+               // If it is, don't close the popover
+            } else if (!target.closest('[cmdk-list="true"]')) {
+                // If the click is outside the list but still inside the popover content (e.g. on scrollbar), allow it
+                // But if it's a click on the PopoverContent background itself or similar, do nothing special (let it close if default behavior)
+            }
+          }
         }}
       >
         <Command>
@@ -188,12 +204,15 @@ export function Combobox({
                 ? (
                   <CommandItem
                     key="__custom_add__"
-                    value={`add-${inputValue.trim()}`} // Ensure cmdk value is unique
-                    onSelect={() => { // cmdk's onSelect
+                    value={`add-${inputValue.trim()}`}
+                    onSelect={() => {
                       handleCustomValueAdd();
-                      if (multiple) {
-                        inputRef.current?.focus();
-                      }
+                    }}
+                     onPointerDown={(e) => { // Prevent popover closing on item click in multi-select
+                        if (multiple) {
+                            e.preventDefault();
+                            e.stopPropagation();
+                        }
                     }}
                   >
                     Add "{inputValue.trim()}"
@@ -205,14 +224,16 @@ export function Combobox({
               {options.map((option) => (
                 <CommandItem
                   key={option.value}
-                  value={option.label} // cmdk uses this for filtering and as a unique key for its internal state
-                  onSelect={() => { // cmdk's onSelect
+                  value={option.label}
+                  onSelect={() => {
                     handleSelect(option.value);
-                    if (multiple) {
-                      // For multi-select, keep the input focused to keep popover open
-                      inputRef.current?.focus();
-                    }
                   }}
+                   onPointerDown={(e) => { // Prevent popover closing on item click in multi-select
+                        if (multiple) {
+                            e.preventDefault();
+                            e.stopPropagation();
+                        }
+                    }}
                   className="flex items-center justify-between"
                 >
                   <span className="truncate">{option.label}</span>
