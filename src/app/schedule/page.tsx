@@ -2,9 +2,8 @@
 "use client";
 
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { Calendar as CalendarIcon, Package, Clock, Filter, Users, FileText, GripVertical, XCircle, RotateCcw } from 'lucide-react';
+import { Calendar as CalendarIcon, Package, Clock, Filter, Users, FileText, GripVertical, XCircle, RotateCcw, SearchIcon } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -14,35 +13,32 @@ import { cn } from '@/lib/utils';
 import { Label } from "@/components/ui/label";
 import { Combobox } from '@/components/ui/combobox';
 import type { Pump, PriorityLevel } from '@/types';
-import { PUMP_MODELS, CUSTOMER_NAMES, PRIORITY_LEVELS, STAGES } from '@/lib/constants'; // Assuming STAGES might be useful contextually
+import { PUMP_MODELS, CUSTOMER_NAMES, PRIORITY_LEVELS, STAGES } from '@/lib/constants';
 import { useToast } from '@/hooks/use-toast';
 
-// --- Data Augmentation and Types ---
 interface PlannablePump extends Pump {
   daysPerUnit: number;
 }
 
 interface ScheduledPump extends PlannablePump {
-  scheduledOnDayIndex: number; // Which day index on the calendar it's initially scheduled for
-  instanceId: string; // Unique ID for this specific scheduled instance
+  scheduledOnDayIndex: number; 
+  instanceId: string; 
 }
 
 interface ScheduleTimelineEntry extends ScheduledPump {
   startDay: number;
   endDay: number;
-  duration: number; // Same as daysPerUnit for a single pump unit
+  duration: number; 
 }
 
-// Simulate fetching pumps (like in HomePage)
 const generateId = () => crypto.randomUUID();
 const generateRandomSerialNumber = () => `MSP-JN-${String(Math.floor(Math.random() * 9000) + 1000).padStart(4, '0')}`;
 
 const getDaysPerUnit = (model: string): number => {
-  // Simple logic for now, can be expanded
   if (model.includes('DD4') || model.includes('RL200')) return 2;
   if (model.includes('DD6') || model.includes('RL300')) return 3;
   if (model.includes('HC150') || model.includes('DV6')) return 4;
-  return 2; // Default
+  return 2; 
 };
 
 export default function SchedulePage() {
@@ -51,6 +47,7 @@ export default function SchedulePage() {
   const [plannableItems, setPlannableItems] = useState<PlannablePump[]>([]);
   const [scheduledItems, setScheduledItems] = useState<ScheduledPump[]>([]);
   
+  const [globalSearchTerm, setGlobalSearchTerm] = useState('');
   const [filters, setFilters] = useState<{ customer: string[]; poNumber: string[]; model: string[]; priority: string[] }>({
     customer: [],
     poNumber: [],
@@ -62,7 +59,6 @@ export default function SchedulePage() {
   const [draggedItemType, setDraggedItemType] = useState<'plannable' | 'scheduled' | null>(null);
 
   useEffect(() => {
-    // Simulate initial data load
     const now = new Date().toISOString();
     const samplePumps: Pump[] = [
       { id: generateId(), model: PUMP_MODELS[0], serialNumber: generateRandomSerialNumber(), customer: CUSTOMER_NAMES[0], poNumber: 'PO-PLAN-001', currentStage: 'open-jobs', priority: 'high', createdAt: now, updatedAt: now },
@@ -71,7 +67,7 @@ export default function SchedulePage() {
       { id: generateId(), model: PUMP_MODELS[0], serialNumber: generateRandomSerialNumber(), customer: CUSTOMER_NAMES[2], poNumber: 'PO-PLAN-004', currentStage: 'testing', powderCoater: 'Acme Powder Coating', powderCoatColor: 'RAL 9005', priority: 'normal', createdAt: now, updatedAt: now },
       { id: generateId(), model: PUMP_MODELS[3], serialNumber: generateRandomSerialNumber(), customer: CUSTOMER_NAMES[3], poNumber: 'PO-PLAN-005', currentStage: 'powder-coat', powderCoater: 'Best Finishers Inc.', powderCoatColor: 'RAL 7035', priority: 'high', createdAt: now, updatedAt: now },
       { id: generateId(), model: PUMP_MODELS[4], serialNumber: generateRandomSerialNumber(), customer: CUSTOMER_NAMES[1], poNumber: 'PO-PLAN-006', currentStage: 'open-jobs', priority: 'normal', notes: 'Needs special part', createdAt: now, updatedAt: now },
-      { id: generateId(), model: PUMP_MODELS[1], serialNumber: generateRandomSerialNumber(), customer: CUSTOMER_NAMES[0], poNumber: 'PO-PLAN-001', currentStage: 'open-jobs', priority: 'high', createdAt: now, updatedAt: now }, // Duplicate PO for testing
+      { id: generateId(), model: PUMP_MODELS[1], serialNumber: generateRandomSerialNumber(), customer: CUSTOMER_NAMES[0], poNumber: 'PO-PLAN-001', currentStage: 'open-jobs', priority: 'high', createdAt: now, updatedAt: now }, 
     ];
     setInitialPumps(samplePumps);
   }, []);
@@ -80,28 +76,36 @@ export default function SchedulePage() {
     const nonShippedPumps = initialPumps.filter(p => p.currentStage !== 'shipped');
     const augmentedPumps: PlannablePump[] = nonShippedPumps
       .map(p => ({ ...p, daysPerUnit: getDaysPerUnit(p.model) }))
-      // Filter out pumps that are already in scheduledItems by their original ID
       .filter(p => !scheduledItems.some(sp => sp.id === p.id));
     setPlannableItems(augmentedPumps);
   }, [initialPumps, scheduledItems]);
 
-
-  // --- Memoized Calculations ---
   const filteredPlannableItems = useMemo(() => {
-    return plannableItems.filter(item =>
+    let tempItems = [...plannableItems];
+
+    if (globalSearchTerm) {
+      const lowerSearchTerm = globalSearchTerm.toLowerCase();
+      tempItems = tempItems.filter(item =>
+        Object.values(item).some(val =>
+          String(val).toLowerCase().includes(lowerSearchTerm)
+        )
+      );
+    }
+
+    return tempItems.filter(item =>
       (filters.customer.length === 0 || filters.customer.includes(item.customer)) &&
-      (filters.poNumber.length === 0 || filters.poNumber.some(po => item.poNumber.toLowerCase().includes(po.toLowerCase()))) && // Allow partial match for PO
+      (filters.poNumber.length === 0 || filters.poNumber.some(po => item.poNumber.toLowerCase().includes(po.toLowerCase()))) && 
       (filters.model.length === 0 || filters.model.includes(item.model)) &&
       (filters.priority.length === 0 || filters.priority.includes(item.priority || 'normal'))
     );
-  }, [plannableItems, filters]);
+  }, [plannableItems, filters, globalSearchTerm]);
 
   const calendarDays = useMemo(() => {
     const days = [];
     const today = new Date();
     const startDate = new Date(today);
-    startDate.setDate(today.getDate() - today.getDay()); // Start from Sunday of current week
-    for (let i = 0; i < 42; i++) { // 6 weeks
+    startDate.setDate(today.getDate() - today.getDay()); 
+    for (let i = 0; i < 42; i++) { 
       const date = new Date(startDate);
       date.setDate(startDate.getDate() + i);
       days.push(date);
@@ -111,11 +115,7 @@ export default function SchedulePage() {
 
   const scheduleTimeline = useMemo(() => {
     const timeline: ScheduleTimelineEntry[] = [];
-    // Simple sequential placement for now. A more complex version would handle overlaps.
-    let currentDayCursor = 0; 
     scheduledItems.sort((a,b) => a.scheduledOnDayIndex - b.scheduledOnDayIndex).forEach(item => {
-      // This is a naive placement. A real scheduler would check for overlaps on item.scheduledOnDayIndex.
-      // For now, let's assume scheduledOnDayIndex is the desired START.
       const startDay = item.scheduledOnDayIndex;
       const duration = item.daysPerUnit;
       
@@ -133,8 +133,6 @@ export default function SchedulePage() {
     return scheduledItems.reduce((sum, item) => sum + item.daysPerUnit, 0);
   }, [scheduledItems]);
 
-
-  // --- Drag and Drop Handlers ---
   const handleDragStartPlannableItem = useCallback((e: React.DragEvent, item: PlannablePump) => {
     setDraggedItem(item);
     setDraggedItemType('plannable');
@@ -166,7 +164,6 @@ export default function SchedulePage() {
         instanceId: crypto.randomUUID(),
       };
       setScheduledItems(prev => [...prev, newScheduledItem].sort((a,b) => a.scheduledOnDayIndex - b.scheduledOnDayIndex));
-      // Plannable items will be refiltered by the useEffect dependency on scheduledItems
       toast({ title: "Pump Scheduled", description: `${plannableDraggedItem.serialNumber || plannableDraggedItem.model} added to schedule.` });
     } else if (draggedItemType === 'scheduled') {
       const scheduledDraggedItem = draggedItem as ScheduledPump;
@@ -183,11 +180,10 @@ export default function SchedulePage() {
   
   const handleDropOnPlannableList = useCallback((e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
-    if (!draggedItem || draggedItemType !== 'scheduled') return; // Only handle drops of existing scheduled items
+    if (!draggedItem || draggedItemType !== 'scheduled') return;
 
     const scheduledDraggedItem = draggedItem as ScheduledPump;
     setScheduledItems(prev => prev.filter(item => item.instanceId !== scheduledDraggedItem.instanceId));
-    // The item will reappear in plannableItems due to useEffect dependency
     toast({ title: "Pump Unscheduled", description: `${scheduledDraggedItem.serialNumber || scheduledDraggedItem.model} removed from schedule.` });
     setDraggedItem(null);
     setDraggedItemType(null);
@@ -203,15 +199,13 @@ export default function SchedulePage() {
   
   const resetSchedule = useCallback(() => {
     setScheduledItems([]);
-    // Plannable items will be fully restored by the useEffect
     toast({ title: "Schedule Reset", description: "All pumps removed from schedule and returned to plannable list." });
   }, [toast]);
 
-  // --- UI Helpers ---
   const getPriorityBadgeVariant = (priority?: PriorityLevel): "default" | "secondary" | "destructive" | "outline" => {
     switch (priority) {
       case 'urgent': return 'destructive';
-      case 'high': return 'default'; // Using 'default' (primary theme color) for high
+      case 'high': return 'default'; 
       case 'normal': return 'secondary';
       default: return 'outline';
     }
@@ -240,43 +234,29 @@ export default function SchedulePage() {
   const availableCustomers = useMemo(() => [...new Set(initialPumps.map(p => p.customer))].map(c => ({ label: c, value: c })), [initialPumps]);
   const availableModels = useMemo(() => PUMP_MODELS.map(m => ({ label: m, value: m })), []);
   const availablePriorities = useMemo(() => PRIORITY_LEVELS.map(p => ({label: p.label, value: p.value})), []);
-  // PO Numbers could be many, so maybe a text input for filtering them is better, or a searchable combobox if there are distinct ones.
-  // For now, I'll use a simple text input for PO.
   const availablePONumbers = useMemo(() => [...new Set(initialPumps.map(p => p.poNumber))].map(po => ({ label: po, value: po})), [initialPumps]);
 
-
-  // --- Summaries ---
   const totalPlannablePumps = plannableItems.length;
-  const pumpsByModel = useMemo(() => {
-    return plannableItems.reduce((acc, item) => {
-      acc[item.model] = (acc[item.model] || 0) + 1;
-      return acc;
-    }, {} as Record<string, number>);
-  }, [plannableItems]);
 
-  const pumpsByCustomer = useMemo(() => {
-    return plannableItems.reduce((acc, item) => {
-      acc[item.customer] = (acc[item.customer] || 0) + 1;
-      return acc;
-    }, {} as Record<string, number>);
-  }, [plannableItems]);
-  
-  const pumpsByPO = useMemo(() => {
-    return plannableItems.reduce((acc, item) => {
-      acc[item.poNumber] = (acc[item.poNumber] || 0) + 1;
-      return acc;
-    }, {} as Record<string, number>);
-  }, [plannableItems]);
-
-
-  // --- Components ---
   const PlannablePumpsTable = () => (
     <Card>
       <CardHeader>
-        <CardTitle>Plannable Pumps</CardTitle>
+        <CardTitle>Pumps to Schedule</CardTitle>
         <CardDescription>Drag pumps from this table to the calendar. Pumps not yet scheduled.</CardDescription>
       </CardHeader>
       <CardContent>
+        <div className="mb-4">
+            <div className="relative">
+                <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                    type="text"
+                    placeholder="Search all fields..."
+                    value={globalSearchTerm}
+                    onChange={(e) => setGlobalSearchTerm(e.target.value)}
+                    className="pl-10 w-full"
+                />
+            </div>
+        </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
           <Combobox
             options={availableCustomers}
@@ -296,7 +276,7 @@ export default function SchedulePage() {
             emptyText="No model found."
             multiple
           />
-          <Combobox // Using Combobox for PO as well
+          <Combobox 
             options={availablePONumbers}
             value={filters.poNumber}
             onChange={(value) => setFilters(prev => ({...prev, poNumber: value as string[]}))}
@@ -304,7 +284,7 @@ export default function SchedulePage() {
             searchPlaceholder="Search POs..."
             emptyText="No PO found."
             multiple
-            allowCustomValue // Allow typing custom PO parts for filtering
+            allowCustomValue 
           />
           <Combobox
             options={availablePriorities}
@@ -319,7 +299,7 @@ export default function SchedulePage() {
         
         <ScrollArea 
           className="h-[400px] border rounded-md"
-          onDragOver={handleDragOver} // Allow dropping scheduled items back
+          onDragOver={handleDragOver} 
           onDrop={handleDropOnPlannableList} 
         >
           <div className="p-1">
@@ -390,14 +370,14 @@ export default function SchedulePage() {
           ))}
         </div>
         
-        <div className="grid grid-cols-7 gap-1 min-h-[300px]"> {/* Ensure calendar has some min height */}
+        <div className="grid grid-cols-7 gap-1 min-h-[300px]">
           {calendarDays.map((date, dayIndex) => {
             const dayString = date.toDateString();
             return (
               <div
                 key={dayString}
                 className={cn(
-                  "h-32 border rounded-sm p-1 text-xs relative flex flex-col overflow-hidden bg-background hover:bg-muted/30", // Increased height to h-32
+                  "h-32 border rounded-sm p-1 text-xs relative flex flex-col overflow-hidden bg-background hover:bg-muted/30",
                   date.getMonth() !== new Date().getMonth() && "bg-muted/20 text-muted-foreground/60"
                 )}
                 onDragOver={handleDragOver}
@@ -406,9 +386,9 @@ export default function SchedulePage() {
                 <div className={cn("font-medium pb-0.5 text-right", date.toDateString() === new Date().toDateString() && "text-primary font-bold")}>{date.getDate()}</div>
                 <ScrollArea className="flex-grow space-y-0.5">
                   {scheduleTimeline
-                    .filter(item => dayIndex >= item.startDay && dayIndex <= item.endDay) // Items spanning this day
+                    .filter(item => dayIndex >= item.startDay && dayIndex <= item.endDay) 
                     .map(item => {
-                      if (dayIndex === item.startDay) { // Only render the main block on its start day
+                      if (dayIndex === item.startDay) { 
                         return (
                           <div
                             key={item.instanceId}
@@ -418,12 +398,10 @@ export default function SchedulePage() {
                             className={cn(
                               "text-[10px] p-1 rounded mb-0.5 cursor-grab text-primary-foreground leading-tight border",
                               getColorForModelOnCalendar(item.model),
-                              // Basic attempt to show duration by occupying more space, complex for CSS grid alone
                             )}
                             style={{ 
-                              height: `${item.duration * 1.5}rem`, // very rough height based on duration
+                              height: `${item.duration * 1.5}rem`, 
                               minHeight: '1.5rem',
-                              // Position absolutely if it needs to span rows correctly
                             }} 
                           >
                             <p className="font-semibold truncate">{item.model}</p>
@@ -431,7 +409,7 @@ export default function SchedulePage() {
                             <p className="truncate text-[9px] opacity-80">{item.customer}</p>
                           </div>
                         );
-                      } else { // For subsequent days of a multi-day task, show a smaller placeholder or segment
+                      } else { 
                          return (
                            <div
                              key={`${item.instanceId}-span-${dayIndex}`}
@@ -495,61 +473,7 @@ export default function SchedulePage() {
 
       <ScrollArea className="flex-grow">
         <div className="space-y-6">
-          <section>
-            <h2 className="text-xl font-semibold text-primary mb-3">Summary of Plannable Pumps</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                <Card>
-                    <CardHeader className="pb-2 pt-4">
-                    <CardTitle className="text-base flex items-center gap-2"><Users size={16} /> By Customer</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                    {Object.entries(pumpsByCustomer).length > 0 ? (
-                        Object.entries(pumpsByCustomer).map(([customer, count]) => (
-                        <div key={customer} className="flex justify-between text-sm py-0.5">
-                            <span>{customer}</span>
-                            <Badge variant="secondary" className="text-xs">{count}</Badge>
-                        </div>
-                        ))
-                    ) : <p className="text-sm text-muted-foreground">N/A</p>}
-                    </CardContent>
-                </Card>
-                
-                <Card>
-                    <CardHeader className="pb-2 pt-4">
-                    <CardTitle className="text-base flex items-center gap-2"><Package size={16}/> By Model</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                    {Object.entries(pumpsByModel).length > 0 ? (
-                        Object.entries(pumpsByModel).map(([model, count]) => (
-                        <div key={model} className="flex justify-between text-sm py-0.5">
-                            <span>{model}</span>
-                            <Badge variant="secondary" className="text-xs">{count}</Badge>
-                        </div>
-                        ))
-                    ) : <p className="text-sm text-muted-foreground">N/A</p>}
-                    </CardContent>
-                </Card>
-                
-                <Card className="md:col-span-2">
-                    <CardHeader className="pb-2 pt-4">
-                    <CardTitle className="text-base flex items-center gap-2"><FileText size={16}/> By Purchase Order</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                    <ScrollArea className="h-[100px]">
-                    {Object.entries(pumpsByPO).length > 0 ? (
-                        Object.entries(pumpsByPO).map(([po, count]) => (
-                        <div key={po} className="flex justify-between text-sm py-0.5">
-                            <span className="truncate max-w-[70%]">{po}</span>
-                            <Badge variant="outline" className="text-xs flex-shrink-0">{count}</Badge>
-                        </div>
-                        ))
-                    ) : <p className="text-sm text-muted-foreground">N/A</p>}
-                    </ScrollArea>
-                    </CardContent>
-                </Card>
-            </div>
-          </section>
-
+          {/* Removed summary cards section */}
           <Separator className="my-6" />
 
           <section>
