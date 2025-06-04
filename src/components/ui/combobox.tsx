@@ -76,12 +76,13 @@ export function Combobox({
         currentSelected.push(optionValue);
       }
       onChange(currentSelected);
-      setInputValue(""); 
-      inputRef.current?.focus(); 
-    } else {
-      onChange(optionValue === value ? "" : optionValue); 
       setInputValue("");
-      setOpen(false); 
+      // Do not call setOpen(false) here for multiple
+      // Re-focusing input is handled in CommandItem's onSelect or here for custom values
+    } else {
+      onChange(optionValue === value ? "" : optionValue);
+      setInputValue("");
+      setOpen(false); // Close for single select
     }
   };
 
@@ -93,10 +94,10 @@ export function Combobox({
         if (!currentSelected.includes(newValue)) {
           onChange([...currentSelected, newValue]);
         }
-        inputRef.current?.focus();
+        inputRef.current?.focus(); // Keep focus for multi-select
       } else {
         onChange(newValue);
-        setOpen(false);
+        setOpen(false); // Close for single select
       }
       setInputValue("");
     }
@@ -106,7 +107,7 @@ export function Combobox({
     if (multiple && Array.isArray(value)) {
       onChange(value.filter(v => v !== itemToRemove));
     }
-    inputRef.current?.focus();
+    inputRef.current?.focus(); // Try to keep popover open by focusing input
   };
 
   const displayedValue = getButtonLabel();
@@ -124,7 +125,7 @@ export function Combobox({
           <span className="truncate flex-grow text-left">
             {multiple && Array.isArray(value) && value.length > 0 ? (
               <div className="flex flex-wrap gap-1 items-center">
-                {value.slice(0, 3).map(val => { 
+                {value.slice(0, 3).map(val => {
                   const option = options.find(opt => opt.value === val);
                   return (
                     <Badge
@@ -138,11 +139,12 @@ export function Combobox({
                         className="ml-1 rounded-full outline-none ring-offset-background focus-visible:ring-1 focus-visible:ring-ring focus-visible:ring-offset-1 flex-shrink-0"
                         onClick={(e) => {
                           e.preventDefault();
-                          e.stopPropagation();
+                          e.stopPropagation(); // Stop propagation to parent PopoverTrigger
                           removeSelectedItem(val);
                         }}
                         onPointerDown={(e) => {
-                            e.preventDefault();
+                            // Prevent popover from closing on pointer down, critical for Radix
+                            e.preventDefault(); 
                             e.stopPropagation();
                         }}
                         aria-label={`Remove ${option?.label || val}`}
@@ -168,13 +170,9 @@ export function Combobox({
         align="start"
         style={{ width: triggerRef.current?.offsetWidth ? `${triggerRef.current.offsetWidth}px` : 'auto' }}
         onOpenAutoFocus={(e) => {
+          // When popover opens, focus the command input
           e.preventDefault();
           inputRef.current?.focus();
-        }}
-        onPointerDownCapture={(e) => {
-          if (multiple && (e.target as HTMLElement).closest('[cmdk-item]')) {
-            e.stopPropagation();
-          }
         }}
       >
         <Command>
@@ -190,8 +188,13 @@ export function Combobox({
                 ? (
                   <CommandItem
                     key="__custom_add__"
-                    value={`add-${inputValue.trim()}`}
-                    onSelect={handleCustomValueAdd}
+                    value={`add-${inputValue.trim()}`} // Ensure cmdk value is unique
+                    onSelect={() => { // cmdk's onSelect
+                      handleCustomValueAdd();
+                      if (multiple) {
+                        inputRef.current?.focus();
+                      }
+                    }}
                   >
                     Add "{inputValue.trim()}"
                   </CommandItem>
@@ -202,9 +205,13 @@ export function Combobox({
               {options.map((option) => (
                 <CommandItem
                   key={option.value}
-                  value={option.label} 
-                  onSelect={() => {
+                  value={option.label} // cmdk uses this for filtering and as a unique key for its internal state
+                  onSelect={() => { // cmdk's onSelect
                     handleSelect(option.value);
+                    if (multiple) {
+                      // For multi-select, keep the input focused to keep popover open
+                      inputRef.current?.focus();
+                    }
                   }}
                   className="flex items-center justify-between"
                 >
