@@ -53,45 +53,6 @@ body {
     --sidebar-border: 210 100% 20%; /* Slightly lighter navy for borders within sidebar */
     --sidebar-ring: 38 92% 65%; /* Lighter orange for focus in sidebar */
   }
-
-  .dark {
-    --background: 210 100% 10%; /* Even Darker Navy for main background */
-    --foreground: 220 15% 85%; /* Lighter gray for text */
-
-    --card: 210 100% 15%; /* Deep Navy for cards */
-    --card-foreground: 220 15% 85%; /* Lighter gray for text on cards */
-
-    --popover: 210 100% 15%;
-    --popover-foreground: 220 15% 85%;
-
-    --primary: 207 100% 45%; /* Primary Brand Blue - a bit lighter for dark mode */
-    --primary-foreground: 0 0% 98%; /* White text on primary */
-
-    --secondary: 210 80% 20%; /* Darker muted blue/gray */
-    --secondary-foreground: 220 15% 85%;
-
-    --muted: 210 70% 18%; /* Even more muted dark blue/gray */
-    --muted-foreground: 220 15% 70%;
-
-    --accent: 38 92% 60%; /* Accent / CTA Orange - slightly lighter for dark mode */
-    --accent-foreground: 0 0% 10%; /* Dark text on accent */
-
-    --destructive: 0 70% 50%;
-    --destructive-foreground: 0 0% 98%;
-
-    --border: 210 50% 25%; /* Muted navy border */
-    --input: 210 50% 22%; /* Muted navy input background */
-    --ring: 207 100% 55%; /* Lighter Primary Brand Blue for focus rings */
-
-    --sidebar-background: 210 100% 8%; /* Very Dark Navy for sidebar */
-    --sidebar-foreground: 0 0% 95%; /* Almost white for text */
-    --sidebar-primary: 38 92% 60%; /* Lighter Orange for active/hover */
-    --sidebar-primary-foreground: 0 0% 10%; /* Dark text */
-    --sidebar-accent: 38 92% 60%;
-    --sidebar-accent-foreground: 0 0% 10%;
-    --sidebar-border: 210 100% 12%;
-    --sidebar-ring: 38 92% 70%;
-  }
 }
 
 @layer base {
