@@ -47,8 +47,9 @@ export function Combobox({
   allowCustomValue = false,
 }: ComboboxProps) {
   const [open, setOpen] = React.useState(false);
-  const [inputValue, setInputValue] = React.useState(""); // For custom value input / search term
+  const [inputValue, setInputValue] = React.useState(""); 
   const triggerRef = React.useRef<HTMLButtonElement>(null);
+  const inputRef = React.useRef<HTMLInputElement>(null);
 
 
   const getButtonLabel = () => {
@@ -59,8 +60,6 @@ export function Combobox({
         const selectedOption = options.find((option) => option.value === selectedValues[0]);
         return selectedOption?.label || selectedValues[0];
       }
-      // For multiple items, show badges inside the trigger if there's space, or "X selected"
-      // This part needs careful UI consideration for responsiveness. For now, let's keep it simple.
       return `${selectedValues.length} selected`;
     } else {
       const selectedOption = options.find((option) => option.value === value);
@@ -78,12 +77,13 @@ export function Combobox({
         currentSelected.push(optionValue);
       }
       onChange(currentSelected);
-      setInputValue(""); // Clear search input after selection
-      // Keep popover open for multi-select
+      setInputValue(""); 
+      // For multi-select, keep focus on input to keep popover open
+      inputRef.current?.focus();
     } else {
-      onChange(optionValue === value ? "" : optionValue); // Allow deselect by clicking current value
+      onChange(optionValue === value ? "" : optionValue); 
       setInputValue("");
-      setOpen(false); // Close on single select
+      setOpen(false); 
     }
   };
 
@@ -95,19 +95,22 @@ export function Combobox({
         if (!currentSelected.includes(newValue)) {
           onChange([...currentSelected, newValue]);
         }
+        inputRef.current?.focus(); // Keep focus
       } else {
         onChange(newValue);
+        setOpen(false); // Close popover if single select
       }
-      setInputValue(""); // Clear input after adding
-      if (!multiple) setOpen(false); // Close popover if single select
+      setInputValue(""); 
     }
   };
   
   const removeSelectedItem = (itemToRemove: string, e: React.MouseEvent) => {
-    e.stopPropagation(); // Prevent popover from opening/closing
+    e.preventDefault(); // Prevent any default action
+    e.stopPropagation(); // Prevent popover from toggling
     if (multiple && Array.isArray(value)) {
       onChange(value.filter(v => v !== itemToRemove));
     }
+    // Do not close popover, allow further interaction
   };
 
   const displayedValue = getButtonLabel();
@@ -125,7 +128,7 @@ export function Combobox({
           <span className="truncate">
             {multiple && Array.isArray(value) && value.length > 0 ? (
               <div className="flex flex-wrap gap-1 items-center">
-                {value.slice(0, 2).map(val => { // Show max 2 badges, then count
+                {value.slice(0, 2).map(val => { 
                   const option = options.find(opt => opt.value === val);
                   return (
                     <Badge
@@ -137,6 +140,7 @@ export function Combobox({
                       <X
                         className="ml-1 h-3 w-3 cursor-pointer hover:text-destructive"
                         onClick={(e) => removeSelectedItem(val, e)}
+                        aria-label={`Remove ${option?.label || val}`}
                       />
                     </Badge>
                   );
@@ -156,9 +160,15 @@ export function Combobox({
         className="w-[--radix-popover-trigger-width] p-0" 
         align="start"
         style={{ width: triggerRef.current?.offsetWidth ? `${triggerRef.current.offsetWidth}px` : 'auto' }}
+        onOpenAutoFocus={(e) => {
+          // Prevent default focus on PopoverContent itself, direct to input
+          e.preventDefault();
+          inputRef.current?.focus();
+        }}
       >
         <Command>
           <CommandInput
+            ref={inputRef}
             placeholder={searchPlaceholder}
             value={inputValue}
             onValueChange={setInputValue}
@@ -169,7 +179,7 @@ export function Combobox({
                 ? (
                   <CommandItem
                     key="__custom_add__"
-                    value={`add-${inputValue.trim()}`} // Unique value for selection
+                    value={`add-${inputValue.trim()}`} 
                     onSelect={handleCustomValueAdd}
                   >
                     Add "{inputValue.trim()}"
@@ -181,8 +191,8 @@ export function Combobox({
               {options.map((option) => (
                 <CommandItem
                   key={option.value}
-                  value={option.label} // Search/filter by label
-                  onSelect={() => handleSelect(option.value)} // Actual selection uses option.value
+                  value={option.label} 
+                  onSelect={() => handleSelect(option.value)} 
                   className="flex items-center justify-between"
                 >
                   <span className="truncate">{option.label}</span>
