@@ -64,7 +64,7 @@ export function KanbanColumn({
 
   return (
     <div
-      className="flex-shrink-0 w-60 bg-secondary/50 rounded-lg shadow-sm h-full flex flex-col" // Changed w-64 to w-60
+      className="flex-shrink-0 w-[18.75rem] bg-secondary/50 rounded-lg shadow-sm h-full flex flex-col"
       onDragOver={onDragOver}
       onDrop={(e) => onDrop(e, stage.id)}
       aria-labelledby={`stage-title-${stage.id}`}
