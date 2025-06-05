@@ -89,7 +89,7 @@ export default function SchedulePage() {
 
   useEffect(() => {
     const nonShippedPumps = initialPumps.filter(p => p.currentStage !== 'shipped');
-    const scheduledPumpOriginalIds = new Set(scheduledItems.map(si => si.id)); // Use original pump ID
+    const scheduledPumpOriginalIds = new Set(scheduledItems.map(si => si.id));
     const augmentedPumps: PlannablePump[] = nonShippedPumps
       .filter(p => !scheduledPumpOriginalIds.has(p.id))
       .map(p => ({ ...p, daysPerUnit: getDaysPerUnit(p.model) }));
@@ -170,30 +170,24 @@ export default function SchedulePage() {
           ? prevSelectedIds.filter(id => id !== item.id)
           : [...prevSelectedIds, item.id];
       }
-      return [item.id]; // Single click selects only this item
+      return prevSelectedIds.includes(item.id) && prevSelectedIds.length === 1 ? [] : [item.id];
     });
   }, [setSelectedPlannableItemIds]);
+
 
   const handleDragStartPlannableItem = useCallback((e: React.DragEvent, item: PlannablePump) => {
     console.log('🔥 DRAG START - Plannable Item (SchedulePage):', item.id, item.model);
     e.stopPropagation();
 
     try {
-      // Critical step: Set data for the drag operation.
-      // 'text/plain' is a safe, universally supported type.
+      // --- CRITICAL ORDERING ---
+      // 1. Set dataTransfer properties
       e.dataTransfer.setData('text/plain', item.id);
       e.dataTransfer.effectAllowed = 'move';
       console.log('🔥 DataTransfer: setData("text/plain", "'+item.id+'") and effectAllowed="move" set.');
 
-      // Update internal state to reflect what's being dragged.
-      // For this debug step, we always treat it as a single item drag.
-      setDraggedItemData({ type: 'plannable-single', item });
-      // Ensure the dragged item is the only one marked as selected for clarity during this drag.
-      setSelectedPlannableItemIds([item.id]);
-      console.log('🔥 Internal State: draggedItemData set for single item, selectedPlannableItemIds updated.');
-      
-      // Visual feedback: Make the card being dragged semi-transparent.
-      // e.currentTarget should be the <Card> element from SchedulePumpCard.
+      // 2. Apply direct DOM manipulation for visual feedback (opacity) to e.currentTarget
+      // This is the element the browser will try to create a ghost image from.
       const cardElement = e.currentTarget as HTMLElement;
       if (cardElement) {
         cardElement.style.opacity = '0.5';
@@ -202,12 +196,21 @@ export default function SchedulePage() {
         console.warn('🔥 Visual Feedback: Could not find cardElement (e.currentTarget) to set opacity.');
       }
       
+      // 3. THEN update React state. This might cause re-renders.
+      // Forcing single item drag for now to ensure basics work.
+      // Batch logic can be re-enabled once single drag is solid.
+      setDraggedItemData({ type: 'plannable-single', item });
+      // Ensure the dragged item is the only one marked as selected for clarity during this drag.
+      setSelectedPlannableItemIds([item.id]);
+      console.log('🔥 Internal State: draggedItemData set for single item, selectedPlannableItemIds updated.');
+      
       console.log('✅ Drag start for plannable item completed successfully:', item.id);
 
     } catch (error) {
       console.error('❌ ERROR in handleDragStartPlannableItem:', error);
-      // If setData fails, the drag operation might not start or might behave unexpectedly.
-      // No return here, let the browser handle the failed drag if it must.
+      // Reset opacity if error occurs during setup
+      const cardElement = e.currentTarget as HTMLElement;
+      if (cardElement) cardElement.style.opacity = '1';
     }
   }, [setDraggedItemData, setSelectedPlannableItemIds]);
 
@@ -218,31 +221,32 @@ export default function SchedulePage() {
     
     try {
       e.dataTransfer.setData('application/pumptrack-instance-id', item.instanceId);
-      e.dataTransfer.setData('text/plain', item.instanceId); // Also set text/plain for broader compatibility
+      e.dataTransfer.setData('text/plain', item.instanceId); 
       e.dataTransfer.effectAllowed = 'move';
       console.log('🔥 DataTransfer: setData for instanceId and text/plain, effectAllowed set.');
 
-      setDraggedItemData({ type: 'scheduled', item });
-      console.log('🔥 Internal State: draggedItemData set for scheduled item.');
-
-      const targetElement = e.currentTarget as HTMLElement; // currentTarget should be the div from CalendarView
+      const targetElement = e.currentTarget as HTMLElement; 
       if (targetElement) {
           targetElement.style.opacity = '0.5';
           console.log('🔥 Visual Feedback: Opacity set for scheduled item instance:', item.instanceId);
       } else {
           console.warn('🔥 Visual Feedback: Could not find targetElement for scheduled item instance:', item.instanceId);
       }
+      
+      setDraggedItemData({ type: 'scheduled', item });
+      console.log('🔥 Internal State: draggedItemData set for scheduled item.');
+
       console.log('✅ Drag start for scheduled item completed successfully:', item.instanceId);
     } catch (error) {
        console.error('❌ ERROR in handleDragStartScheduledItem:', error);
+       const targetElement = e.currentTarget as HTMLElement;
+       if (targetElement) targetElement.style.opacity = '1';
     }
   }, [setDraggedItemData]);
 
   const handleDragEnd = useCallback((e: React.DragEvent) => {
     console.log('🏁 DRAG END (SchedulePage) - dropEffect:', e.dataTransfer.dropEffect);
     
-    // Reset opacity for the original dragged element.
-    // e.currentTarget here will be the element that had onDragStart (e.g., SchedulePumpCard or the scheduled item div).
     const draggedElement = e.currentTarget as HTMLElement;
     if (draggedElement) {
       draggedElement.style.opacity = '1';
@@ -250,18 +254,24 @@ export default function SchedulePage() {
     } else {
         console.warn('🏁 Visual Feedback: Could not find e.currentTarget in handleDragEnd to reset opacity.');
     }
-
-    // Clear the dragged item data.
-    // Doing this synchronously is usually fine as drop handlers should have already processed.
-    setDraggedItemData(null);
-    console.log('🏁 Internal State: draggedItemData cleared.');
-  }, [setDraggedItemData]);
+    
+    // Important: Clear draggedItemData only if drop was not successful or handled elsewhere
+    // If dropEffect is 'none', it means the drop was not on a valid target or was cancelled.
+    // If it was 'move', the drop handler should have ideally cleared draggedItemData.
+    // However, as a fallback, or if drag is cancelled mid-air, clear it here.
+    if (e.dataTransfer.dropEffect === 'none' || draggedItemData) {
+        console.log('🏁 Clearing draggedItemData in handleDragEnd. Current dropEffect:', e.dataTransfer.dropEffect);
+        setDraggedItemData(null);
+    } else {
+        console.log('🏁 Not clearing draggedItemData in handleDragEnd as dropEffect suggests successful drop, assuming drop handler managed it. dropEffect:', e.dataTransfer.dropEffect)
+    }
+  }, [draggedItemData, setDraggedItemData]);
 
 
   const handleDragOver = useCallback((e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault(); // Necessary to allow dropping
+    e.preventDefault(); 
     e.stopPropagation();
-    e.dataTransfer.dropEffect = 'move'; // Visual cue for the user
+    e.dataTransfer.dropEffect = 'move'; 
   }, []);
 
   const handleDropOnCalendar = useCallback((e: React.DragEvent<HTMLDivElement>, targetDayIndex: number) => {
@@ -269,25 +279,30 @@ export default function SchedulePage() {
     e.preventDefault();
     e.stopPropagation();
     
-    const currentDraggedItem = draggedItemData; // Capture state at the moment of drop
+    const currentDraggedItem = draggedItemData; 
     console.log('🟢 Captured draggedItemData for drop:', currentDraggedItem);
 
     if (!currentDraggedItem) {
-      console.warn('🟢 Drop occurred but no draggedItemData was found. Drag might have been cleared prematurely or not set.');
-      setDraggedItemData(null); // Defensive clear
-      return;
+      console.warn('🟢 Drop occurred but no draggedItemData was found.');
+      const idFromDataTransfer = e.dataTransfer.getData('text/plain');
+      console.warn('🟢 ID from dataTransfer (text/plain) for diagnostics:', idFromDataTransfer);
+      if (!idFromDataTransfer) { // If truly nothing useful, bail.
+          setDraggedItemData(null); 
+          return;
+      }
+      // Try to recover if only draggedItemData was lost but dataTransfer is good.
+      // This scenario is less ideal but might happen.
+      // For now, we'll primarily rely on draggedItemData being set.
     }
-
-    // Remove hover styling from the drop target
+    
     const dropTargetElement = e.currentTarget as HTMLElement;
     dropTargetElement.classList.remove('bg-primary/10', 'border-primary');
 
-    if (currentDraggedItem.type === 'plannable-single') {
+    if (currentDraggedItem?.type === 'plannable-single') {
       const itemToSchedule = currentDraggedItem.item;
       console.log('🟢 Scheduling SINGLE plannable item:', itemToSchedule.id);
 
       setScheduledItems(prev => {
-        // Remove if already scheduled (e.g. re-dragged), then add new instance
         const filteredPrev = prev.filter(si => si.id !== itemToSchedule.id);
         return [...filteredPrev, {
           ...itemToSchedule,
@@ -296,16 +311,14 @@ export default function SchedulePage() {
         }].sort((a,b) => a.scheduledOnDayIndex - b.scheduledOnDayIndex);
       });
       toast({ title: "Pump Scheduled", description: `${itemToSchedule.serialNumber || itemToSchedule.model} added to schedule.` });
-      setSelectedPlannableItemIds([]); // Clear selection after scheduling
+      setSelectedPlannableItemIds([]); 
 
-    } else if (currentDraggedItem.type === 'plannable-batch') {
-      // This case is simplified for now, but the debug drag start only does single.
-      // If batch logic is re-enabled, this part will need testing.
+    } else if (currentDraggedItem?.type === 'plannable-batch') {
       const itemsToSchedule = currentDraggedItem.items;
       console.log('🟢 Scheduling BATCH of plannable items. Count:', itemsToSchedule.length);
       const newScheduledInstances: ScheduledPump[] = itemsToSchedule.map(item => ({
         ...item,
-        scheduledOnDayIndex: targetDayIndex, // All start on the same day for now
+        scheduledOnDayIndex: targetDayIndex, 
         instanceId: crypto.randomUUID(),
       }));
       
@@ -318,7 +331,7 @@ export default function SchedulePage() {
       toast({ title: "Pumps Scheduled", description: `${itemsToSchedule.length} pumps added to schedule.` });
       setSelectedPlannableItemIds([]);
 
-    } else if (currentDraggedItem.type === 'scheduled') {
+    } else if (currentDraggedItem?.type === 'scheduled') {
       const itemToMove = currentDraggedItem.item;
       console.log('🟢 Moving SCHEDULED item instance:', itemToMove.instanceId, 'to day index:', targetDayIndex);
       setScheduledItems(prev => prev.map(si =>
@@ -330,8 +343,8 @@ export default function SchedulePage() {
     }
     
     console.log('🟢 Clearing draggedItemData after successful calendar drop processing.');
-    setDraggedItemData(null); // Crucial to clear after processing
-  }, [draggedItemData, toast, setScheduledItems, setSelectedPlannableItemIds, plannableItems]);
+    setDraggedItemData(null); 
+  }, [draggedItemData, toast, setScheduledItems, setSelectedPlannableItemIds]);
 
 
   const handleDropOnPlannableList = useCallback((e: React.DragEvent<HTMLDivElement>) => {
@@ -339,12 +352,12 @@ export default function SchedulePage() {
     e.preventDefault();
     e.stopPropagation();
     
-    const currentDraggedItem = draggedItemData; // Capture state
+    const currentDraggedItem = draggedItemData; 
     console.log('🟢 Captured draggedItemData for plannable list drop:', currentDraggedItem);
 
     if (!currentDraggedItem || currentDraggedItem.type !== 'scheduled') {
       console.warn('🟢 Drop on plannable list but not a scheduled item, or no draggedItemData. Type:', currentDraggedItem?.type);
-      setDraggedItemData(null); // Defensive clear
+      setDraggedItemData(null); 
       return;
     }
 
@@ -355,7 +368,7 @@ export default function SchedulePage() {
     
     setSelectedPlannableItemIds([]);
     console.log('🟢 Clearing draggedItemData after plannable list drop processing.');
-    setDraggedItemData(null); // Crucial to clear
+    setDraggedItemData(null); 
   }, [draggedItemData, toast, setScheduledItems, setSelectedPlannableItemIds]);
 
   const removeFromSchedule = useCallback((instanceIdToRemove: string) => {
@@ -386,7 +399,6 @@ export default function SchedulePage() {
 
   const handleUpdatePump = useCallback((updatedPump: Pump) => {
     setInitialPumps(prev => prev.map(p => p.id === updatedPump.id ? updatedPump : p));
-    // Also update in scheduledItems if it's there
     setScheduledItems(prevScheduled => prevScheduled.map(sp => 
         sp.id === updatedPump.id ? { ...sp, ...updatedPump, daysPerUnit: getDaysPerUnit(updatedPump.model) } : sp
     ));
@@ -471,14 +483,14 @@ export default function SchedulePage() {
       </CardHeader>
       <CardContent>
         <ScrollArea 
-          className="h-[400px] border rounded-md p-2" // Added padding to ScrollArea
+          className="h-[400px] border rounded-md p-2"
           onDrop={handleDropOnPlannableList}
-          onDragOver={handleDragOver} // Add dragOver here too
+          onDragOver={handleDragOver}
         >
           {filteredPlannableItems.length === 0 ? (
             <p className="text-center p-4 text-muted-foreground">No plannable items match filters or all are scheduled.</p>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 p-1"> {/* Added padding to grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 p-1">
               {filteredPlannableItems.map(item => (
                 <SchedulePumpCard
                   key={item.id}
@@ -486,7 +498,7 @@ export default function SchedulePage() {
                   isSelected={selectedPlannableItemIds.includes(item.id)}
                   onCardClick={handlePlannableItemClick}
                   onDragStart={(e) => handleDragStartPlannableItem(e, item)}
-                  onDragEnd={handleDragEnd} // Pass the page's handleDragEnd
+                  onDragEnd={handleDragEnd} 
                   onOpenDetailsModal={() => handleOpenDetailsModal(item)}
                 />
               ))}
@@ -525,9 +537,9 @@ export default function SchedulePage() {
               <div
                 key={date.toISOString()}
                 className={cn(
-                  "h-32 border rounded-sm p-1 text-xs relative flex flex-col bg-background hover:bg-muted/30 transition-colors",
+                  "border rounded-sm p-1 text-xs relative flex flex-col bg-background hover:bg-muted/30 transition-colors",
                   date.getMonth() !== new Date().getMonth() && "bg-muted/20 text-muted-foreground/60",
-                  "min-h-[8rem]" // Ensure day cells have a minimum height
+                  "min-h-[8rem]" 
                 )}
                 onDragOver={handleDragOver}
                 onDrop={(e) => handleDropOnCalendar(e, dayIndex)}
@@ -535,20 +547,20 @@ export default function SchedulePage() {
                 onDragLeave={(e) => { e.currentTarget.classList.remove('bg-primary/10', 'border-primary'); }}
               >
                 <div className={cn("font-medium pb-0.5 text-right", date.toDateString() === new Date().toDateString() && "text-primary font-bold")}>{date.getDate()}</div>
-                <ScrollArea className="flex-grow space-y-0.5 overflow-y-auto"> {/* Scroll for items within a day cell */}
+                <ScrollArea className="flex-grow space-y-0.5 overflow-y-auto"> 
                   {itemsStartingThisDay.map(item => (
                      <div
                         key={item.instanceId}
                         draggable={true}
                         onDragStart={(e) => handleDragStartScheduledItem(e, item)}
-                        onDragEnd={handleDragEnd} // Pass the page's handleDragEnd
+                        onDragEnd={handleDragEnd} 
                         title={`${item.model} - ${item.serialNumber || 'N/A'}\nCustomer: ${item.customer}\nPO: ${item.poNumber}\nDuration: ${item.duration} days`}
                         className={cn(
                           "text-[10px] p-1 rounded mb-0.5 cursor-grab active:cursor-grabbing text-primary-foreground leading-tight border select-none",
                           getColorForModelOnCalendar(item.model),
                           "overflow-hidden transition-transform hover:scale-105"
                         )}
-                        style={{ minHeight: '1.4rem' }} // Removed complex height, rely on content and cell min-height
+                        style={{ minHeight: '1.4rem' }} 
                       >
                         <p className="font-semibold truncate">{item.model}</p>
                         <p className="truncate text-xs">{item.serialNumber || 'N/A'}</p>
