@@ -5,9 +5,8 @@ import React, { useState, useEffect, useCallback } from 'react';
 import type { Pump, StageId, ViewMode, Filters, PriorityLevel } from '@/types';
 import { STAGES, POWDER_COATERS, PUMP_MODELS, CUSTOMER_NAMES, DEFAULT_POWDER_COAT_COLORS, PRIORITY_LEVELS } from '@/lib/constants';
 import { useToast } from '@/hooks/use-toast';
-import { Header } from '@/components/layout/Header';
+import { EnhancedHeader } from '@/components/layout/EnhancedHeader';
 import { KanbanBoard } from '@/components/kanban/KanbanBoard';
-import { AddPumpForm } from '@/components/pump/AddPumpForm';
 import { PumpDetailsModal } from '@/components/pump/PumpDetailsModal';
 import { MissingInfoModal } from '@/components/pump/MissingInfoModal';
 import { GroupedPumpDetailsModal } from '@/components/pump/GroupedPumpDetailsModal';
@@ -20,8 +19,8 @@ export default function HomePage() {
   const [pumps, setPumps] = useState<Pump[]>([]);
   const [filteredPumps, setFilteredPumps] = useState<Pump[]>([]);
   const [filters, setFilters] = useState<Filters>({});
+  const [searchTerm, setSearchTerm] = useState('');
   
-  const [isAddPumpModalOpen, setIsAddPumpModalOpen] = useState(false);
   const [selectedPumpForDetails, setSelectedPumpForDetails] = useState<Pump | null>(null);
   const [isPumpDetailsModalOpen, setIsPumpDetailsModalOpen] = useState(false);
   
@@ -58,6 +57,18 @@ export default function HomePage() {
 
   useEffect(() => {
     let tempPumps = [...pumps];
+    
+    // Apply search filter
+    if (searchTerm) {
+      const lowerSearchTerm = searchTerm.toLowerCase();
+      tempPumps = tempPumps.filter(pump =>
+        Object.values(pump).some(val =>
+          String(val).toLowerCase().includes(lowerSearchTerm)
+        )
+      );
+    }
+    
+    // Apply other filters
     if (filters.serialNumber && filters.serialNumber.length > 0) {
       tempPumps = tempPumps.filter(p => p.serialNumber && filters.serialNumber!.some(sn => p.serialNumber!.toLowerCase().includes(sn.toLowerCase())));
     }
@@ -77,52 +88,8 @@ export default function HomePage() {
       tempPumps = tempPumps.filter(p => filters.priority!.includes(p.priority || 'normal'));
     }
     setFilteredPumps(tempPumps);
-  }, [pumps, filters]);
+  }, [pumps, filters, searchTerm]);
 
-  const handleAddPump = useCallback((newPumpData: Omit<Pump, 'id' | 'currentStage' | 'createdAt' | 'updatedAt'> & { quantity: number; serialNumber?: string; priority?: PriorityLevel }) => {
-    const { quantity, serialNumber: startSerialNumberInput, priority, ...basePumpData } = newPumpData;
-    const newPumps: Pump[] = [];
-    let currentSerialNumberNumeric = -1;
-    const startSerialNumber = startSerialNumberInput?.trim() === '' ? undefined : startSerialNumberInput;
-    const now = new Date().toISOString();
-
-    if (quantity > 1 && startSerialNumber && /^MSP-JN-\d{4}$/.test(startSerialNumber)) {
-      currentSerialNumberNumeric = parseInt(startSerialNumber.substring(7), 10);
-    }
-
-    for (let i = 0; i < quantity; i++) {
-      let pumpSerialNumber: string | undefined = undefined;
-      if (quantity === 1 && startSerialNumber && /^MSP-JN-\d{4}$/.test(startSerialNumber)) {
-        pumpSerialNumber = startSerialNumber;
-      } else if (quantity > 1 && currentSerialNumberNumeric !== -1) {
-        if (currentSerialNumberNumeric + i <= 9999) { 
-            pumpSerialNumber = `MSP-JN-${String(currentSerialNumberNumeric + i).padStart(4, '0')}`;
-        }
-      } else if (quantity === 1 && (!startSerialNumber || !/^MSP-JN-\d{4}$/.test(startSerialNumber))) {
-        toast({ variant: "destructive", title: "Validation Error", description: "Serial number is required and must be valid for single pump addition." });
-        return; 
-      }
-
-      const newPump: Pump = {
-        ...basePumpData,
-        id: generateId(),
-        serialNumber: pumpSerialNumber,
-        currentStage: 'open-jobs',
-        notes: basePumpData.notes || undefined,
-        priority: priority || 'normal',
-        createdAt: now,
-        updatedAt: now,
-      };
-      newPumps.push(newPump);
-    }
-    
-    setPumps(prev => [...newPumps, ...prev]);
-    if (newPumps.length === 1) {
-      toast({ title: "Pump Added", description: `${newPumps[0].serialNumber || 'New Pump'} added to Open Jobs.` });
-    } else {
-      toast({ title: `${newPumps.length} Pumps Added`, description: `Batch added to Open Jobs.` });
-    }
-  }, [toast]);
 
   const handleUpdatePump = useCallback((updatedPump: Pump) => {
     const now = new Date().toISOString();
@@ -284,8 +251,11 @@ export default function HomePage() {
 
   return (
     <div className="flex flex-col h-full">
-      <Header
-        onAddPump={() => setIsAddPumpModalOpen(true)}
+      <EnhancedHeader
+        title="PumpTrack Workflow"
+        showAddPump={false}
+        searchTerm={searchTerm}
+        onSearchChange={setSearchTerm}
         filters={filters}
         onFiltersChange={setFilters}
         availablePumpModels={allPumpModels}
@@ -310,12 +280,6 @@ export default function HomePage() {
           onToggleExplodeGroup={handleToggleExplodeGroup}
         />
       </main>
-
-      <AddPumpForm
-        isOpen={isAddPumpModalOpen}
-        onClose={() => setIsAddPumpModalOpen(false)}
-        onAddPump={handleAddPump}
-      />
 
       {selectedPumpForDetails && (
         <PumpDetailsModal
