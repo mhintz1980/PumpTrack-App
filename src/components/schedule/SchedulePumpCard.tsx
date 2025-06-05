@@ -1,6 +1,7 @@
+
 "use client";
 
-import React from 'react';
+import React from 'react'; // Imported React for React.memo
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { GripVertical, Eye } from 'lucide-react';
@@ -27,7 +28,8 @@ interface SchedulePumpCardProps {
   onOpenDetailsModal: (pump: PlannablePump) => void;
 }
 
-export function SchedulePumpCard({
+// Wrap the component definition with React.memo
+export const SchedulePumpCard = React.memo(function SchedulePumpCard({
   pump,
   isSelected,
   onCardClick,
@@ -57,27 +59,26 @@ export function SchedulePumpCard({
       pumpId: pump.id,
       target: e.target,
       currentTarget: e.currentTarget,
-      button: (e.nativeEvent as any).button,
-      buttons: (e.nativeEvent as any).buttons,
-      dataTransfer: e.dataTransfer,
+      button: (e.nativeEvent as any).button, // Be cautious with 'any' in production
+      buttons: (e.nativeEvent as any).buttons, // Be cautious with 'any' in production
+      dataTransfer: e.dataTransfer, // This might be null or limited in console
       clientX: e.clientX,
       clientY: e.clientY
     });
     
-    // Call the parent handler first to ensure proper setup
     onDragStart(e, pump);
     
-    // Log what happened after parent handler
-    console.log('🔥 After parent handler - dataTransfer types:', Array.from(e.dataTransfer.types));
-    console.log('🔥 After parent handler - effectAllowed:', e.dataTransfer.effectAllowed);
+    console.log('🔥 After parent onDragStart (SchedulePumpCard) - dataTransfer types:', Array.from(e.dataTransfer.types));
+    console.log('🔥 After parent onDragStart (SchedulePumpCard) - effectAllowed:', e.dataTransfer.effectAllowed);
   };
 
-  const handleDragEnd = (e: React.DragEvent) => {
-    console.log('🏁 SchedulePumpCard - handleDragEnd called', pump.id, 'dropEffect:', e.dataTransfer.dropEffect);
+  const handleDragEndInternal = (e: React.DragEvent) => {
+    console.log('🏁 SchedulePumpCard - handleDragEndInternal called', pump.id, 'dropEffect:', e.dataTransfer.dropEffect);
     const targetElement = e.currentTarget as HTMLElement;
-    targetElement.style.opacity = '1';
+    if (targetElement) {
+        targetElement.style.opacity = '1'; // Ensure opacity is reset here too
+    }
     
-    // Call parent drag end handler if provided
     if (onDragEnd) {
       onDragEnd(e);
     }
@@ -98,10 +99,10 @@ export function SchedulePumpCard({
     <Card
       draggable={true}
       onDragStart={handleDragStart}
-      onDragEnd={handleDragEnd}
+      onDragEnd={handleDragEndInternal} // Use internal handler that calls parent
       onClick={handleCardClick}
       onDrag={(e) => {
-        console.log('🔄 SchedulePumpCard - onDrag event', pump.id, 'clientX:', e.clientX, 'clientY:', e.clientY);
+        // console.log('🔄 SchedulePumpCard - onDrag event', pump.id, 'clientX:', e.clientX, 'clientY:', e.clientY);
       }}
       className={cn(
         "mb-3 shadow-md hover:shadow-lg transition-shadow duration-150 ease-in-out bg-card group cursor-grab active:cursor-grabbing select-none",
@@ -144,7 +145,7 @@ export function SchedulePumpCard({
                 <div
                   className="cursor-grab active:cursor-grabbing"
                   aria-label="Drag pump"
-                  data-drag-handle="true"
+                  data-drag-handle="true" // This attribute can be used to distinguish drag handle clicks
                 >
                   <GripVertical className="h-5 w-5 text-muted-foreground" />
                 </div>
@@ -158,4 +159,4 @@ export function SchedulePumpCard({
       </CardHeader>
     </Card>
   );
-}
+});
