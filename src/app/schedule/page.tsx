@@ -49,16 +49,6 @@ interface DraggedScheduled {
 }
 type DraggedItemData = DraggedPlannableSingle | DraggedPlannableBatch | DraggedScheduled;
 
-// getDaysPerUnit function might still be useful for informational purposes or fallback,
-// but schedule block size is now primarily driven by pump.estimatedBuildTimeDays.
-// For consistency, let's keep it and use it as a fallback if estimatedBuildTimeDays is not set.
-const getModelBasedDaysPerUnit = (model: string): number => {
-  if (model.includes('DD4') || model.includes('RL200')) return 2;
-  if (model.includes('DD6') || model.includes('RL300')) return 3;
-  if (model.includes('HC150') || model.includes('DV6')) return 4;
-  return 1.5; // Default model-based build time
-};
-
 
 export default function SchedulePage() {
   const { toast } = useToast();
@@ -82,15 +72,7 @@ export default function SchedulePage() {
     const fetchPumps = async () => {
       setIsLoading(true);
       try {
-        let fetchedPumps = await pumpService.getAllPumps(); 
-        if (fetchedPumps.length === 0) {
-            const now = new Date().toISOString();
-            fetchedPumps = [
-              { id: crypto.randomUUID(), model: PUMP_MODELS[0], serialNumber: `MSP-JN-${String(Math.floor(Math.random() * 9000) + 1000).padStart(4, '0')}`, customer: CUSTOMER_NAMES[0], poNumber: 'PO-PLAN-001', currentStage: 'open-jobs', priority: 'high', estimatedBuildTimeDays: 2, createdAt: now, updatedAt: now },
-              { id: crypto.randomUUID(), model: PUMP_MODELS[1], serialNumber: `MSP-JN-${String(Math.floor(Math.random() * 9000) + 1000).padStart(4, '0')}`, customer: CUSTOMER_NAMES[1], poNumber: 'PO-PLAN-002', currentStage: 'assembly', priority: 'normal', estimatedBuildTimeDays: 3, createdAt: now, updatedAt: now },
-              { id: crypto.randomUUID(), model: PUMP_MODELS[2], serialNumber: `MSP-JN-${String(Math.floor(Math.random() * 9000) + 1000).padStart(4, '0')}`, customer: CUSTOMER_NAMES[0], poNumber: 'PO-PLAN-003', currentStage: 'fabrication', priority: 'urgent', estimatedBuildTimeDays: 1.5, createdAt: now, updatedAt: now },
-            ];
-        }
+        const fetchedPumps = await pumpService.getAllPumps(); 
         setInitialPumps(fetchedPumps);
       } catch (error) {
         console.error("Failed to fetch pumps for schedule:", error);
@@ -111,8 +93,7 @@ export default function SchedulePage() {
     );
     const augmentedPumps: PlannablePump[] = availableForPlanning.map(p => ({ 
       ...p, 
-      // Use estimatedBuildTimeDays if available, otherwise fallback to model-based, then a hard default.
-      daysPerUnit: p.estimatedBuildTimeDays !== undefined ? p.estimatedBuildTimeDays : getModelBasedDaysPerUnit(p.model)
+      daysPerUnit: p.estimatedBuildTimeDays !== undefined ? p.estimatedBuildTimeDays : 1.5 // Default to 1.5 if not set
     }));
     setPlannableItems(augmentedPumps);
   }, [initialPumps, scheduledItems]);
@@ -169,7 +150,7 @@ export default function SchedulePage() {
     const timeline: ScheduleTimelineEntry[] = [];
     scheduledItems.sort((a, b) => a.scheduledOnDayIndex - b.scheduledOnDayIndex).forEach(item => {
       const startDay = item.scheduledOnDayIndex;
-      const duration = item.daysPerUnit; // This is now based on estimatedBuildTimeDays
+      const duration = item.daysPerUnit; 
 
       timeline.push({
         ...item,
@@ -383,7 +364,7 @@ export default function SchedulePage() {
   }, [toast]);
 
 
-  const handleOpenDetailsModal = useCallback((pump: Pump) => { // Parameter type changed to Pump
+  const handleOpenDetailsModal = useCallback((pump: Pump) => { 
     setSelectedPumpForDetails(pump);
     setIsDetailsModalOpen(true);
   }, []);
@@ -403,12 +384,11 @@ export default function SchedulePage() {
         const savedPump = await pumpService.updatePumpWithActivityLog(updatedPump.id, updatedPump, originalPump);
         setInitialPumps(prev => prev.map(p => p.id === savedPump.id ? savedPump : p));
         
-        // Also update scheduledItems if the pump is there, ensuring daysPerUnit is recalculated
         setScheduledItems(prevScheduled => prevScheduled.map(sp => 
             sp.id === savedPump.id ? { 
               ...sp, 
               ...savedPump, 
-              daysPerUnit: savedPump.estimatedBuildTimeDays !== undefined ? savedPump.estimatedBuildTimeDays : getModelBasedDaysPerUnit(savedPump.model)
+              daysPerUnit: savedPump.estimatedBuildTimeDays !== undefined ? savedPump.estimatedBuildTimeDays : 1.5
             } : sp
         ));
         toast({ title: "Pump Updated", description: `${savedPump.serialNumber || savedPump.model} has been updated.` });
@@ -493,7 +473,7 @@ export default function SchedulePage() {
               {filteredPlannableItems.map(item => (
                 <SchedulePumpCard
                   key={item.id}
-                  pump={item} // item is already PlannablePump
+                  pump={item} 
                   isSelected={selectedPlannableItemIds.includes(item.id)}
                   onCardClick={handlePlannableItemClick}
                   onDragStart={(e) => handleDragStartPlannableItem(e, item)}
@@ -628,11 +608,10 @@ export default function SchedulePage() {
 
       <AddPumpForm isOpen={isAddPumpModalOpen} onClose={() => setIsAddPumpModalOpen(false)} onAddPump={handleAddPumps} />
       
-      {/* Ensure selectedPumpForDetails is compatible with PumpDetailsModal's pump prop */}
       <PumpDetailsModal 
         isOpen={isDetailsModalOpen} 
         onClose={handleCloseDetailsModal} 
-        pump={selectedPumpForDetails} // selectedPumpForDetails is Pump | null
+        pump={selectedPumpForDetails} 
         onUpdatePump={handleUpdatePump} 
       />
     </div>

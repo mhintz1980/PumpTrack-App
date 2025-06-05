@@ -2,6 +2,7 @@
 // Placeholder for pump service that will interact with a backend (e.g., Firebase Firestore)
 
 import type { Pump, ActivityLogEntry, StageId, ActivityLogType } from '@/types';
+import { PUMP_MODELS, CUSTOMER_NAMES, POWDER_COATERS, DEFAULT_POWDER_COAT_COLORS, STAGES } from '@/lib/constants';
 
 /**
  * Simulates saving a new pump and logging its creation.
@@ -103,11 +104,115 @@ export async function movePumpStageWithActivityLog(
  */
 export async function getAllPumps(): Promise<Pump[]> {
   console.log('[PumpService] Fetching all pumps...');
-  // In a real app: const snapshot = await db.collection('pumps').get();
-  //                 return snapshot.docs.map(doc => doc.data() as Pump);
-  // For now, return an empty array or mock data if needed for testing.
-  return []; 
+  const samplePumps: Pump[] = [];
+  const now = new Date().toISOString();
+
+  const stageDistribution: Record<StageId, number> = {
+    'open-jobs': 12,
+    'fabrication': 4,
+    'powder-coat': 6,
+    'assembly': 3,
+    'testing': 2,
+    'shipped': 0,
+  };
+
+  let serialCounter = 1000;
+  let poCounter = 100;
+
+  const stagesRequiringPowderCoatInfo: StageId[] = ['powder-coat', 'assembly', 'testing'];
+
+  // Create 3 pumps for each model
+  for (let i = 0; i < 3; i++) {
+    for (const model of PUMP_MODELS) {
+      const pump: Partial<Pump> = {
+        id: crypto.randomUUID(),
+        model: model,
+        serialNumber: `MSP-JN-${String(serialCounter++).padStart(4, '0')}`,
+        customer: CUSTOMER_NAMES[samplePumps.length % CUSTOMER_NAMES.length],
+        poNumber: `PO-${String(poCounter++).padStart(5, '0')}`,
+        estimatedBuildTimeDays: 1.5 + (Math.random() * 2), // Small variation
+        priority: ['normal', 'high', 'urgent'][samplePumps.length % 3] as Pump['priority'],
+        createdAt: now,
+        updatedAt: now,
+      };
+
+      // Assign stage based on distribution
+      let assignedStage = false;
+      for (const stage of STAGES) { // Iterate in defined order
+        const stageId = stage.id;
+        if (stageDistribution[stageId] > 0) {
+          const pumpsInThisStage = samplePumps.filter(p => p.currentStage === stageId).length;
+          if (pumpsInThisStage < stageDistribution[stageId]) {
+            pump.currentStage = stageId;
+            
+            if (stagesRequiringPowderCoatInfo.includes(stageId)) {
+              pump.powderCoater = POWDER_COATERS[samplePumps.length % POWDER_COATERS.length];
+              pump.powderCoatColor = DEFAULT_POWDER_COAT_COLORS[samplePumps.length % DEFAULT_POWDER_COAT_COLORS.length];
+            }
+            assignedStage = true;
+            break;
+          }
+        }
+      }
+      // Fallback if distribution logic has issues (e.g. exact counts not met, though it should)
+      if (!assignedStage) {
+        pump.currentStage = 'open-jobs';
+      }
+      
+      samplePumps.push(pump as Pump);
+    }
+  }
+  
+  // Shuffle pumps to better distribute models across stages rather than clustering them
+  // This is a simple shuffle, good enough for sample data
+  for (let i = samplePumps.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [samplePumps[i], samplePumps[j]] = [samplePumps[j], samplePumps[i]];
+  }
+
+  // Re-assign stages based on target counts after shuffling models
+  const currentStageCounts: Record<StageId, number> = {
+    'open-jobs': 0, 'fabrication': 0, 'powder-coat': 0, 
+    'assembly': 0, 'testing': 0, 'shipped': 0,
+  };
+
+  const finalPumps: Pump[] = [];
+  for (const p of samplePumps) {
+      let assigned = false;
+      for (const stageObj of STAGES) {
+          const stageId = stageObj.id;
+          if (currentStageCounts[stageId] < stageDistribution[stageId]) {
+              p.currentStage = stageId;
+              // Ensure powder coat info if needed for the new stage
+              if (stagesRequiringPowderCoatInfo.includes(stageId) && (!p.powderCoater || !p.powderCoatColor)) {
+                p.powderCoater = POWDER_COATERS[finalPumps.length % POWDER_COATERS.length];
+                p.powderCoatColor = DEFAULT_POWDER_COAT_COLORS[finalPumps.length % DEFAULT_POWDER_COAT_COLORS.length];
+              } else if (!stagesRequiringPowderCoatInfo.includes(stageId)) {
+                // Optionally clear powder coat info if moved to a stage before it
+                // p.powderCoater = undefined;
+                // p.powderCoatColor = undefined;
+              }
+              currentStageCounts[stageId]++;
+              finalPumps.push(p);
+              assigned = true;
+              break;
+          }
+      }
+      if (!assigned && finalPumps.length < PUMP_MODELS.length * 3) { // Safety net
+          p.currentStage = 'open-jobs';
+          currentStageCounts['open-jobs']++;
+          finalPumps.push(p);
+      }
+  }
+
+
+  // console.log(`Generated ${finalPumps.length} sample pumps.`);
+  // console.log("Final stage counts:", currentStageCounts);
+  // finalPumps.forEach(p => console.log(`Model: ${p.model}, Stage: ${p.currentStage}, SN: ${p.serialNumber}`));
+
+  return Promise.resolve(finalPumps.slice(0, PUMP_MODELS.length * 3)); // Ensure exact count
 }
+
 
 /**
  * Simulates fetching the activity log for a specific pump.
