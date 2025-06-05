@@ -170,9 +170,11 @@ export default function SchedulePage() {
           ? prevSelectedIds.filter(id => id !== item.id)
           : [...prevSelectedIds, item.id];
       }
+      // If not ctrl/meta click, select only this item if it's not already the only selected,
+      // or deselect if it is the only one selected.
       return prevSelectedIds.includes(item.id) && prevSelectedIds.length === 1 ? [] : [item.id];
     });
-  }, [setSelectedPlannableItemIds]);
+  }, [selectedPlannableItemIds, setSelectedPlannableItemIds]);
 
 
   const handleDragStartPlannableItem = useCallback((e: React.DragEvent, item: PlannablePump) => {
@@ -180,39 +182,39 @@ export default function SchedulePage() {
     e.stopPropagation();
 
     try {
-      // --- CRITICAL ORDERING ---
-      // 1. Set dataTransfer properties
       e.dataTransfer.setData('text/plain', item.id);
       e.dataTransfer.effectAllowed = 'move';
       console.log('🔥 DataTransfer: setData("text/plain", "'+item.id+'") and effectAllowed="move" set.');
-
-      // 2. Apply direct DOM manipulation for visual feedback (opacity) to e.currentTarget
-      // This is the element the browser will try to create a ghost image from.
-      const cardElement = e.currentTarget as HTMLElement;
-      if (cardElement) {
-        cardElement.style.opacity = '0.5';
-        console.log('🔥 Visual Feedback: Opacity set to 0.5 for card ID:', item.id);
-      } else {
-        console.warn('🔥 Visual Feedback: Could not find cardElement (e.currentTarget) to set opacity.');
-      }
-      
-      // 3. THEN update React state. This might cause re-renders.
-      // Forcing single item drag for now to ensure basics work.
-      // Batch logic can be re-enabled once single drag is solid.
-      setDraggedItemData({ type: 'plannable-single', item });
-      // Ensure the dragged item is the only one marked as selected for clarity during this drag.
-      setSelectedPlannableItemIds([item.id]);
-      console.log('🔥 Internal State: draggedItemData set for single item, selectedPlannableItemIds updated.');
-      
-      console.log('✅ Drag start for plannable item completed successfully:', item.id);
-
-    } catch (error) {
-      console.error('❌ ERROR in handleDragStartPlannableItem:', error);
-      // Reset opacity if error occurs during setup
-      const cardElement = e.currentTarget as HTMLElement;
-      if (cardElement) cardElement.style.opacity = '1';
+    } catch (err) {
+      console.error('❌ ERROR setting dataTransfer:', err);
+      return; 
     }
-  }, [setDraggedItemData, setSelectedPlannableItemIds]);
+
+    const cardElement = e.currentTarget as HTMLElement;
+    if (cardElement) {
+      cardElement.style.opacity = '0.5';
+      console.log('🔥 Visual Feedback: Opacity set to 0.5 for card ID:', item.id);
+    } else {
+      console.warn('🔥 Visual Feedback: Could not find cardElement (e.currentTarget) to set opacity.');
+    }
+    
+    setTimeout(() => {
+      console.log('🔥 Timeout: Updating React state for drag start.');
+      setDraggedItemData({ type: 'plannable-single', item });
+      
+      if (selectedPlannableItemIds.includes(item.id) && selectedPlannableItemIds.length > 1) {
+        const batchItems = plannableItems.filter(p => selectedPlannableItemIds.includes(p.id));
+        setDraggedItemData({ type: 'plannable-batch', items: batchItems });
+        console.log('🔥 Internal State (after timeout): Dragging BATCH of', batchItems.length, 'items.');
+      } else {
+        setDraggedItemData({ type: 'plannable-single', item });
+        setSelectedPlannableItemIds([item.id]);
+        console.log('🔥 Internal State (after timeout): Dragging SINGLE item, selectedPlannableItemIds updated.');
+      }
+    }, 0);
+
+    console.log('✅ Drag start for plannable item setup completed (React state updates deferred):', item.id);
+  }, [setDraggedItemData, setSelectedPlannableItemIds, selectedPlannableItemIds, plannableItems]);
 
 
   const handleDragStartScheduledItem = useCallback((e: React.DragEvent, item: ScheduledPump) => {
@@ -224,46 +226,42 @@ export default function SchedulePage() {
       e.dataTransfer.setData('text/plain', item.instanceId); 
       e.dataTransfer.effectAllowed = 'move';
       console.log('🔥 DataTransfer: setData for instanceId and text/plain, effectAllowed set.');
-
-      const targetElement = e.currentTarget as HTMLElement; 
-      if (targetElement) {
-          targetElement.style.opacity = '0.5';
-          console.log('🔥 Visual Feedback: Opacity set for scheduled item instance:', item.instanceId);
-      } else {
-          console.warn('🔥 Visual Feedback: Could not find targetElement for scheduled item instance:', item.instanceId);
-      }
-      
-      setDraggedItemData({ type: 'scheduled', item });
-      console.log('🔥 Internal State: draggedItemData set for scheduled item.');
-
-      console.log('✅ Drag start for scheduled item completed successfully:', item.instanceId);
-    } catch (error) {
-       console.error('❌ ERROR in handleDragStartScheduledItem:', error);
-       const targetElement = e.currentTarget as HTMLElement;
-       if (targetElement) targetElement.style.opacity = '1';
+    } catch (err) {
+       console.error('❌ ERROR setting dataTransfer for scheduled item:', err);
+       return;
     }
+
+    const targetElement = e.currentTarget as HTMLElement; 
+    if (targetElement) {
+        targetElement.style.opacity = '0.5';
+        console.log('🔥 Visual Feedback: Opacity set for scheduled item instance:', item.instanceId);
+    } else {
+        console.warn('🔥 Visual Feedback: Could not find targetElement for scheduled item instance:', item.instanceId);
+    }
+    
+    setTimeout(() => {
+      console.log('🔥 Timeout: Updating React state for scheduled item drag start.');
+      setDraggedItemData({ type: 'scheduled', item });
+      console.log('🔥 Internal State (after timeout): draggedItemData set for scheduled item.');
+    }, 0);
+
+    console.log('✅ Drag start for scheduled item setup completed (React state updates deferred):', item.instanceId);
   }, [setDraggedItemData]);
 
   const handleDragEnd = useCallback((e: React.DragEvent) => {
     console.log('🏁 DRAG END (SchedulePage) - dropEffect:', e.dataTransfer.dropEffect);
     
-    const draggedElement = e.currentTarget as HTMLElement;
-    if (draggedElement) {
-      draggedElement.style.opacity = '1';
-      console.log('🏁 Visual Feedback: Opacity reset for element that was dragged.');
+    const draggedDOMElement = e.currentTarget as HTMLElement;
+    if (draggedDOMElement) {
+      draggedDOMElement.style.opacity = '1';
+      console.log('🏁 Visual Feedback: Opacity reset for dragged element.');
     } else {
         console.warn('🏁 Visual Feedback: Could not find e.currentTarget in handleDragEnd to reset opacity.');
     }
     
-    // Important: Clear draggedItemData only if drop was not successful or handled elsewhere
-    // If dropEffect is 'none', it means the drop was not on a valid target or was cancelled.
-    // If it was 'move', the drop handler should have ideally cleared draggedItemData.
-    // However, as a fallback, or if drag is cancelled mid-air, clear it here.
-    if (e.dataTransfer.dropEffect === 'none' || draggedItemData) {
-        console.log('🏁 Clearing draggedItemData in handleDragEnd. Current dropEffect:', e.dataTransfer.dropEffect);
+    if (draggedItemData) {
+        console.log('🏁 Clearing draggedItemData in handleDragEnd. Current draggedItemData type:', draggedItemData.type);
         setDraggedItemData(null);
-    } else {
-        console.log('🏁 Not clearing draggedItemData in handleDragEnd as dropEffect suggests successful drop, assuming drop handler managed it. dropEffect:', e.dataTransfer.dropEffect)
     }
   }, [draggedItemData, setDraggedItemData]);
 
@@ -275,33 +273,56 @@ export default function SchedulePage() {
   }, []);
 
   const handleDropOnCalendar = useCallback((e: React.DragEvent<HTMLDivElement>, targetDayIndex: number) => {
-    console.log('🟢 DROP ON CALENDAR - Day Index:', targetDayIndex);
+    console.log('🟢 DROP ON CALENDAR - Day Index:', targetDayIndex, 'Dragged Data Type:', draggedItemData?.type);
     e.preventDefault();
     e.stopPropagation();
     
     const currentDraggedItem = draggedItemData; 
-    console.log('🟢 Captured draggedItemData for drop:', currentDraggedItem);
-
     if (!currentDraggedItem) {
-      console.warn('🟢 Drop occurred but no draggedItemData was found.');
+      console.warn('🟢 Drop occurred but no draggedItemData was found. Attempting fallback with dataTransfer.');
       const idFromDataTransfer = e.dataTransfer.getData('text/plain');
-      console.warn('🟢 ID from dataTransfer (text/plain) for diagnostics:', idFromDataTransfer);
-      if (!idFromDataTransfer) { // If truly nothing useful, bail.
-          setDraggedItemData(null); 
+      const itemToScheduleFromPlannable = plannableItems.find(p => p.id === idFromDataTransfer);
+
+      if (idFromDataTransfer && itemToScheduleFromPlannable) {
+         console.log('🟢 Fallback: Found plannable item by ID from dataTransfer:', itemToScheduleFromPlannable.id);
+         setScheduledItems(prev => {
+            const filteredPrev = prev.filter(si => si.id !== itemToScheduleFromPlannable.id); // Avoid duplicates by original ID
+            return [...filteredPrev, {
+              ...itemToScheduleFromPlannable,
+              scheduledOnDayIndex: targetDayIndex,
+              instanceId: crypto.randomUUID(),
+            }].sort((a,b) => a.scheduledOnDayIndex - b.scheduledOnDayIndex);
+          });
+          toast({ title: "Pump Scheduled (Fallback)", description: `${itemToScheduleFromPlannable.serialNumber || itemToScheduleFromPlannable.model} added to schedule.` });
+          setSelectedPlannableItemIds([]); 
+          setDraggedItemData(null);
           return;
+      } else {
+          const scheduledItemInstanceId = e.dataTransfer.getData('application/pumptrack-instance-id');
+          const itemToMoveFromScheduled = scheduledItems.find(si => si.instanceId === scheduledItemInstanceId);
+          if (scheduledItemInstanceId && itemToMoveFromScheduled) {
+            console.log('🟢 Fallback: Found scheduled item instance by ID from dataTransfer:', itemToMoveFromScheduled.instanceId);
+             setScheduledItems(prev => prev.map(si =>
+                si.instanceId === itemToMoveFromScheduled.instanceId
+                ? { ...si, scheduledOnDayIndex: targetDayIndex }
+                : si
+            ).sort((a,b) => a.scheduledOnDayIndex - b.scheduledOnDayIndex));
+            toast({ title: "Schedule Updated (Fallback)", description: `Rescheduled ${itemToMoveFromScheduled.serialNumber || itemToMoveFromScheduled.model}.` });
+            setDraggedItemData(null);
+            return;
+          }
       }
-      // Try to recover if only draggedItemData was lost but dataTransfer is good.
-      // This scenario is less ideal but might happen.
-      // For now, we'll primarily rely on draggedItemData being set.
+      console.warn('🟢 Fallback failed: Could not identify dragged item from dataTransfer.');
+      setDraggedItemData(null); 
+      return;
     }
     
     const dropTargetElement = e.currentTarget as HTMLElement;
     dropTargetElement.classList.remove('bg-primary/10', 'border-primary');
 
-    if (currentDraggedItem?.type === 'plannable-single') {
+    if (currentDraggedItem.type === 'plannable-single') {
       const itemToSchedule = currentDraggedItem.item;
       console.log('🟢 Scheduling SINGLE plannable item:', itemToSchedule.id);
-
       setScheduledItems(prev => {
         const filteredPrev = prev.filter(si => si.id !== itemToSchedule.id);
         return [...filteredPrev, {
@@ -311,9 +332,7 @@ export default function SchedulePage() {
         }].sort((a,b) => a.scheduledOnDayIndex - b.scheduledOnDayIndex);
       });
       toast({ title: "Pump Scheduled", description: `${itemToSchedule.serialNumber || itemToSchedule.model} added to schedule.` });
-      setSelectedPlannableItemIds([]); 
-
-    } else if (currentDraggedItem?.type === 'plannable-batch') {
+    } else if (currentDraggedItem.type === 'plannable-batch') {
       const itemsToSchedule = currentDraggedItem.items;
       console.log('🟢 Scheduling BATCH of plannable items. Count:', itemsToSchedule.length);
       const newScheduledInstances: ScheduledPump[] = itemsToSchedule.map(item => ({
@@ -329,9 +348,7 @@ export default function SchedulePage() {
           .sort((a,b) => a.scheduledOnDayIndex - b.scheduledOnDayIndex);
       });
       toast({ title: "Pumps Scheduled", description: `${itemsToSchedule.length} pumps added to schedule.` });
-      setSelectedPlannableItemIds([]);
-
-    } else if (currentDraggedItem?.type === 'scheduled') {
+    } else if (currentDraggedItem.type === 'scheduled') {
       const itemToMove = currentDraggedItem.item;
       console.log('🟢 Moving SCHEDULED item instance:', itemToMove.instanceId, 'to day index:', targetDayIndex);
       setScheduledItems(prev => prev.map(si =>
@@ -342,21 +359,38 @@ export default function SchedulePage() {
       toast({ title: "Schedule Updated", description: `Rescheduled ${itemToMove.serialNumber || itemToMove.model}.` });
     }
     
+    setSelectedPlannableItemIds([]);
     console.log('🟢 Clearing draggedItemData after successful calendar drop processing.');
     setDraggedItemData(null); 
-  }, [draggedItemData, toast, setScheduledItems, setSelectedPlannableItemIds]);
+  }, [draggedItemData, toast, setScheduledItems, setSelectedPlannableItemIds, plannableItems, scheduledItems]);
 
 
   const handleDropOnPlannableList = useCallback((e: React.DragEvent<HTMLDivElement>) => {
-    console.log('🟢 DROP ON PLANNABLE LIST');
+    console.log('🟢 DROP ON PLANNABLE LIST. Dragged Data Type:', draggedItemData?.type);
     e.preventDefault();
     e.stopPropagation();
     
     const currentDraggedItem = draggedItemData; 
-    console.log('🟢 Captured draggedItemData for plannable list drop:', currentDraggedItem);
+    if (!currentDraggedItem) {
+      console.warn('🟢 Drop on plannable list but no draggedItemData. Attempting fallback.');
+      const instanceIdFromDataTransfer = e.dataTransfer.getData('application/pumptrack-instance-id') || e.dataTransfer.getData('text/plain');
+      const itemToRemoveFromSchedule = scheduledItems.find(si => si.instanceId === instanceIdFromDataTransfer);
+      if (itemToRemoveFromSchedule) {
+        console.log('🟢 Fallback: Identified scheduled item to remove from schedule:', itemToRemoveFromSchedule.instanceId);
+        setScheduledItems(prev => prev.filter(item => item.instanceId !== itemToRemoveFromSchedule.instanceId));
+        toast({ title: "Pump Unscheduled (Fallback)", description: `${itemToRemoveFromSchedule.serialNumber || itemToRemoveFromSchedule.model} removed from schedule.` });
+        setSelectedPlannableItemIds([]);
+        setDraggedItemData(null);
+        return;
+      }
+      console.warn('🟢 Fallback failed: Could not identify item to remove from schedule via dataTransfer.');
+      setDraggedItemData(null);
+      return;
+    }
 
-    if (!currentDraggedItem || currentDraggedItem.type !== 'scheduled') {
-      console.warn('🟢 Drop on plannable list but not a scheduled item, or no draggedItemData. Type:', currentDraggedItem?.type);
+
+    if (currentDraggedItem.type !== 'scheduled') {
+      console.warn('🟢 Drop on plannable list but not a scheduled item, or no draggedItemData. Type:', currentDraggedItem.type);
       setDraggedItemData(null); 
       return;
     }
@@ -369,7 +403,7 @@ export default function SchedulePage() {
     setSelectedPlannableItemIds([]);
     console.log('🟢 Clearing draggedItemData after plannable list drop processing.');
     setDraggedItemData(null); 
-  }, [draggedItemData, toast, setScheduledItems, setSelectedPlannableItemIds]);
+  }, [draggedItemData, toast, setScheduledItems, setSelectedPlannableItemIds, scheduledItems]);
 
   const removeFromSchedule = useCallback((instanceIdToRemove: string) => {
     const itemToRemove = scheduledItems.find(si => si.instanceId === instanceIdToRemove);
