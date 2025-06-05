@@ -1,7 +1,7 @@
 
 "use client";
 
-import React from 'react'; // Imported React for React.memo
+import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import type { Pump } from '@/types';
@@ -23,7 +23,6 @@ interface KanbanCardProps {
   isSelected?: boolean;
 }
 
-// Wrap the component definition with React.memo
 export const KanbanCard = React.memo(function KanbanCard({
   pump,
   onDragStart,
@@ -60,7 +59,7 @@ export const KanbanCard = React.memo(function KanbanCard({
       className={cn(
         "mb-3 shadow-md hover:shadow-lg hover:scale-[1.02] transition-all duration-150 ease-in-out bg-card group cursor-pointer",
         priorityClass(),
-        isSelected && "ring-2 ring-primary ring-offset-1" // Selection ring, border controlled by priority or default
+        isSelected && "ring-2 ring-primary ring-offset-1"
       )}
       aria-label={`Pump Model: ${pump.model}, Customer: ${pump.customer}, S/N: ${displaySerialNumber}, Priority: ${pump.priority || 'normal'}`}
     >
@@ -110,12 +109,15 @@ export const KanbanCard = React.memo(function KanbanCard({
           )}
         </div>
       </CardHeader>
-      <CardContent className="p-3 pt-0">
-        {pump.durationDays !== undefined && (
-          <p className="text-xs text-muted-foreground">
-            Duration: {pump.durationDays} days
+      <CardContent className="p-3 pt-0 text-xs text-muted-foreground space-y-0.5">
+        {pump.estimatedBuildTimeDays !== undefined && (
+          <p>
+            Build Time: {pump.estimatedBuildTimeDays} days
           </p>
         )}
+        <p>
+          Actual Duration: {pump.actualDurationDays !== undefined ? `${pump.actualDurationDays} days` : 'N/A'}
+        </p>
       </CardContent>
     </Card>
   );

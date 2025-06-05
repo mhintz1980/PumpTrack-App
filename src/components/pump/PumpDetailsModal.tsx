@@ -42,7 +42,7 @@ const pumpDetailsSchema = z.object({
   powderCoater: z.string().optional(),
   powderCoatColor: z.string().optional(),
   priority: z.enum(PRIORITY_LEVELS.map(p => p.value) as [PriorityLevel, ...PriorityLevel[]]).default('normal'),
-  durationDays: z.coerce.number().min(0.1, "Duration must be a positive number.").optional().nullable(),
+  estimatedBuildTimeDays: z.coerce.number().min(0.1, "Build time must be a positive number.").optional().nullable(),
   notes: z.string().optional(),
 });
 
@@ -70,7 +70,7 @@ export function PumpDetailsModal({ isOpen, onClose, pump, onUpdatePump }: PumpDe
         powderCoater: pump.powderCoater || '',
         powderCoatColor: pump.powderCoatColor || '',
         priority: pump.priority || 'normal',
-        durationDays: pump.durationDays === undefined ? null : pump.durationDays, // Handle undefined for the form
+        estimatedBuildTimeDays: pump.estimatedBuildTimeDays === undefined ? null : pump.estimatedBuildTimeDays,
         notes: pump.notes || '',
       });
     }
@@ -89,7 +89,8 @@ export function PumpDetailsModal({ isOpen, onClose, pump, onUpdatePump }: PumpDe
       powderCoater: data.powderCoater?.trim() === '' ? undefined : data.powderCoater,
       powderCoatColor: data.powderCoatColor?.trim() === '' ? undefined : data.powderCoatColor,
       priority: data.priority,
-      durationDays: data.durationDays === null ? undefined : data.durationDays, // Convert null back to undefined if needed
+      estimatedBuildTimeDays: data.estimatedBuildTimeDays === null ? undefined : data.estimatedBuildTimeDays,
+      // actualDurationDays is not edited here
       notes: data.notes?.trim() === '' ? undefined : data.notes,
     };
     onUpdatePump(updatedPumpData);
@@ -206,10 +207,10 @@ export function PumpDetailsModal({ isOpen, onClose, pump, onUpdatePump }: PumpDe
                   />
                 <FormField
                   control={form.control}
-                  name="durationDays"
+                  name="estimatedBuildTimeDays"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Duration (days)</FormLabel>
+                      <FormLabel>Build Time (days)</FormLabel>
                       <FormControl>
                         <Input
                           type="number"

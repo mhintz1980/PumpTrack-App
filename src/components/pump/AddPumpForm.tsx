@@ -36,7 +36,6 @@ const pumpFormSchemaBase = z.object({
   quantity: z.number().min(1, "Quantity must be at least 1").int("Quantity must be an integer").default(1),
   serialNumber: z.string().optional(),
   priority: z.enum(PRIORITY_LEVELS.map(p => p.value) as [PriorityLevel, ...PriorityLevel[]]).default('normal'),
-  // durationDays is not directly in the form, but set on creation
 });
 
 const pumpFormSchema = pumpFormSchemaBase.superRefine((data, ctx) => {
@@ -68,7 +67,6 @@ const pumpFormSchema = pumpFormSchemaBase.superRefine((data, ctx) => {
 
 type PumpFormValues = z.infer<typeof pumpFormSchema>;
 
-// Updated onAddPump signature
 interface AddPumpFormProps {
   isOpen: boolean;
   onClose: () => void;
@@ -134,7 +132,8 @@ export function AddPumpForm({ isOpen, onClose, onAddPump }: AddPumpFormProps) {
         currentStage: 'open-jobs', // Default stage
         notes: data.notes || undefined,
         priority: data.priority || 'normal',
-        durationDays: 1.5, // Default duration
+        estimatedBuildTimeDays: 1.5, // Default estimated build time
+        // actualDurationDays is not set at creation
         // powderCoater and powderCoatColor are not set at creation from this form
       };
       newPumpsToCreate.push(pumpData);

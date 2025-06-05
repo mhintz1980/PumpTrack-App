@@ -1,7 +1,7 @@
 
 "use client";
 
-import React from 'react'; // Imported React for React.memo
+import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { GripVertical, Eye } from 'lucide-react';
@@ -14,9 +14,8 @@ import {
 import { cn } from '@/lib/utils';
 import type { Pump } from '@/types';
 
-// PlannablePump extends Pump with daysPerUnit, and now Pump has durationDays
 interface PlannablePump extends Pump {
-  daysPerUnit: number; // This is for calendar block rendering duration
+  daysPerUnit: number; // This will now come from estimatedBuildTimeDays via schedule page logic
 }
 
 interface SchedulePumpCardProps {
@@ -28,7 +27,6 @@ interface SchedulePumpCardProps {
   onOpenDetailsModal: (pump: PlannablePump) => void;
 }
 
-// Wrap the component definition with React.memo
 export const SchedulePumpCard = React.memo(function SchedulePumpCard({
   pump,
   isSelected,
@@ -45,7 +43,6 @@ export const SchedulePumpCard = React.memo(function SchedulePumpCard({
   };
 
   const handleCardClick = (e: React.MouseEvent) => {
-    // Prevent click when dragging or if drag handle was clicked
     if ((e.target as HTMLElement).closest('[data-drag-handle]')) {
       e.preventDefault();
       e.stopPropagation();
@@ -61,9 +58,8 @@ export const SchedulePumpCard = React.memo(function SchedulePumpCard({
   const handleDragEndInternal = (e: React.DragEvent) => {
     const targetElement = e.currentTarget as HTMLElement;
     if (targetElement) {
-        targetElement.style.opacity = '1'; // Ensure opacity is reset here too
+        targetElement.style.opacity = '1';
     }
-
     if (onDragEnd) {
       onDragEnd(e);
     }
@@ -139,15 +135,19 @@ export const SchedulePumpCard = React.memo(function SchedulePumpCard({
           </TooltipProvider>
         </div>
       </CardHeader>
-      <CardContent className="p-3 pt-0">
-        {pump.durationDays !== undefined && (
-          <p className="text-xs text-muted-foreground">
-            Duration: {pump.durationDays} days
+      <CardContent className="p-3 pt-0 text-xs text-muted-foreground space-y-0.5">
+        {pump.estimatedBuildTimeDays !== undefined && (
+          <p>
+            Build Time: {pump.estimatedBuildTimeDays} days
           </p>
         )}
-         <p className="text-xs text-muted-foreground mt-0.5">
-            Build Time: {pump.daysPerUnit} days
-          </p>
+         <p>
+          Actual Duration: {pump.actualDurationDays !== undefined ? `${pump.actualDurationDays} days` : 'N/A'}
+        </p>
+        {/* This displays the value used by the calendar for block size, now sourced from estimatedBuildTimeDays */}
+        <p className="text-xs text-muted-foreground mt-0.5">
+            Schedule Block: {pump.daysPerUnit} days
+        </p>
       </CardContent>
     </Card>
   );

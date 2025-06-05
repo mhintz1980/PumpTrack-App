@@ -23,7 +23,8 @@ export interface Pump {
   powderCoatColor?: string;
   notes?: string;
   priority?: PriorityLevel;
-  durationDays?: number; // New field for editable duration
+  estimatedBuildTimeDays?: number; // Editable estimate for build time
+  actualDurationDays?: number; // Actual time taken, to be populated later
   createdAt: string; // ISO date string
   updatedAt: string; // ISO date string
 }
