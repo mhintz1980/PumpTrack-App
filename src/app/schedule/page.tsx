@@ -448,15 +448,17 @@ export default function SchedulePage() {
   const PlannablePumpsTable = () => (
     <Card>
       <CardHeader>
-        <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-          <CardTitle>Pumps to Schedule</CardTitle>
-          <Button onClick={() => setIsAddPumpModalOpen(true)} size="sm" className="shrink-0">
-            <PlusCircle className="mr-2 h-4 w-4" /> Add Pump(s)
-          </Button>
-          <CardDescription className="text-sm text-muted-foreground flex-grow min-w-[200px] text-left sm:text-right">
-            Drag pumps from this list to the calendar. Use Ctrl/Meta+Click to select multiple.
-          </CardDescription>
-        </div>
+        <div className="flex flex-col gap-y-2">
+            <div className="flex flex-wrap items-center gap-x-4">
+              <CardTitle>Pumps to Schedule</CardTitle>
+              <Button onClick={() => setIsAddPumpModalOpen(true)} size="sm" className="shrink-0">
+                <PlusCircle className="mr-2 h-4 w-4" /> Add Pump(s)
+              </Button>
+            </div>
+            <CardDescription className="text-sm text-muted-foreground text-left">
+              Drag pumps from this list to the calendar. Use Ctrl/Meta+Click to select multiple.
+            </CardDescription>
+          </div>
       </CardHeader>
       <CardContent>
         <ScrollArea 
