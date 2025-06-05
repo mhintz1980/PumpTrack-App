@@ -67,10 +67,11 @@ const pumpFormSchema = pumpFormSchemaBase.superRefine((data, ctx) => {
 
 type PumpFormValues = z.infer<typeof pumpFormSchema>;
 
+// Updated onAddPump signature
 interface AddPumpFormProps {
   isOpen: boolean;
   onClose: () => void;
-  onAddPump: (newPumpData: Omit<Pump, 'id' | 'currentStage'> & { quantity: number; serialNumber?: string; priority?: PriorityLevel }) => void;
+  onAddPump: (newPumpsData: Array<Omit<Pump, 'id' | 'createdAt' | 'updatedAt'>>) => void;
 }
 
 export function AddPumpForm({ isOpen, onClose, onAddPump }: AddPumpFormProps) {
@@ -105,15 +106,39 @@ export function AddPumpForm({ isOpen, onClose, onAddPump }: AddPumpFormProps) {
 
   const onSubmit = (data: PumpFormValues) => {
     setIsSubmitting(true);
-    onAddPump({ 
-      model: data.model,
-      customer: data.customer,
-      poNumber: data.poNumber,
-      notes: data.notes,
-      quantity: data.quantity,
-      serialNumber: data.serialNumber?.trim() === '' ? undefined : data.serialNumber,
-      priority: data.priority,
-    });
+    
+    const newPumpsToCreate: Array<Omit<Pump, 'id' | 'createdAt' | 'updatedAt'>> = [];
+    let currentSerialNumberNumeric = -1;
+    const startSerialNumber = data.serialNumber?.trim() === '' ? undefined : data.serialNumber;
+
+    if (data.quantity > 1 && startSerialNumber && /^MSP-JN-\d{4}$/.test(startSerialNumber)) {
+      currentSerialNumberNumeric = parseInt(startSerialNumber.substring(7), 10);
+    }
+
+    for (let i = 0; i < data.quantity; i++) {
+      let pumpSerialNumber: string | undefined = undefined;
+      if (data.quantity === 1 && startSerialNumber && /^MSP-JN-\d{4}$/.test(startSerialNumber)) {
+        pumpSerialNumber = startSerialNumber;
+      } else if (data.quantity > 1 && currentSerialNumberNumeric !== -1) {
+         if (currentSerialNumberNumeric + i <= 9999) {
+            pumpSerialNumber = `MSP-JN-${String(currentSerialNumberNumeric + i).padStart(4, '0')}`;
+        }
+      } // No serial for quantity > 1 if start serial is not valid/provided - service might assign or handle
+
+      const pumpData: Omit<Pump, 'id' | 'createdAt' | 'updatedAt'> = {
+        model: data.model,
+        customer: data.customer,
+        poNumber: data.poNumber,
+        serialNumber: pumpSerialNumber,
+        currentStage: 'open-jobs', // Default stage
+        notes: data.notes || undefined,
+        priority: data.priority || 'normal',
+        // powderCoater and powderCoatColor are not set at creation from this form
+      };
+      newPumpsToCreate.push(pumpData);
+    }
+    
+    onAddPump(newPumpsToCreate);
     setIsSubmitting(false);
     handleClose();
   };

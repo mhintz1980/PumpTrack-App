@@ -2,25 +2,25 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from 'react';
-import type { Pump, StageId, ViewMode, Filters, PriorityLevel } from '@/types';
+import type { Pump, StageId, ViewMode, Filters } from '@/types';
 import { STAGES, POWDER_COATERS, PUMP_MODELS, CUSTOMER_NAMES, DEFAULT_POWDER_COAT_COLORS, PRIORITY_LEVELS } from '@/lib/constants';
 import { useToast } from '@/hooks/use-toast';
 import { EnhancedHeader } from '@/components/layout/EnhancedHeader';
 import { KanbanBoard } from '@/components/kanban/KanbanBoard';
+import { AddPumpForm } from '@/components/pump/AddPumpForm';
 import { PumpDetailsModal } from '@/components/pump/PumpDetailsModal';
 import { MissingInfoModal } from '@/components/pump/MissingInfoModal';
 import { GroupedPumpDetailsModal } from '@/components/pump/GroupedPumpDetailsModal';
-
-const generateId = () => crypto.randomUUID();
-
-const generateRandomSerialNumber = () => `MSP-JN-${String(Math.floor(Math.random() * 9000) + 1000).padStart(4, '0')}`;
+import * as pumpService from '@/services/pumpService'; // Import pumpService
 
 export default function HomePage() {
   const [pumps, setPumps] = useState<Pump[]>([]);
   const [filteredPumps, setFilteredPumps] = useState<Pump[]>([]);
   const [filters, setFilters] = useState<Filters>({});
   const [searchTerm, setSearchTerm] = useState('');
+  const [isLoading, setIsLoading] = useState(true); // For initial data load
   
+  const [isAddPumpModalOpen, setIsAddPumpModalOpen] = useState(false);
   const [selectedPumpForDetails, setSelectedPumpForDetails] = useState<Pump | null>(null);
   const [isPumpDetailsModalOpen, setIsPumpDetailsModalOpen] = useState(false);
   
@@ -41,24 +41,26 @@ export default function HomePage() {
   const { toast } = useToast();
   
   useEffect(() => {
-    const now = new Date().toISOString();
-    const initialSamplePumps: Pump[] = [
-      { id: generateId(), model: PUMP_MODELS[0], serialNumber: generateRandomSerialNumber(), customer: CUSTOMER_NAMES[0], poNumber: 'PO123', currentStage: 'open-jobs', notes: 'Initial inspection pending.', priority: 'normal', createdAt: now, updatedAt: now },
-      { id: generateId(), model: PUMP_MODELS[1], serialNumber: generateRandomSerialNumber(), customer: CUSTOMER_NAMES[1], poNumber: 'PO456', currentStage: 'assembly', notes: 'Waiting for part XYZ.', priority: 'high', createdAt: now, updatedAt: now },
-      { id: generateId(), model: PUMP_MODELS[0], serialNumber: generateRandomSerialNumber(), customer: CUSTOMER_NAMES[0], poNumber: 'PO788', currentStage: 'open-jobs', notes: 'Urgent.', priority: 'urgent', createdAt: now, updatedAt: now },
-      { id: generateId(), model: PUMP_MODELS[2], serialNumber: generateRandomSerialNumber(), customer: CUSTOMER_NAMES[2], poNumber: 'PO789', currentStage: 'testing', powderCoater: POWDER_COATERS[0], powderCoatColor: DEFAULT_POWDER_COAT_COLORS[0], notes: 'High pressure test passed.', priority: 'normal', createdAt: now, updatedAt: now },
-      { id: generateId(), model: PUMP_MODELS[3], serialNumber: generateRandomSerialNumber(), customer: CUSTOMER_NAMES[3], poNumber: 'PO124', currentStage: 'powder-coat', powderCoater: POWDER_COATERS[1], powderCoatColor: DEFAULT_POWDER_COAT_COLORS[1], priority: 'high', createdAt: now, updatedAt: now },
-      { id: generateId(), model: PUMP_MODELS[0], serialNumber: generateRandomSerialNumber(), customer: CUSTOMER_NAMES[1], poNumber: 'PO101', currentStage: 'open-jobs', notes: 'Needs quick turnaround', priority: 'urgent', createdAt: now, updatedAt: now },
-      { id: generateId(), model: PUMP_MODELS[4], serialNumber: generateRandomSerialNumber(), customer: CUSTOMER_NAMES[4], poNumber: 'PO567', currentStage: 'fabrication', priority: 'normal', createdAt: now, updatedAt: now },
-      { id: generateId(), model: PUMP_MODELS[0], serialNumber: generateRandomSerialNumber(), customer: CUSTOMER_NAMES[2], poNumber: 'PO202', currentStage: 'open-jobs', priority: 'normal', createdAt: now, updatedAt: now },
-    ];
-    setPumps(initialSamplePumps);
-  }, []);
+    const fetchPumps = async () => {
+      setIsLoading(true);
+      try {
+        // For now, pumpService.getAllPumps() will return mock data.
+        // Later, this will fetch from the backend.
+        const fetchedPumps = await pumpService.getAllPumps();
+        setPumps(fetchedPumps);
+      } catch (error) {
+        console.error("Failed to fetch pumps:", error);
+        toast({ variant: "destructive", title: "Error", description: "Could not load pump data." });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchPumps();
+  }, [toast]);
 
   useEffect(() => {
     let tempPumps = [...pumps];
     
-    // Apply search filter
     if (searchTerm) {
       const lowerSearchTerm = searchTerm.toLowerCase();
       tempPumps = tempPumps.filter(pump =>
@@ -68,7 +70,6 @@ export default function HomePage() {
       );
     }
     
-    // Apply other filters
     if (filters.serialNumber && filters.serialNumber.length > 0) {
       tempPumps = tempPumps.filter(p => p.serialNumber && filters.serialNumber!.some(sn => p.serialNumber!.toLowerCase().includes(sn.toLowerCase())));
     }
@@ -90,35 +91,76 @@ export default function HomePage() {
     setFilteredPumps(tempPumps);
   }, [pumps, filters, searchTerm]);
 
+  const handleAddPumps = useCallback(async (newPumpsData: Array<Omit<Pump, 'id' | 'createdAt' | 'updatedAt'>>) => {
+    const addedPumps: Pump[] = [];
+    let success = true;
+    for (const pumpData of newPumpsData) {
+      try {
+        const newPump = await pumpService.addPumpWithActivityLog(pumpData);
+        addedPumps.push(newPump);
+      } catch (error) {
+        console.error("Error adding pump:", error);
+        toast({ variant: "destructive", title: "Add Pump Failed", description: `Could not add pump ${pumpData.serialNumber || pumpData.model}.` });
+        success = false;
+        break; 
+      }
+    }
 
-  const handleUpdatePump = useCallback((updatedPump: Pump) => {
-    const now = new Date().toISOString();
-    setPumps(prev => prev.map(p => p.id === updatedPump.id ? {...updatedPump, updatedAt: now } : p));
-    setSelectedPumpIdsForDrag([]); 
-    toast({ title: "Pump Updated", description: `Details for ${updatedPump.serialNumber || 'Pump'} saved.` });
+    if (success) {
+      setPumps(prev => [...prev, ...addedPumps]);
+      if (newPumpsData.length === 1) {
+        toast({ title: "Pump Added", description: `${addedPumps[0].serialNumber || addedPumps[0].model} has been added.` });
+      } else {
+        toast({ title: `${newPumpsData.length} Pumps Added`, description: "Batch added successfully." });
+      }
+    }
+    setIsAddPumpModalOpen(false);
   }, [toast]);
 
-  const handlePumpMove = useCallback((pumpId: string, newStageId: StageId) => {
+  const handleUpdatePump = useCallback(async (updatedPumpData: Pump) => {
+    const originalPump = pumps.find(p => p.id === updatedPumpData.id);
+    if (!originalPump) {
+      toast({ variant: "destructive", title: "Update Error", description: "Original pump not found." });
+      return;
+    }
+    try {
+      const savedPump = await pumpService.updatePumpWithActivityLog(updatedPumpData.id, updatedPumpData, originalPump);
+      setPumps(prev => prev.map(p => p.id === savedPump.id ? savedPump : p));
+      toast({ title: "Pump Updated", description: `Details for ${savedPump.serialNumber || 'Pump'} saved.` });
+    } catch (error) {
+      console.error("Error updating pump:", error);
+      toast({ variant: "destructive", title: "Update Failed", description: "Could not save pump details." });
+    }
+    setSelectedPumpIdsForDrag([]); 
+    setIsPumpDetailsModalOpen(false);
+    setSelectedPumpForDetails(null);
+  }, [pumps, toast]);
+
+  const handlePumpMove = useCallback(async (pumpId: string, newStageId: StageId) => {
     const pumpToMove = pumps.find(p => p.id === pumpId);
     if (!pumpToMove) return;
-    const now = new Date().toISOString();
 
     if (newStageId === 'powder-coat' && (!pumpToMove.powderCoater || !pumpToMove.powderCoatColor)) {
       setMissingInfoPump(pumpToMove);
       setMissingInfoTargetStage(newStageId);
       setIsMissingInfoModalOpen(true);
     } else {
-      setPumps(prev => prev.map(p => p.id === pumpId ? { ...p, currentStage: newStageId, updatedAt: now } : p));
-      const stageTitle = STAGES.find(s => s.id === newStageId)?.title || newStageId;
-      toast({ title: "Pump Moved", description: `${pumpToMove.serialNumber || 'Pump'} moved to ${stageTitle}.` });
+      try {
+        const movedPump = await pumpService.movePumpStageWithActivityLog(pumpId, newStageId, pumpToMove);
+        setPumps(prev => prev.map(p => p.id === pumpId ? movedPump : p));
+        const stageTitle = STAGES.find(s => s.id === newStageId)?.title || newStageId;
+        toast({ title: "Pump Moved", description: `${movedPump.serialNumber || 'Pump'} moved to ${stageTitle}.` });
+      } catch (error) {
+        console.error("Error moving pump:", error);
+        toast({ variant: "destructive", title: "Move Failed", description: "Could not move pump." });
+      }
     }
     setSelectedPumpIdsForDrag([]);
   }, [pumps, toast]);
   
-  const handleMultiplePumpsMove = useCallback((pumpIdsToMove: string[], newStageId: StageId) => {
+  const handleMultiplePumpsMove = useCallback(async (pumpIdsToMove: string[], newStageId: StageId) => {
     let powderCoatInfoMissing = false;
     let firstMissingPumpForModal: Pump | null = null;
-    const now = new Date().toISOString();
 
     for (const pumpId of pumpIdsToMove) {
       const pump = pumps.find(p => p.id === pumpId);
@@ -136,7 +178,6 @@ export default function HomePage() {
         setMissingInfoPump(firstMissingPumpForModal); 
         setMissingInfoTargetStage(newStageId);
         setIsMissingInfoModalOpen(true);
-        // Do not proceed with the move for any pumps if one is missing info for powder coat
         toast({
           variant: "destructive",
           title: "Move Halted",
@@ -146,27 +187,63 @@ export default function HomePage() {
         return; 
     }
     
-    setPumps(prev => 
-      prev.map(p => 
-        pumpIdsToMove.includes(p.id) ? { ...p, currentStage: newStageId, updatedAt: now } : p
-      )
-    );
-    const stageTitle = STAGES.find(s => s.id === newStageId)?.title || newStageId;
-    toast({ title: `${pumpIdsToMove.length} Pump(s) Moved`, description: `Moved to ${stageTitle}.` });
+    const updatedPumpsPromises = pumpIdsToMove.map(async (pumpId) => {
+      const pumpToMove = pumps.find(p => p.id === pumpId);
+      if (pumpToMove) {
+        try {
+          return await pumpService.movePumpStageWithActivityLog(pumpId, newStageId, pumpToMove);
+        } catch (error) {
+          console.error(`Error moving pump ${pumpId}:`, error);
+          toast({ variant: "destructive", title: "Move Failed", description: `Could not move pump ${pumpToMove.serialNumber || pumpId}.` });
+          return pumpToMove; // Return original on error to avoid losing it from UI optimistically
+        }
+      }
+      return null;
+    });
+
+    const results = (await Promise.all(updatedPumpsPromises)).filter((p): p is Pump => p !== null);
+    
+    setPumps(prev => {
+      const newPumps = [...prev];
+      results.forEach(movedPump => {
+        const index = newPumps.findIndex(p => p.id === movedPump.id);
+        if (index !== -1) {
+          newPumps[index] = movedPump;
+        }
+      });
+      return newPumps;
+    });
+
+    if (results.length > 0) {
+      const stageTitle = STAGES.find(s => s.id === newStageId)?.title || newStageId;
+      toast({ title: `${results.length} Pump(s) Moved`, description: `Moved to ${stageTitle}.` });
+    }
     setSelectedPumpIdsForDrag([]);
   }, [pumps, toast]);
 
+  const handleSaveMissingInfo = useCallback(async (pumpId: string, data: Partial<Pump>) => {
+    const pumpToUpdate = pumps.find(p => p.id === pumpId);
+    if (!pumpToUpdate || !missingInfoTargetStage) return;
 
-  const handleSaveMissingInfo = useCallback((pumpId: string, data: Partial<Pump>) => {
-    const now = new Date().toISOString();
-    setPumps(prev => prev.map(p => p.id === pumpId ? { ...p, ...data, currentStage: missingInfoTargetStage!, updatedAt: now } : p));
-    const pump = pumps.find(p => p.id === pumpId); 
-    if (pump && missingInfoTargetStage) {
-       const stageTitle = STAGES.find(s => s.id === missingInfoTargetStage)?.title || missingInfoTargetStage;
-       toast({ title: "Info Saved & Pump Moved", description: `${pump.serialNumber || 'Pump'} updated and moved to ${stageTitle}.` });
+    const updatesWithStage = { ...data, currentStage: missingInfoTargetStage };
+
+    try {
+      // Use updatePump for this as it's primarily an info update + a stage move
+      // The log description in updatePump can be made more specific for this case if needed.
+      const originalPumpForLog = { ...pumpToUpdate, currentStage: pumpToUpdate.currentStage }; // Log from original stage
+      const savedPump = await pumpService.updatePumpWithActivityLog(pumpId, updatesWithStage, originalPumpForLog, 'STAGE_MOVED', `Pump ${pumpToUpdate.serialNumber || pumpToUpdate.model} updated with powder coat info and moved to ${missingInfoTargetStage}.`);
+      
+      setPumps(prev => prev.map(p => p.id === pumpId ? savedPump : p));
+      const stageTitle = STAGES.find(s => s.id === missingInfoTargetStage)?.title || missingInfoTargetStage;
+      toast({ title: "Info Saved & Pump Moved", description: `${savedPump.serialNumber || 'Pump'} updated and moved to ${stageTitle}.` });
+    } catch (error) {
+      console.error("Error saving missing info and moving pump:", error);
+      toast({ variant: "destructive", title: "Save Failed", description: "Could not save info and move pump." });
     }
+    
     setMissingInfoPump(null);
     setMissingInfoTargetStage(null);
+    setIsMissingInfoModalOpen(false);
     setSelectedPumpIdsForDrag([]);
   }, [pumps, missingInfoTargetStage, toast]);
 
@@ -248,12 +325,20 @@ export default function HomePage() {
   const allSerialNumbers = Array.from(new Set(pumps.map(p => p.serialNumber).filter((sn): sn is string => !!sn))).sort();
   const allPONumbers = Array.from(new Set(pumps.map(p => p.poNumber).filter(Boolean as unknown as (value: string | undefined) => value is string))).sort();
 
+  if (isLoading) {
+    return (
+      <div className="flex flex-col h-full items-center justify-center">
+        <p>Loading pump data...</p> {/* Replace with a proper loading spinner/skeleton later */}
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col h-full">
       <EnhancedHeader
         title="PumpTrack Workflow"
-        showAddPump={false}
+        showAddPump={true} // Add Pump button is now controlled by showAddPump prop
+        onAddPump={() => setIsAddPumpModalOpen(true)}
         searchTerm={searchTerm}
         onSearchChange={setSearchTerm}
         filters={filters}
@@ -273,13 +358,19 @@ export default function HomePage() {
           onPumpMove={handlePumpMove}
           onMultiplePumpsMove={handleMultiplePumpsMove}
           onOpenPumpDetailsModal={handleOpenPumpDetailsModal}
-          onOpenGroupDetailsModal={handleOpenGroupDetailsModal}
+          onOpenGroupDetailsModal={onOpenGroupDetailsModal}
           selectedPumpIdsForDrag={selectedPumpIdsForDrag}
           onPumpCardClick={handlePumpCardClick}
           explodedGroups={explodedGroups}
           onToggleExplodeGroup={handleToggleExplodeGroup}
         />
       </main>
+
+      <AddPumpForm
+        isOpen={isAddPumpModalOpen}
+        onClose={() => setIsAddPumpModalOpen(false)}
+        onAddPump={handleAddPumps}
+      />
 
       {selectedPumpForDetails && (
         <PumpDetailsModal
