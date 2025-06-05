@@ -20,8 +20,8 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { SidebarTrigger, useSidebar } from '@/components/ui/sidebar'; // Import useSidebar
-import { useIsMobile } from '@/hooks/use-mobile'; // Import useIsMobile
+import { SidebarTrigger } from '@/components/ui/sidebar';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface EnhancedHeaderProps {
   title: string;
@@ -58,7 +58,7 @@ export function EnhancedHeader({
     (value) => Array.isArray(value) ? value.length > 0 : value !== undefined && value !== ''
   ).length;
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const isMobile = useIsMobile(); // Use the hook
+  const isMobile = useIsMobile();
 
   const handleClearFilters = () => {
     onFiltersChange({});
@@ -68,76 +68,83 @@ export function EnhancedHeader({
     <TooltipProvider>
       <div className="bg-card p-4 shadow-md sticky top-0 z-20">
         <div className="container mx-auto flex flex-col lg:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-2">
-            {isMobile && <SidebarTrigger className="h-7 w-7" />} {/* Conditionally render SidebarTrigger */}
-            <h1 className="text-2xl font-bold text-primary whitespace-nowrap">{title}</h1>
-          </div>
-          
-          <div className="flex items-center gap-2 sm:gap-3 flex-wrap justify-center">
-            <div className="relative min-w-[200px] max-w-[300px]">
+          {/* Left Group: Mobile Trigger, Search, Filters, Title */}
+          <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
+            {isMobile && <SidebarTrigger className="h-7 w-7" />}
+            
+            <div className="relative min-w-[150px] sm:min-w-[200px] max-w-[300px]">
               <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 type="text"
-                placeholder="Search all fields..."
+                placeholder="Search..."
                 value={searchTerm}
                 onChange={(e) => onSearchChange(e.target.value)}
-                className="pl-10 w-full"
+                className="pl-10 w-full h-9 text-sm"
+                aria-label="Search all fields"
               />
             </div>
 
-            <DropdownMenu open={isMenuOpen} onOpenChange={setIsMenuOpen}>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <DropdownMenuTrigger asChild>
+            <div className="flex items-center gap-1">
+              <DropdownMenu open={isMenuOpen} onOpenChange={setIsMenuOpen}>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        aria-label={activeFilterCount > 0 ? `Filters (${activeFilterCount} Applied), open menu` : "Open filters menu"}
+                      >
+                        <Settings2 className="mr-1 sm:mr-2 h-4 w-4" />
+                        <span className="hidden sm:inline">Filters</span>
+                        {activeFilterCount > 0 && <span className="ml-1">({activeFilterCount})</span>}
+                      </Button>
+                    </DropdownMenuTrigger>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Open filters menu</p>
+                  </TooltipContent>
+                </Tooltip>
+                <DropdownMenuContent className="w-72 p-4" align="start">
+                  <DropdownMenuLabel>Filter Pumps</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <PumpFilterControls
+                    filters={filters}
+                    onFiltersChange={onFiltersChange}
+                    availablePumpModels={availablePumpModels}
+                    availablePowderCoaters={availablePowderCoaters}
+                    availableCustomers={availableCustomers}
+                    availableSerialNumbers={availableSerialNumbers}
+                    availablePONumbers={availablePONumbers}
+                    availablePriorities={availablePriorities}
+                  />
+                </DropdownMenuContent>
+              </DropdownMenu>
+
+              {activeFilterCount > 0 && (
+                <Tooltip>
+                  <TooltipTrigger asChild>
                     <Button
-                      variant="outline"
-                      size="sm"
-                      aria-label={activeFilterCount > 0 ? `Filters (${activeFilterCount} Applied), open menu` : "Open filters menu"}
+                      variant="ghost"
+                      size="icon"
+                      onClick={handleClearFilters}
+                      className="h-9 w-9"
+                      aria-label="Clear all filters"
                     >
-                      <Settings2 className="mr-2 h-4 w-4" />
-                      {activeFilterCount > 0 ? `Filters (${activeFilterCount})` : "Filters"}
+                      <FilterX className="h-4 w-4" />
                     </Button>
-                  </DropdownMenuTrigger>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>Open filters menu</p>
-                </TooltipContent>
-              </Tooltip>
-              <DropdownMenuContent className="w-72 p-4" align="end">
-                <DropdownMenuLabel>Filter Pumps</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <PumpFilterControls
-                  filters={filters}
-                  onFiltersChange={onFiltersChange}
-                  availablePumpModels={availablePumpModels}
-                  availablePowderCoaters={availablePowderCoaters}
-                  availableCustomers={availableCustomers}
-                  availableSerialNumbers={availableSerialNumbers}
-                  availablePONumbers={availablePONumbers}
-                  availablePriorities={availablePriorities}
-                />
-              </DropdownMenuContent>
-            </DropdownMenu>
-
-            {activeFilterCount > 0 && (
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={handleClearFilters}
-                    className="h-9 w-9"
-                    aria-label="Clear all filters"
-                  >
-                    <FilterX className="h-4 w-4" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>Clear all filters</p>
-                </TooltipContent>
-              </Tooltip>
-            )}
-
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Clear all filters</p>
+                  </TooltipContent>
+                </Tooltip>
+              )}
+            </div>
+            
+            <h1 className="text-xl sm:text-2xl font-bold text-primary whitespace-nowrap">{title}</h1>
+          </div>
+          
+          {/* Right Group: Add Pump Button (if shown) */}
+          <div className="flex items-center">
             {showAddPump && onAddPump && (
               <Tooltip>
                 <TooltipTrigger asChild>
@@ -156,5 +163,3 @@ export function EnhancedHeader({
     </TooltipProvider>
   );
 }
-
-    
