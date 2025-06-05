@@ -378,12 +378,8 @@ export default function SchedulePage() {
   }, []);
   
   const handleOpenGroupDetailsModal = useCallback((model: string, pumpsInGroup: Pump[]) => {
-    // This function can be passed to GroupedKanbanCard if needed
-    // For now, it's a placeholder. A GroupedPumpDetailsModal for plannable items could be created.
     console.log(`Open group details for model ${model} with ${pumpsInGroup.length} pumps`);
-    // Example: Open the first pump's details, or implement a specific group modal
     if (pumpsInGroup.length > 0) {
-        // Find the PlannablePump equivalent to pass to modal
         const plannableEquivalent = plannableItems.find(pi => pi.id === pumpsInGroup[0].id);
         if(plannableEquivalent) handleOpenDetailsModal(plannableEquivalent);
     }
@@ -559,13 +555,13 @@ export default function SchedulePage() {
               ))}
             </div>
           ) : ( // Condensed View
-            <div className="space-y-3 p-1">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 p-1">
               {Object.entries(groupedPlannableItemsByModel).map(([model, pumpsInGroup]) => {
                 if (pumpsInGroup.length === 0) return null;
 
                 if (explodedPlannableModels.has(model)) {
                   return (
-                    <div key={model} className="space-y-2 py-2 rounded-md border border-dashed border-primary/30 bg-primary/5 p-2">
+                    <div key={model} className="space-y-2 py-2 rounded-md border border-dashed border-primary/30 bg-primary/5 p-2 col-span-full"> {/* Exploded groups take full width */}
                        <Button
                           variant="link"
                           size="sm"
@@ -767,6 +763,5 @@ export default function SchedulePage() {
     </div>
   );
 }
-
 
     
