@@ -13,7 +13,7 @@ export type StageId =
 export type PriorityLevel = typeof PRIORITY_LEVELS[number]['value'];
 
 export interface Pump {
-  id: string;
+  id: string; // Unique identifier for the pump
   model: string;
   serialNumber?: string;
   customer: string;
@@ -50,4 +50,26 @@ export interface Filters {
   model?: string[];
   powderCoater?: string[];
   priority?: string[];
+}
+
+// New type for Activity Log Entries
+export type ActivityLogType = 
+  | 'PUMP_CREATED'
+  | 'PUMP_UPDATED'
+  | 'STAGE_MOVED'
+  | 'NOTE_ADDED'
+  | 'NOTE_UPDATED'
+  | 'PRIORITY_CHANGED'
+  | 'DETAILS_EDITED' // Generic for other field changes
+  | 'PUMP_ARCHIVED'
+  | 'PUMP_DELETED';
+
+export interface ActivityLogEntry {
+  id: string; // Unique ID for the log entry
+  pumpId: string; // ID of the pump this log refers to
+  timestamp: string; // ISO date string of when the activity occurred
+  type: ActivityLogType; // The type of activity
+  description: string; // Human-readable description of the change
+  details?: Record<string, any>; // Optional field for specific changed values, e.g., { fromStage: 'A', toStage: 'B', field: 'serialNumber', oldValue: 'X', newValue: 'Y' }
+  userId?: string; // Optional: ID of the user who performed the action (for future use with authentication)
 }
