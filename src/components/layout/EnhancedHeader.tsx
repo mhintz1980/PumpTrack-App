@@ -4,7 +4,7 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { PlusCircle, Settings2, FilterX, SearchIcon } from 'lucide-react';
+import { Settings2, FilterX, SearchIcon } from 'lucide-react'; // Removed PlusCircle
 import type { Filters } from '@/types';
 import { PumpFilterControls } from '@/components/pump/PumpFilterControls';
 import {
@@ -25,8 +25,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 
 interface EnhancedHeaderProps {
   title: string;
-  showAddPump?: boolean;
-  onAddPump?: () => void;
+  // showAddPump and onAddPump props removed
   searchTerm: string;
   onSearchChange: (term: string) => void;
   filters: Filters;
@@ -41,8 +40,6 @@ interface EnhancedHeaderProps {
 
 export function EnhancedHeader({
   title,
-  showAddPump = false,
-  onAddPump,
   searchTerm,
   onSearchChange,
   filters,
@@ -143,21 +140,7 @@ export function EnhancedHeader({
             </div>
           </div>
           
-          {/* Right Group: Add Pump Button (if shown) */}
-          <div className="flex items-center">
-            {showAddPump && onAddPump && (
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button onClick={onAddPump} size="sm">
-                    <PlusCircle className="mr-2 h-4 w-4" /> Add Pump
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>Add new pump(s)</p>
-                </TooltipContent>
-              </Tooltip>
-            )}
-          </div>
+          {/* Add Pump button is removed from here */}
         </div>
       </div>
     </TooltipProvider>

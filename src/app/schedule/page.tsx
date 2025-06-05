@@ -2,7 +2,7 @@
 "use client";
 
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { Calendar as CalendarIcon, Package, Clock, Users, FileText, GripVertical, XCircle, RotateCcw } from 'lucide-react';
+import { Calendar as CalendarIcon, Package, Clock, Users, FileText, GripVertical, XCircle, RotateCcw, PlusCircle } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -16,6 +16,7 @@ import { SchedulePumpCard } from '@/components/schedule/SchedulePumpCard';
 import { PumpDetailsModal } from '@/components/pump/PumpDetailsModal';
 import { EnhancedHeader } from '@/components/layout/EnhancedHeader';
 import { AddPumpForm } from '@/components/pump/AddPumpForm';
+import * as pumpService from '@/services/pumpService'; // Import pumpService
 
 interface PlannablePump extends Pump {
   daysPerUnit: number;
@@ -49,9 +50,6 @@ interface DraggedScheduled {
 type DraggedItemData = DraggedPlannableSingle | DraggedPlannableBatch | DraggedScheduled;
 
 
-const generateId = () => crypto.randomUUID();
-const generateRandomSerialNumber = () => `MSP-JN-${String(Math.floor(Math.random() * 9000) + 1000).padStart(4, '0')}`;
-
 const getDaysPerUnit = (model: string): number => {
   if (model.includes('DD4') || model.includes('RL200')) return 2;
   if (model.includes('DD6') || model.includes('RL300')) return 3;
@@ -64,6 +62,7 @@ export default function SchedulePage() {
   const [initialPumps, setInitialPumps] = useState<Pump[]>([]);
   const [plannableItems, setPlannableItems] = useState<PlannablePump[]>([]);
   const [scheduledItems, setScheduledItems] = useState<ScheduledPump[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   const [globalSearchTerm, setGlobalSearchTerm] = useState('');
   const [filters, setFilters] = useState<Filters>({});
@@ -76,25 +75,51 @@ export default function SchedulePage() {
   const [selectedPumpForDetails, setSelectedPumpForDetails] = useState<PlannablePump | null>(null);
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
 
+  useEffect(() => {
+    const fetchPumps = async () => {
+      setIsLoading(true);
+      try {
+        // For now, we use pumpService.getAllPumps which might return sample data or empty array
+        // In future, this could fetch pumps that are specifically 'open-jobs' or not yet 'shipped'
+        // or all pumps and then filter client-side.
+        const fetchedPumps = await pumpService.getAllPumps(); 
+        // If getAllPumps returns empty (as it does by default), let's add some sample data for schedule page.
+        if (fetchedPumps.length === 0) {
+            const now = new Date().toISOString();
+            const samplePumpsForSchedule: Pump[] = [
+              { id: crypto.randomUUID(), model: PUMP_MODELS[0], serialNumber: `MSP-JN-${String(Math.floor(Math.random() * 9000) + 1000).padStart(4, '0')}`, customer: CUSTOMER_NAMES[0], poNumber: 'PO-PLAN-001', currentStage: 'open-jobs', priority: 'high', createdAt: now, updatedAt: now },
+              { id: crypto.randomUUID(), model: PUMP_MODELS[1], serialNumber: `MSP-JN-${String(Math.floor(Math.random() * 9000) + 1000).padStart(4, '0')}`, customer: CUSTOMER_NAMES[1], poNumber: 'PO-PLAN-002', currentStage: 'assembly', priority: 'normal', createdAt: now, updatedAt: now },
+              { id: crypto.randomUUID(), model: PUMP_MODELS[2], serialNumber: `MSP-JN-${String(Math.floor(Math.random() * 9000) + 1000).padStart(4, '0')}`, customer: CUSTOMER_NAMES[0], poNumber: 'PO-PLAN-003', currentStage: 'fabrication', priority: 'urgent', createdAt: now, updatedAt: now },
+            ];
+            setInitialPumps(samplePumpsForSchedule);
+        } else {
+            setInitialPumps(fetchedPumps);
+        }
+      } catch (error) {
+        console.error("Failed to fetch pumps for schedule:", error);
+        toast({ variant: "destructive", title: "Error", description: "Could not load pump data for scheduling." });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchPumps();
+  }, [toast]);
+
 
   useEffect(() => {
-    const now = new Date().toISOString();
-    const samplePumps: Pump[] = [
-      { id: generateId(), model: PUMP_MODELS[0], serialNumber: generateRandomSerialNumber(), customer: CUSTOMER_NAMES[0], poNumber: 'PO-PLAN-001', currentStage: 'open-jobs', priority: 'high', createdAt: now, updatedAt: now },
-      { id: generateId(), model: PUMP_MODELS[1], serialNumber: generateRandomSerialNumber(), customer: CUSTOMER_NAMES[1], poNumber: 'PO-PLAN-002', currentStage: 'assembly', priority: 'normal', createdAt: now, updatedAt: now },
-      { id: generateId(), model: PUMP_MODELS[2], serialNumber: generateRandomSerialNumber(), customer: CUSTOMER_NAMES[0], poNumber: 'PO-PLAN-003', currentStage: 'fabrication', priority: 'urgent', createdAt: now, updatedAt: now },
-    ];
-    setInitialPumps(samplePumps);
-  }, []);
-
-  useEffect(() => {
-    const nonShippedPumps = initialPumps.filter(p => p.currentStage !== 'shipped');
+    // Filter out pumps that are 'shipped' or already on the schedule from initialPumps
     const scheduledPumpOriginalIds = new Set(scheduledItems.map(si => si.id));
-    const augmentedPumps: PlannablePump[] = nonShippedPumps
-      .filter(p => !scheduledPumpOriginalIds.has(p.id))
-      .map(p => ({ ...p, daysPerUnit: getDaysPerUnit(p.model) }));
+    const availableForPlanning = initialPumps.filter(p => 
+        p.currentStage !== 'shipped' && 
+        !scheduledPumpOriginalIds.has(p.id)
+    );
+    const augmentedPumps: PlannablePump[] = availableForPlanning.map(p => ({ 
+      ...p, 
+      daysPerUnit: getDaysPerUnit(p.model) 
+    }));
     setPlannableItems(augmentedPumps);
   }, [initialPumps, scheduledItems]);
+
 
   const filteredPlannableItems = useMemo(() => {
     let tempItems = [...plannableItems];
@@ -170,100 +195,50 @@ export default function SchedulePage() {
           ? prevSelectedIds.filter(id => id !== item.id)
           : [...prevSelectedIds, item.id];
       }
-      // If not ctrl/meta click, select only this item if it's not already the only selected,
-      // or deselect if it is the only one selected.
       return prevSelectedIds.includes(item.id) && prevSelectedIds.length === 1 ? [] : [item.id];
     });
-  }, [selectedPlannableItemIds, setSelectedPlannableItemIds]);
+  }, []);
 
 
   const handleDragStartPlannableItem = useCallback((e: React.DragEvent, item: PlannablePump) => {
-    console.log('🔥 DRAG START - Plannable Item (SchedulePage):', item.id, item.model);
     e.stopPropagation();
-
-    try {
-      e.dataTransfer.setData('text/plain', item.id);
-      e.dataTransfer.effectAllowed = 'move';
-      console.log('🔥 DataTransfer: setData("text/plain", "'+item.id+'") and effectAllowed="move" set.');
-    } catch (err) {
-      console.error('❌ ERROR setting dataTransfer:', err);
-      return; 
-    }
-
-    const cardElement = e.currentTarget as HTMLElement;
-    if (cardElement) {
-      cardElement.style.opacity = '0.5';
-      console.log('🔥 Visual Feedback: Opacity set to 0.5 for card ID:', item.id);
-    } else {
-      console.warn('🔥 Visual Feedback: Could not find cardElement (e.currentTarget) to set opacity.');
-    }
+    e.dataTransfer.setData('text/plain', item.id);
+    e.dataTransfer.effectAllowed = 'move';
+    (e.currentTarget as HTMLElement).style.opacity = '0.5';
     
     setTimeout(() => {
-      console.log('🔥 Timeout: Updating React state for drag start.');
-      setDraggedItemData({ type: 'plannable-single', item });
-      
       if (selectedPlannableItemIds.includes(item.id) && selectedPlannableItemIds.length > 1) {
         const batchItems = plannableItems.filter(p => selectedPlannableItemIds.includes(p.id));
         setDraggedItemData({ type: 'plannable-batch', items: batchItems });
-        console.log('🔥 Internal State (after timeout): Dragging BATCH of', batchItems.length, 'items.');
       } else {
         setDraggedItemData({ type: 'plannable-single', item });
-        setSelectedPlannableItemIds([item.id]);
-        console.log('🔥 Internal State (after timeout): Dragging SINGLE item, selectedPlannableItemIds updated.');
+        setSelectedPlannableItemIds([item.id]); // Ensure single dragged item is also "selected" for consistency
       }
     }, 0);
-
-    console.log('✅ Drag start for plannable item setup completed (React state updates deferred):', item.id);
-  }, [setDraggedItemData, setSelectedPlannableItemIds, selectedPlannableItemIds, plannableItems]);
+  }, [selectedPlannableItemIds, plannableItems]);
 
 
   const handleDragStartScheduledItem = useCallback((e: React.DragEvent, item: ScheduledPump) => {
-    console.log('🔥 DRAG START - Scheduled Item (SchedulePage):', item.instanceId, item.model);
     e.stopPropagation();
-    
-    try {
-      e.dataTransfer.setData('application/pumptrack-instance-id', item.instanceId);
-      e.dataTransfer.setData('text/plain', item.instanceId); 
-      e.dataTransfer.effectAllowed = 'move';
-      console.log('🔥 DataTransfer: setData for instanceId and text/plain, effectAllowed set.');
-    } catch (err) {
-       console.error('❌ ERROR setting dataTransfer for scheduled item:', err);
-       return;
-    }
-
-    const targetElement = e.currentTarget as HTMLElement; 
-    if (targetElement) {
-        targetElement.style.opacity = '0.5';
-        console.log('🔥 Visual Feedback: Opacity set for scheduled item instance:', item.instanceId);
-    } else {
-        console.warn('🔥 Visual Feedback: Could not find targetElement for scheduled item instance:', item.instanceId);
-    }
+    e.dataTransfer.setData('application/pumptrack-instance-id', item.instanceId);
+    e.dataTransfer.setData('text/plain', item.instanceId); 
+    e.dataTransfer.effectAllowed = 'move';
+    (e.currentTarget as HTMLElement).style.opacity = '0.5';
     
     setTimeout(() => {
-      console.log('🔥 Timeout: Updating React state for scheduled item drag start.');
       setDraggedItemData({ type: 'scheduled', item });
-      console.log('🔥 Internal State (after timeout): draggedItemData set for scheduled item.');
     }, 0);
-
-    console.log('✅ Drag start for scheduled item setup completed (React state updates deferred):', item.instanceId);
-  }, [setDraggedItemData]);
+  }, []);
 
   const handleDragEnd = useCallback((e: React.DragEvent) => {
-    console.log('🏁 DRAG END (SchedulePage) - dropEffect:', e.dataTransfer.dropEffect);
-    
     const draggedDOMElement = e.currentTarget as HTMLElement;
     if (draggedDOMElement) {
       draggedDOMElement.style.opacity = '1';
-      console.log('🏁 Visual Feedback: Opacity reset for dragged element.');
-    } else {
-        console.warn('🏁 Visual Feedback: Could not find e.currentTarget in handleDragEnd to reset opacity.');
     }
-    
     if (draggedItemData) {
-        console.log('🏁 Clearing draggedItemData in handleDragEnd. Current draggedItemData type:', draggedItemData.type);
         setDraggedItemData(null);
     }
-  }, [draggedItemData, setDraggedItemData]);
+  }, [draggedItemData]);
 
 
   const handleDragOver = useCallback((e: React.DragEvent<HTMLDivElement>) => {
@@ -273,20 +248,17 @@ export default function SchedulePage() {
   }, []);
 
   const handleDropOnCalendar = useCallback((e: React.DragEvent<HTMLDivElement>, targetDayIndex: number) => {
-    console.log('🟢 DROP ON CALENDAR - Day Index:', targetDayIndex, 'Dragged Data Type:', draggedItemData?.type);
     e.preventDefault();
     e.stopPropagation();
     
     const currentDraggedItem = draggedItemData; 
     if (!currentDraggedItem) {
-      console.warn('🟢 Drop occurred but no draggedItemData was found. Attempting fallback with dataTransfer.');
+      // Fallback for safety, though setTimeout should make draggedItemData reliable
       const idFromDataTransfer = e.dataTransfer.getData('text/plain');
       const itemToScheduleFromPlannable = plannableItems.find(p => p.id === idFromDataTransfer);
-
       if (idFromDataTransfer && itemToScheduleFromPlannable) {
-         console.log('🟢 Fallback: Found plannable item by ID from dataTransfer:', itemToScheduleFromPlannable.id);
          setScheduledItems(prev => {
-            const filteredPrev = prev.filter(si => si.id !== itemToScheduleFromPlannable.id); // Avoid duplicates by original ID
+            const filteredPrev = prev.filter(si => si.id !== itemToScheduleFromPlannable.id);
             return [...filteredPrev, {
               ...itemToScheduleFromPlannable,
               scheduledOnDayIndex: targetDayIndex,
@@ -301,7 +273,6 @@ export default function SchedulePage() {
           const scheduledItemInstanceId = e.dataTransfer.getData('application/pumptrack-instance-id');
           const itemToMoveFromScheduled = scheduledItems.find(si => si.instanceId === scheduledItemInstanceId);
           if (scheduledItemInstanceId && itemToMoveFromScheduled) {
-            console.log('🟢 Fallback: Found scheduled item instance by ID from dataTransfer:', itemToMoveFromScheduled.instanceId);
              setScheduledItems(prev => prev.map(si =>
                 si.instanceId === itemToMoveFromScheduled.instanceId
                 ? { ...si, scheduledOnDayIndex: targetDayIndex }
@@ -312,7 +283,6 @@ export default function SchedulePage() {
             return;
           }
       }
-      console.warn('🟢 Fallback failed: Could not identify dragged item from dataTransfer.');
       setDraggedItemData(null); 
       return;
     }
@@ -322,9 +292,8 @@ export default function SchedulePage() {
 
     if (currentDraggedItem.type === 'plannable-single') {
       const itemToSchedule = currentDraggedItem.item;
-      console.log('🟢 Scheduling SINGLE plannable item:', itemToSchedule.id);
       setScheduledItems(prev => {
-        const filteredPrev = prev.filter(si => si.id !== itemToSchedule.id);
+        const filteredPrev = prev.filter(si => si.id !== itemToSchedule.id); // Avoid duplicates of original pump ID
         return [...filteredPrev, {
           ...itemToSchedule,
           scheduledOnDayIndex: targetDayIndex,
@@ -334,7 +303,6 @@ export default function SchedulePage() {
       toast({ title: "Pump Scheduled", description: `${itemToSchedule.serialNumber || itemToSchedule.model} added to schedule.` });
     } else if (currentDraggedItem.type === 'plannable-batch') {
       const itemsToSchedule = currentDraggedItem.items;
-      console.log('🟢 Scheduling BATCH of plannable items. Count:', itemsToSchedule.length);
       const newScheduledInstances: ScheduledPump[] = itemsToSchedule.map(item => ({
         ...item,
         scheduledOnDayIndex: targetDayIndex, 
@@ -350,7 +318,6 @@ export default function SchedulePage() {
       toast({ title: "Pumps Scheduled", description: `${itemsToSchedule.length} pumps added to schedule.` });
     } else if (currentDraggedItem.type === 'scheduled') {
       const itemToMove = currentDraggedItem.item;
-      console.log('🟢 Moving SCHEDULED item instance:', itemToMove.instanceId, 'to day index:', targetDayIndex);
       setScheduledItems(prev => prev.map(si =>
         si.instanceId === itemToMove.instanceId
           ? { ...si, scheduledOnDayIndex: targetDayIndex }
@@ -360,48 +327,40 @@ export default function SchedulePage() {
     }
     
     setSelectedPlannableItemIds([]);
-    console.log('🟢 Clearing draggedItemData after successful calendar drop processing.');
     setDraggedItemData(null); 
   }, [draggedItemData, toast, setScheduledItems, setSelectedPlannableItemIds, plannableItems, scheduledItems]);
 
 
   const handleDropOnPlannableList = useCallback((e: React.DragEvent<HTMLDivElement>) => {
-    console.log('🟢 DROP ON PLANNABLE LIST. Dragged Data Type:', draggedItemData?.type);
     e.preventDefault();
     e.stopPropagation();
     
     const currentDraggedItem = draggedItemData; 
     if (!currentDraggedItem) {
-      console.warn('🟢 Drop on plannable list but no draggedItemData. Attempting fallback.');
       const instanceIdFromDataTransfer = e.dataTransfer.getData('application/pumptrack-instance-id') || e.dataTransfer.getData('text/plain');
       const itemToRemoveFromSchedule = scheduledItems.find(si => si.instanceId === instanceIdFromDataTransfer);
       if (itemToRemoveFromSchedule) {
-        console.log('🟢 Fallback: Identified scheduled item to remove from schedule:', itemToRemoveFromSchedule.instanceId);
         setScheduledItems(prev => prev.filter(item => item.instanceId !== itemToRemoveFromSchedule.instanceId));
         toast({ title: "Pump Unscheduled (Fallback)", description: `${itemToRemoveFromSchedule.serialNumber || itemToRemoveFromSchedule.model} removed from schedule.` });
         setSelectedPlannableItemIds([]);
         setDraggedItemData(null);
         return;
       }
-      console.warn('🟢 Fallback failed: Could not identify item to remove from schedule via dataTransfer.');
       setDraggedItemData(null);
       return;
     }
 
 
     if (currentDraggedItem.type !== 'scheduled') {
-      console.warn('🟢 Drop on plannable list but not a scheduled item, or no draggedItemData. Type:', currentDraggedItem.type);
       setDraggedItemData(null); 
       return;
     }
 
     const itemToRemoveFromSchedule = currentDraggedItem.item;
-    console.log('🟢 Removing scheduled item instance from schedule:', itemToRemoveFromSchedule.instanceId);
     setScheduledItems(prev => prev.filter(item => item.instanceId !== itemToRemoveFromSchedule.instanceId));
     toast({ title: "Pump Unscheduled", description: `${itemToRemoveFromSchedule.serialNumber || itemToRemoveFromSchedule.model} removed from schedule.` });
     
     setSelectedPlannableItemIds([]);
-    console.log('🟢 Clearing draggedItemData after plannable list drop processing.');
     setDraggedItemData(null); 
   }, [draggedItemData, toast, setScheduledItems, setSelectedPlannableItemIds, scheduledItems]);
 
@@ -424,65 +383,54 @@ export default function SchedulePage() {
   const handleOpenDetailsModal = useCallback((pump: PlannablePump) => {
     setSelectedPumpForDetails(pump);
     setIsDetailsModalOpen(true);
-  }, [setSelectedPumpForDetails, setIsDetailsModalOpen]);
+  }, []);
 
   const handleCloseDetailsModal = useCallback(() => {
     setIsDetailsModalOpen(false);
     setSelectedPumpForDetails(null);
-  }, [setIsDetailsModalOpen, setSelectedPumpForDetails]);
+  }, []);
 
-  const handleUpdatePump = useCallback((updatedPump: Pump) => {
-    setInitialPumps(prev => prev.map(p => p.id === updatedPump.id ? updatedPump : p));
-    setScheduledItems(prevScheduled => prevScheduled.map(sp => 
-        sp.id === updatedPump.id ? { ...sp, ...updatedPump, daysPerUnit: getDaysPerUnit(updatedPump.model) } : sp
-    ));
-    toast({ title: "Pump Updated", description: `${updatedPump.serialNumber || updatedPump.model} has been updated.` });
-  }, [toast, setInitialPumps, setScheduledItems]);
-
-  const handleAddPump = useCallback((newPumpData: Omit<Pump, 'id' | 'currentStage' | 'createdAt' | 'updatedAt'> & { quantity: number; serialNumber?: string; priority?: PriorityLevel }) => {
-    const { quantity, serialNumber: startSerialNumberInput, priority, ...basePumpData } = newPumpData;
-    const newPumps: Pump[] = [];
-    let currentSerialNumberNumeric = -1;
-    const startSerialNumber = startSerialNumberInput?.trim() === '' ? undefined : startSerialNumberInput;
-    const now = new Date().toISOString();
-
-    if (quantity > 1 && startSerialNumber && /^MSP-JN-\d{4}$/.test(startSerialNumber)) {
-      currentSerialNumberNumeric = parseInt(startSerialNumber.substring(7), 10);
-    }
-
-    for (let i = 0; i < quantity; i++) {
-      let pumpSerialNumber: string | undefined = undefined;
-      if (quantity === 1 && startSerialNumber && /^MSP-JN-\d{4}$/.test(startSerialNumber)) {
-        pumpSerialNumber = startSerialNumber;
-      } else if (quantity > 1 && currentSerialNumberNumeric !== -1) {
-        if (currentSerialNumberNumeric + i <= 9999) {
-            pumpSerialNumber = `MSP-JN-${String(currentSerialNumberNumeric + i).padStart(4, '0')}`;
-        }
-      } else if (quantity === 1 && (!startSerialNumber || !/^MSP-JN-\d{4}$/.test(startSerialNumber))) {
-        toast({ variant: "destructive", title: "Validation Error", description: "Serial number is required and must be valid for single pump addition." });
+  const handleUpdatePump = useCallback(async (updatedPump: Pump) => {
+    const originalPump = initialPumps.find(p => p.id === updatedPump.id);
+    if (!originalPump) {
+        toast({ variant: "destructive", title: "Update Error", description: "Original pump not found in initial list."});
         return;
-      }
+    }
+    try {
+        // Simulate saving to backend
+        const savedPump = await pumpService.updatePumpWithActivityLog(updatedPump.id, updatedPump, originalPump);
+        setInitialPumps(prev => prev.map(p => p.id === savedPump.id ? savedPump : p));
+        setScheduledItems(prevScheduled => prevScheduled.map(sp => 
+            sp.id === savedPump.id ? { ...sp, ...savedPump, daysPerUnit: getDaysPerUnit(savedPump.model) } : sp
+        ));
+        toast({ title: "Pump Updated", description: `${savedPump.serialNumber || savedPump.model} has been updated.` });
+    } catch (error) {
+        console.error("Error updating pump on schedule page:", error);
+        toast({ variant: "destructive", title: "Update Failed", description: "Could not save pump details."});
+    }
+  }, [toast, initialPumps]);
 
-      const newPump: Pump = {
-        ...basePumpData,
-        id: generateId(),
-        serialNumber: pumpSerialNumber,
-        currentStage: 'open-jobs',
-        notes: basePumpData.notes || undefined,
-        priority: priority || 'normal',
-        createdAt: now,
-        updatedAt: now,
-      };
-      newPumps.push(newPump);
+  const handleAddPumps = useCallback(async (newPumpsData: Array<Omit<Pump, 'id' | 'createdAt' | 'updatedAt'>>) => {
+    setIsLoading(true);
+    try {
+      const addedPumpsPromises = newPumpsData.map(pumpData => pumpService.addPumpWithActivityLog(pumpData));
+      const successfullyAddedPumps = await Promise.all(addedPumpsPromises);
+      
+      setInitialPumps(prev => [...successfullyAddedPumps, ...prev]);
+      
+      if (successfullyAddedPumps.length === 1) {
+        toast({ title: "Pump Added", description: `${successfullyAddedPumps[0].serialNumber || 'New Pump'} added to schedule planning.` });
+      } else if (successfullyAddedPumps.length > 1) {
+        toast({ title: `${successfullyAddedPumps.length} Pumps Added`, description: `Batch added to schedule planning.` });
+      }
+    } catch (error) {
+      console.error("Error adding pumps:", error);
+      toast({ variant: "destructive", title: "Add Failed", description: "Could not add new pump(s)." });
+    } finally {
+      setIsLoading(false);
+      setIsAddPumpModalOpen(false); 
     }
-    
-    setInitialPumps(prev => [...newPumps, ...prev]);
-    if (newPumps.length === 1) {
-      toast({ title: "Pump Added", description: `${newPumps[0].serialNumber || 'New Pump'} added to schedule planning.` });
-    } else {
-      toast({ title: `${newPumps.length} Pumps Added`, description: `Batch added to schedule planning.` });
-    }
-  }, [toast, setInitialPumps]);
+  }, [toast]);
 
 
   const modelColors = PUMP_MODELS.reduce((acc, model, index) => {
@@ -511,9 +459,14 @@ export default function SchedulePage() {
 
   const PlannablePumpsTable = () => (
     <Card>
-      <CardHeader>
-        <CardTitle>Pumps to Schedule</CardTitle>
-        <CardDescription>Drag pumps from this list to the calendar. Use Ctrl/Meta+Click to select multiple.</CardDescription>
+      <CardHeader className="flex flex-row items-center justify-between">
+        <div>
+          <CardTitle>Pumps to Schedule</CardTitle>
+          <CardDescription>Drag pumps from this list to the calendar. Use Ctrl/Meta+Click to select multiple.</CardDescription>
+        </div>
+        <Button onClick={() => setIsAddPumpModalOpen(true)} size="sm">
+          <PlusCircle className="mr-2 h-4 w-4" /> Add Pump(s)
+        </Button>
       </CardHeader>
       <CardContent>
         <ScrollArea 
@@ -521,7 +474,9 @@ export default function SchedulePage() {
           onDrop={handleDropOnPlannableList}
           onDragOver={handleDragOver}
         >
-          {filteredPlannableItems.length === 0 ? (
+          {isLoading ? (
+             <p className="text-center p-4 text-muted-foreground">Loading plannable pumps...</p>
+          ) : filteredPlannableItems.length === 0 ? (
             <p className="text-center p-4 text-muted-foreground">No plannable items match filters or all are scheduled.</p>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 p-1">
@@ -635,8 +590,7 @@ export default function SchedulePage() {
     <div className="flex flex-col h-full">
       <EnhancedHeader
         title="Production Planning & Schedule"
-        showAddPump={true}
-        onAddPump={() => setIsAddPumpModalOpen(true)}
+        // showAddPump and onAddPump props removed
         searchTerm={globalSearchTerm}
         onSearchChange={setGlobalSearchTerm}
         filters={filters}
@@ -663,7 +617,7 @@ export default function SchedulePage() {
         </div>
       </main>
 
-      <AddPumpForm isOpen={isAddPumpModalOpen} onClose={() => setIsAddPumpModalOpen(false)} onAddPump={handleAddPump} />
+      <AddPumpForm isOpen={isAddPumpModalOpen} onClose={() => setIsAddPumpModalOpen(false)} onAddPump={handleAddPumps} />
       <PumpDetailsModal isOpen={isDetailsModalOpen} onClose={handleCloseDetailsModal} pump={selectedPumpForDetails} onUpdatePump={handleUpdatePump} />
     </div>
   );

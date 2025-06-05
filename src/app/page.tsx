@@ -7,20 +7,19 @@ import { STAGES, POWDER_COATERS, PUMP_MODELS, CUSTOMER_NAMES, PRIORITY_LEVELS } 
 import { useToast } from '@/hooks/use-toast';
 import { EnhancedHeader } from '@/components/layout/EnhancedHeader';
 import { KanbanBoard } from '@/components/kanban/KanbanBoard';
-// import { AddPumpForm } from '@/components/pump/AddPumpForm'; // Removed AddPumpForm import
+// AddPumpForm is no longer used on this page
 import { PumpDetailsModal } from '@/components/pump/PumpDetailsModal';
 import { MissingInfoModal } from '@/components/pump/MissingInfoModal';
 import { GroupedPumpDetailsModal } from '@/components/pump/GroupedPumpDetailsModal';
-import * as pumpService from '@/services/pumpService'; // Import pumpService
+import * as pumpService from '@/services/pumpService';
 
 export default function HomePage() {
   const [pumps, setPumps] = useState<Pump[]>([]);
   const [filteredPumps, setFilteredPumps] = useState<Pump[]>([]);
   const [filters, setFilters] = useState<Filters>({});
   const [searchTerm, setSearchTerm] = useState('');
-  const [isLoading, setIsLoading] = useState(true); // For initial data load
+  const [isLoading, setIsLoading] = useState(true);
   
-  // const [isAddPumpModalOpen, setIsAddPumpModalOpen] = useState(false); // Removed state for AddPumpModal
   const [selectedPumpForDetails, setSelectedPumpForDetails] = useState<Pump | null>(null);
   const [isPumpDetailsModalOpen, setIsPumpDetailsModalOpen] = useState(false);
   
@@ -89,11 +88,7 @@ export default function HomePage() {
     setFilteredPumps(tempPumps);
   }, [pumps, filters, searchTerm]);
 
-  // Removed handleAddPumps function as it's no longer used on this page
-  // const handleAddPumps = useCallback(async (newPumpsData: Array<Omit<Pump, 'id' | 'createdAt' | 'updatedAt'>>) => {
-  //   ...
-  // }, [toast]);
-
+  // handleAddPumps is removed
 
   const handleUpdatePump = useCallback(async (updatedPumpData: Pump) => {
     const originalPump = pumps.find(p => p.id === updatedPumpData.id);
@@ -313,8 +308,8 @@ export default function HomePage() {
     <div className="flex flex-col h-full">
       <EnhancedHeader
         title="PumpTrack Workflow"
-        showAddPump={false} // Add Pump button is now hidden on this page
-        // onAddPump is removed as showAddPump is false
+        // showAddPump is removed
+        // onAddPump is removed
         searchTerm={searchTerm}
         onSearchChange={setSearchTerm}
         filters={filters}
@@ -342,14 +337,7 @@ export default function HomePage() {
         />
       </main>
 
-      {/* AddPumpForm component removed from here */}
-      {/* 
-      <AddPumpForm
-        isOpen={isAddPumpModalOpen}
-        onClose={() => setIsAddPumpModalOpen(false)}
-        onAddPump={handleAddPumps}
-      /> 
-      */}
+      {/* AddPumpForm component and its related state/handlers are removed */}
 
       {selectedPumpForDetails && (
         <PumpDetailsModal
