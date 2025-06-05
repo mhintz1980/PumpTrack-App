@@ -35,7 +35,7 @@ export const KanbanCard = React.memo(function KanbanCard({
   const displaySerialNumber = pump.serialNumber || 'N/A';
 
   const handleEyeClick = (e: React.MouseEvent) => {
-    e.stopPropagation(); 
+    e.stopPropagation();
     if (onOpenDetailsModal) {
       onOpenDetailsModal();
     }
@@ -64,7 +64,7 @@ export const KanbanCard = React.memo(function KanbanCard({
       )}
       aria-label={`Pump Model: ${pump.model}, Customer: ${pump.customer}, S/N: ${displaySerialNumber}, Priority: ${pump.priority || 'normal'}`}
     >
-      <CardHeader className="p-3 flex flex-row items-start justify-between space-y-0">
+      <CardHeader className="p-3 flex flex-row items-start justify-between space-y-0 pb-1">
         <div className="flex-grow pr-2">
           <CardTitle className="text-sm font-semibold leading-none">
             {pump.model} - {pump.customer}
@@ -110,6 +110,13 @@ export const KanbanCard = React.memo(function KanbanCard({
           )}
         </div>
       </CardHeader>
+      <CardContent className="p-3 pt-0">
+        {pump.durationDays !== undefined && (
+          <p className="text-xs text-muted-foreground">
+            Duration: {pump.durationDays} days
+          </p>
+        )}
+      </CardContent>
     </Card>
   );
 });

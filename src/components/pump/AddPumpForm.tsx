@@ -36,6 +36,7 @@ const pumpFormSchemaBase = z.object({
   quantity: z.number().min(1, "Quantity must be at least 1").int("Quantity must be an integer").default(1),
   serialNumber: z.string().optional(),
   priority: z.enum(PRIORITY_LEVELS.map(p => p.value) as [PriorityLevel, ...PriorityLevel[]]).default('normal'),
+  // durationDays is not directly in the form, but set on creation
 });
 
 const pumpFormSchema = pumpFormSchemaBase.superRefine((data, ctx) => {
@@ -90,7 +91,7 @@ export function AddPumpForm({ isOpen, onClose, onAddPump }: AddPumpFormProps) {
 
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const quantity = form.watch("quantity");
-  
+
   const handleClose = () => {
     form.reset({
       model: '',
@@ -106,7 +107,7 @@ export function AddPumpForm({ isOpen, onClose, onAddPump }: AddPumpFormProps) {
 
   const onSubmit = (data: PumpFormValues) => {
     setIsSubmitting(true);
-    
+
     const newPumpsToCreate: Array<Omit<Pump, 'id' | 'createdAt' | 'updatedAt'>> = [];
     let currentSerialNumberNumeric = -1;
     const startSerialNumber = data.serialNumber?.trim() === '' ? undefined : data.serialNumber;
@@ -123,7 +124,7 @@ export function AddPumpForm({ isOpen, onClose, onAddPump }: AddPumpFormProps) {
          if (currentSerialNumberNumeric + i <= 9999) {
             pumpSerialNumber = `MSP-JN-${String(currentSerialNumberNumeric + i).padStart(4, '0')}`;
         }
-      } // No serial for quantity > 1 if start serial is not valid/provided - service might assign or handle
+      }
 
       const pumpData: Omit<Pump, 'id' | 'createdAt' | 'updatedAt'> = {
         model: data.model,
@@ -133,16 +134,17 @@ export function AddPumpForm({ isOpen, onClose, onAddPump }: AddPumpFormProps) {
         currentStage: 'open-jobs', // Default stage
         notes: data.notes || undefined,
         priority: data.priority || 'normal',
+        durationDays: 1.5, // Default duration
         // powderCoater and powderCoatColor are not set at creation from this form
       };
       newPumpsToCreate.push(pumpData);
     }
-    
+
     onAddPump(newPumpsToCreate);
     setIsSubmitting(false);
     handleClose();
   };
-  
+
   const pumpModelOptions = PUMP_MODELS.map(model => ({ label: model, value: model }));
   const customerOptions = CUSTOMER_NAMES.map(customer => ({ label: customer, value: customer }));
   const priorityOptions = PRIORITY_LEVELS.map(p => ({ label: p.label, value: p.value }));
@@ -216,8 +218,8 @@ export function AddPumpForm({ isOpen, onClose, onAddPump }: AddPumpFormProps) {
                 <FormItem>
                   <FormLabel>Quantity</FormLabel>
                   <FormControl>
-                    <Input type="number" min="1" {...field} 
-                           onChange={e => field.onChange(parseInt(e.target.value, 10) || 1)} 
+                    <Input type="number" min="1" {...field}
+                           onChange={e => field.onChange(parseInt(e.target.value, 10) || 1)}
                            disabled={isSubmitting} />
                   </FormControl>
                   <FormMessage />
@@ -231,15 +233,15 @@ export function AddPumpForm({ isOpen, onClose, onAddPump }: AddPumpFormProps) {
                 <FormItem>
                   <FormLabel>{quantity > 1 ? "Starting Serial Number (Optional)" : "Serial Number"}</FormLabel>
                   <FormControl>
-                    <Input 
+                    <Input
                       placeholder={
-                        quantity > 1 
-                          ? "MSP-JN-XXXX (e.g., MSP-JN-1001)" 
+                        quantity > 1
+                          ? "MSP-JN-XXXX (e.g., MSP-JN-1001)"
                           : "MSP-JN-XXXX (e.g., MSP-JN-1234)"
-                      } 
-                      {...field} 
+                      }
+                      {...field}
                       value={field.value || ''}
-                      disabled={isSubmitting} 
+                      disabled={isSubmitting}
                     />
                   </FormControl>
                   <FormMessage />

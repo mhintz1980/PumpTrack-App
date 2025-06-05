@@ -23,6 +23,7 @@ export interface Pump {
   powderCoatColor?: string;
   notes?: string;
   priority?: PriorityLevel;
+  durationDays?: number; // New field for editable duration
   createdAt: string; // ISO date string
   updatedAt: string; // ISO date string
 }
@@ -53,7 +54,7 @@ export interface Filters {
 }
 
 // New type for Activity Log Entries
-export type ActivityLogType = 
+export type ActivityLogType =
   | 'PUMP_CREATED'
   | 'PUMP_UPDATED'
   | 'STAGE_MOVED'

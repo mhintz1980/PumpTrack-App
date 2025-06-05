@@ -34,7 +34,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 const pumpDetailsSchema = z.object({
   model: z.string().min(1, "Model is required"),
   serialNumber: z.string().optional().refine(val => {
-    if (val === undefined || val.trim() === '') return true; 
+    if (val === undefined || val.trim() === '') return true;
     return /^MSP-JN-\d{4}$/.test(val);
   }, { message: "Serial number must be in MSP-JN-XXXX format if provided." }),
   customer: z.string().min(1, "Customer name is required"),
@@ -42,6 +42,7 @@ const pumpDetailsSchema = z.object({
   powderCoater: z.string().optional(),
   powderCoatColor: z.string().optional(),
   priority: z.enum(PRIORITY_LEVELS.map(p => p.value) as [PriorityLevel, ...PriorityLevel[]]).default('normal'),
+  durationDays: z.coerce.number().min(0.1, "Duration must be a positive number.").optional().nullable(),
   notes: z.string().optional(),
 });
 
@@ -69,11 +70,12 @@ export function PumpDetailsModal({ isOpen, onClose, pump, onUpdatePump }: PumpDe
         powderCoater: pump.powderCoater || '',
         powderCoatColor: pump.powderCoatColor || '',
         priority: pump.priority || 'normal',
+        durationDays: pump.durationDays === undefined ? null : pump.durationDays, // Handle undefined for the form
         notes: pump.notes || '',
       });
     }
-  }, [pump, form, isOpen]); 
-  
+  }, [pump, form, isOpen]);
+
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   if (!pump) return null;
@@ -87,13 +89,14 @@ export function PumpDetailsModal({ isOpen, onClose, pump, onUpdatePump }: PumpDe
       powderCoater: data.powderCoater?.trim() === '' ? undefined : data.powderCoater,
       powderCoatColor: data.powderCoatColor?.trim() === '' ? undefined : data.powderCoatColor,
       priority: data.priority,
+      durationDays: data.durationDays === null ? undefined : data.durationDays, // Convert null back to undefined if needed
       notes: data.notes?.trim() === '' ? undefined : data.notes,
     };
     onUpdatePump(updatedPumpData);
     setIsSubmitting(false);
     onClose();
   };
-  
+
   const currentStageDetails = STAGES.find(s => s.id === pump.currentStage);
   const relevantStagesForPowderCoatFields: StageId[] = ['fabrication', 'assembly', 'powder-coat', 'testing'];
   const showPowderCoatFields = relevantStagesForPowderCoatFields.includes(pump.currentStage);
@@ -201,6 +204,27 @@ export function PumpDetailsModal({ isOpen, onClose, pump, onUpdatePump }: PumpDe
                       </FormItem>
                     )}
                   />
+                <FormField
+                  control={form.control}
+                  name="durationDays"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Duration (days)</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="number"
+                          step="0.1"
+                          placeholder="e.g., 1.5"
+                          {...field}
+                          value={field.value === null || field.value === undefined ? '' : String(field.value)}
+                          onChange={e => field.onChange(e.target.value === '' ? null : parseFloat(e.target.value))}
+                          disabled={isSubmitting}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
                  {showPowderCoatFields && (
                   <>
                     <FormField
@@ -235,7 +259,7 @@ export function PumpDetailsModal({ isOpen, onClose, pump, onUpdatePump }: PumpDe
                             placeholder="Select or type color"
                             searchPlaceholder="Search colors..."
                             emptyText="No color found. Type to add."
-                            allowCustomValue={true} 
+                            allowCustomValue={true}
                             disabled={isSubmitting}
                           />
                           <FormMessage />
@@ -258,7 +282,7 @@ export function PumpDetailsModal({ isOpen, onClose, pump, onUpdatePump }: PumpDe
                   </FormItem>
                 )}
               />
-              
+
               <AiActions pump={pump} />
 
               <DialogFooter className="pt-4">

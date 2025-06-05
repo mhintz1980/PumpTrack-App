@@ -14,9 +14,9 @@ import {
 import { cn } from '@/lib/utils';
 import type { Pump } from '@/types';
 
-// PlannablePump extends Pump with daysPerUnit
+// PlannablePump extends Pump with daysPerUnit, and now Pump has durationDays
 interface PlannablePump extends Pump {
-  daysPerUnit: number;
+  daysPerUnit: number; // This is for calendar block rendering duration
 }
 
 interface SchedulePumpCardProps {
@@ -40,7 +40,7 @@ export const SchedulePumpCard = React.memo(function SchedulePumpCard({
   const displaySerialNumber = pump.serialNumber || 'N/A';
 
   const handleEyeClick = (e: React.MouseEvent) => {
-    e.stopPropagation(); 
+    e.stopPropagation();
     onOpenDetailsModal(pump);
   };
 
@@ -55,30 +55,15 @@ export const SchedulePumpCard = React.memo(function SchedulePumpCard({
   };
 
   const handleDragStart = (e: React.DragEvent) => {
-    console.log('🔥 SchedulePumpCard - handleDragStart called', {
-      pumpId: pump.id,
-      target: e.target,
-      currentTarget: e.currentTarget,
-      button: (e.nativeEvent as any).button, // Be cautious with 'any' in production
-      buttons: (e.nativeEvent as any).buttons, // Be cautious with 'any' in production
-      dataTransfer: e.dataTransfer, // This might be null or limited in console
-      clientX: e.clientX,
-      clientY: e.clientY
-    });
-    
     onDragStart(e, pump);
-    
-    console.log('🔥 After parent onDragStart (SchedulePumpCard) - dataTransfer types:', Array.from(e.dataTransfer.types));
-    console.log('🔥 After parent onDragStart (SchedulePumpCard) - effectAllowed:', e.dataTransfer.effectAllowed);
   };
 
   const handleDragEndInternal = (e: React.DragEvent) => {
-    console.log('🏁 SchedulePumpCard - handleDragEndInternal called', pump.id, 'dropEffect:', e.dataTransfer.dropEffect);
     const targetElement = e.currentTarget as HTMLElement;
     if (targetElement) {
         targetElement.style.opacity = '1'; // Ensure opacity is reset here too
     }
-    
+
     if (onDragEnd) {
       onDragEnd(e);
     }
@@ -99,11 +84,8 @@ export const SchedulePumpCard = React.memo(function SchedulePumpCard({
     <Card
       draggable={true}
       onDragStart={handleDragStart}
-      onDragEnd={handleDragEndInternal} // Use internal handler that calls parent
+      onDragEnd={handleDragEndInternal}
       onClick={handleCardClick}
-      onDrag={(e) => {
-        // console.log('🔄 SchedulePumpCard - onDrag event', pump.id, 'clientX:', e.clientX, 'clientY:', e.clientY);
-      }}
       className={cn(
         "mb-3 shadow-md hover:shadow-lg transition-shadow duration-150 ease-in-out bg-card group cursor-grab active:cursor-grabbing select-none",
         priorityClass(),
@@ -111,7 +93,7 @@ export const SchedulePumpCard = React.memo(function SchedulePumpCard({
       )}
       aria-label={`Pump Model: ${pump.model}, Customer: ${pump.customer}, S/N: ${displaySerialNumber}, Priority: ${pump.priority || 'normal'}`}
     >
-      <CardHeader className="p-3 flex flex-row items-start justify-between space-y-0">
+      <CardHeader className="p-3 flex flex-row items-start justify-between space-y-0 pb-1">
         <div className="flex-grow pr-2">
           <CardTitle className="text-sm font-semibold leading-none">
             {pump.model} - {pump.customer}
@@ -145,7 +127,7 @@ export const SchedulePumpCard = React.memo(function SchedulePumpCard({
                 <div
                   className="cursor-grab active:cursor-grabbing"
                   aria-label="Drag pump"
-                  data-drag-handle="true" // This attribute can be used to distinguish drag handle clicks
+                  data-drag-handle="true"
                 >
                   <GripVertical className="h-5 w-5 text-muted-foreground" />
                 </div>
@@ -157,6 +139,16 @@ export const SchedulePumpCard = React.memo(function SchedulePumpCard({
           </TooltipProvider>
         </div>
       </CardHeader>
+      <CardContent className="p-3 pt-0">
+        {pump.durationDays !== undefined && (
+          <p className="text-xs text-muted-foreground">
+            Duration: {pump.durationDays} days
+          </p>
+        )}
+         <p className="text-xs text-muted-foreground mt-0.5">
+            Build Time: {pump.daysPerUnit} days
+          </p>
+      </CardContent>
     </Card>
   );
 });
