@@ -50,7 +50,7 @@ export function GroupedKanbanCard({
 
   return (
     <Card 
-      className="mb-3 shadow-md bg-card cursor-pointer"
+      className="mb-3 shadow-md bg-card cursor-pointer w-[16.75rem]"
       onDoubleClick={handleDoubleClick}
       aria-label={`Grouped pumps for model ${model}, total ${totalQuantity}. Double-click to see details.`}
     >
@@ -97,3 +97,4 @@ export function GroupedKanbanCard({
     </Card>
   );
 }
+
