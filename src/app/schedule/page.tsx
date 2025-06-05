@@ -79,11 +79,7 @@ export default function SchedulePage() {
     const fetchPumps = async () => {
       setIsLoading(true);
       try {
-        // For now, we use pumpService.getAllPumps which might return sample data or empty array
-        // In future, this could fetch pumps that are specifically 'open-jobs' or not yet 'shipped'
-        // or all pumps and then filter client-side.
         const fetchedPumps = await pumpService.getAllPumps(); 
-        // If getAllPumps returns empty (as it does by default), let's add some sample data for schedule page.
         if (fetchedPumps.length === 0) {
             const now = new Date().toISOString();
             const samplePumpsForSchedule: Pump[] = [
@@ -107,7 +103,6 @@ export default function SchedulePage() {
 
 
   useEffect(() => {
-    // Filter out pumps that are 'shipped' or already on the schedule from initialPumps
     const scheduledPumpOriginalIds = new Set(scheduledItems.map(si => si.id));
     const availableForPlanning = initialPumps.filter(p => 
         p.currentStage !== 'shipped' && 
@@ -191,10 +186,13 @@ export default function SchedulePage() {
   const handlePlannableItemClick = useCallback((item: PlannablePump, event: React.MouseEvent) => {
     setSelectedPlannableItemIds(prevSelectedIds => {
       if (event.ctrlKey || event.metaKey) {
+        // If already selected and part of a multi-selection, or if trying to multi-select from different stages (not applicable here)
+        // Here, stage context isn't a factor, so we just toggle.
         return prevSelectedIds.includes(item.id)
           ? prevSelectedIds.filter(id => id !== item.id)
           : [...prevSelectedIds, item.id];
       }
+      // Single click behavior
       return prevSelectedIds.includes(item.id) && prevSelectedIds.length === 1 ? [] : [item.id];
     });
   }, []);
@@ -204,15 +202,19 @@ export default function SchedulePage() {
     e.stopPropagation();
     e.dataTransfer.setData('text/plain', item.id);
     e.dataTransfer.effectAllowed = 'move';
-    (e.currentTarget as HTMLElement).style.opacity = '0.5';
     
+    const targetElement = e.currentTarget as HTMLElement;
+    if (targetElement) {
+      targetElement.style.opacity = '0.5';
+    }
+
     setTimeout(() => {
       if (selectedPlannableItemIds.includes(item.id) && selectedPlannableItemIds.length > 1) {
         const batchItems = plannableItems.filter(p => selectedPlannableItemIds.includes(p.id));
         setDraggedItemData({ type: 'plannable-batch', items: batchItems });
       } else {
         setDraggedItemData({ type: 'plannable-single', item });
-        setSelectedPlannableItemIds([item.id]); // Ensure single dragged item is also "selected" for consistency
+        setSelectedPlannableItemIds([item.id]); 
       }
     }, 0);
   }, [selectedPlannableItemIds, plannableItems]);
@@ -223,7 +225,11 @@ export default function SchedulePage() {
     e.dataTransfer.setData('application/pumptrack-instance-id', item.instanceId);
     e.dataTransfer.setData('text/plain', item.instanceId); 
     e.dataTransfer.effectAllowed = 'move';
-    (e.currentTarget as HTMLElement).style.opacity = '0.5';
+    
+    const targetElement = e.currentTarget as HTMLElement;
+    if (targetElement) {
+      targetElement.style.opacity = '0.5';
+    }
     
     setTimeout(() => {
       setDraggedItemData({ type: 'scheduled', item });
@@ -231,11 +237,14 @@ export default function SchedulePage() {
   }, []);
 
   const handleDragEnd = useCallback((e: React.DragEvent) => {
-    const draggedDOMElement = e.currentTarget as HTMLElement;
+    const draggedDOMElement = e.target instanceof HTMLElement ? e.target : (e.currentTarget as HTMLElement);
     if (draggedDOMElement) {
       draggedDOMElement.style.opacity = '1';
     }
-    if (draggedItemData) {
+    // Clear draggedItemData only if it was set by this drag operation
+    // This check might be redundant if setDraggedItemData(null) is always desired at drag end
+    // but helps ensure we only clear what this drag operation might have set.
+    if (draggedItemData) { 
         setDraggedItemData(null);
     }
   }, [draggedItemData]);
@@ -253,7 +262,6 @@ export default function SchedulePage() {
     
     const currentDraggedItem = draggedItemData; 
     if (!currentDraggedItem) {
-      // Fallback for safety, though setTimeout should make draggedItemData reliable
       const idFromDataTransfer = e.dataTransfer.getData('text/plain');
       const itemToScheduleFromPlannable = plannableItems.find(p => p.id === idFromDataTransfer);
       if (idFromDataTransfer && itemToScheduleFromPlannable) {
@@ -293,7 +301,7 @@ export default function SchedulePage() {
     if (currentDraggedItem.type === 'plannable-single') {
       const itemToSchedule = currentDraggedItem.item;
       setScheduledItems(prev => {
-        const filteredPrev = prev.filter(si => si.id !== itemToSchedule.id); // Avoid duplicates of original pump ID
+        const filteredPrev = prev.filter(si => si.id !== itemToSchedule.id);
         return [...filteredPrev, {
           ...itemToSchedule,
           scheduledOnDayIndex: targetDayIndex,
@@ -328,7 +336,7 @@ export default function SchedulePage() {
     
     setSelectedPlannableItemIds([]);
     setDraggedItemData(null); 
-  }, [draggedItemData, toast, setScheduledItems, setSelectedPlannableItemIds, plannableItems, scheduledItems]);
+  }, [draggedItemData, toast, plannableItems, scheduledItems]);
 
 
   const handleDropOnPlannableList = useCallback((e: React.DragEvent<HTMLDivElement>) => {
@@ -362,7 +370,7 @@ export default function SchedulePage() {
     
     setSelectedPlannableItemIds([]);
     setDraggedItemData(null); 
-  }, [draggedItemData, toast, setScheduledItems, setSelectedPlannableItemIds, scheduledItems]);
+  }, [draggedItemData, toast, scheduledItems]);
 
   const removeFromSchedule = useCallback((instanceIdToRemove: string) => {
     const itemToRemove = scheduledItems.find(si => si.instanceId === instanceIdToRemove);
@@ -371,13 +379,13 @@ export default function SchedulePage() {
       toast({ title: "Pump Unscheduled", description: `${itemToRemove.serialNumber || itemToRemove.model} removed from schedule.` });
     }
     setSelectedPlannableItemIds([]);
-  }, [scheduledItems, toast, setScheduledItems, setSelectedPlannableItemIds]);
+  }, [scheduledItems, toast]);
 
   const resetSchedule = useCallback(() => {
     setScheduledItems([]);
     setSelectedPlannableItemIds([]);
     toast({ title: "Schedule Reset", description: "All pumps removed from schedule and returned to plannable list." });
-  }, [toast, setScheduledItems, setSelectedPlannableItemIds]);
+  }, [toast]);
 
 
   const handleOpenDetailsModal = useCallback((pump: PlannablePump) => {
@@ -397,7 +405,6 @@ export default function SchedulePage() {
         return;
     }
     try {
-        // Simulate saving to backend
         const savedPump = await pumpService.updatePumpWithActivityLog(updatedPump.id, updatedPump, originalPump);
         setInitialPumps(prev => prev.map(p => p.id === savedPump.id ? savedPump : p));
         setScheduledItems(prevScheduled => prevScheduled.map(sp => 
@@ -459,14 +466,16 @@ export default function SchedulePage() {
 
   const PlannablePumpsTable = () => (
     <Card>
-      <CardHeader className="flex flex-row items-center justify-between">
-        <div>
+      <CardHeader>
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
           <CardTitle>Pumps to Schedule</CardTitle>
-          <CardDescription>Drag pumps from this list to the calendar. Use Ctrl/Meta+Click to select multiple.</CardDescription>
+          <Button onClick={() => setIsAddPumpModalOpen(true)} size="sm" className="shrink-0">
+            <PlusCircle className="mr-2 h-4 w-4" /> Add Pump(s)
+          </Button>
+          <CardDescription className="text-sm text-muted-foreground flex-grow min-w-[200px] text-left sm:text-right">
+            Drag pumps from this list to the calendar. Use Ctrl/Meta+Click to select multiple.
+          </CardDescription>
         </div>
-        <Button onClick={() => setIsAddPumpModalOpen(true)} size="sm">
-          <PlusCircle className="mr-2 h-4 w-4" /> Add Pump(s)
-        </Button>
       </CardHeader>
       <CardContent>
         <ScrollArea 
@@ -590,7 +599,6 @@ export default function SchedulePage() {
     <div className="flex flex-col h-full">
       <EnhancedHeader
         title="Production Planning & Schedule"
-        // showAddPump and onAddPump props removed
         searchTerm={globalSearchTerm}
         onSearchChange={setGlobalSearchTerm}
         filters={filters}
