@@ -1,7 +1,7 @@
 
 "use client";
 
-import React from 'react';
+import React from 'react'; // Imported React for React.memo
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import type { Pump } from '@/types';
@@ -23,7 +23,8 @@ interface KanbanCardProps {
   isSelected?: boolean;
 }
 
-export function KanbanCard({
+// Wrap the component definition with React.memo
+export const KanbanCard = React.memo(function KanbanCard({
   pump,
   onDragStart,
   onCardClick,
@@ -111,4 +112,4 @@ export function KanbanCard({
       </CardHeader>
     </Card>
   );
-}
+});
