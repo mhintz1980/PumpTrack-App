@@ -15,7 +15,7 @@ import { cn } from '@/lib/utils';
 import type { Pump } from '@/types';
 
 interface PlannablePump extends Pump {
-  daysPerUnit: number; // This will now come from estimatedBuildTimeDays via schedule page logic
+  daysPerUnit: number; 
 }
 
 interface SchedulePumpCardProps {
@@ -83,7 +83,7 @@ export const SchedulePumpCard = React.memo(function SchedulePumpCard({
       onDragEnd={handleDragEndInternal}
       onClick={handleCardClick}
       className={cn(
-        "mb-3 shadow-md hover:shadow-lg transition-shadow duration-150 ease-in-out bg-card group cursor-grab active:cursor-grabbing select-none",
+        "mb-3 shadow-md hover:shadow-lg transition-shadow duration-150 ease-in-out bg-card group cursor-grab active:cursor-grabbing select-none w-[16.75rem]",
         priorityClass(),
         isSelected && "ring-2 ring-primary ring-offset-1"
       )}
@@ -144,7 +144,6 @@ export const SchedulePumpCard = React.memo(function SchedulePumpCard({
          <p>
           Actual Duration: {pump.actualDurationDays !== undefined ? `${pump.actualDurationDays} days` : 'N/A'}
         </p>
-        {/* "Schedule Block" display removed from here */}
       </CardContent>
     </Card>
   );

@@ -93,7 +93,7 @@ export default function SchedulePage() {
     );
     const augmentedPumps: PlannablePump[] = availableForPlanning.map(p => ({ 
       ...p, 
-      daysPerUnit: p.estimatedBuildTimeDays !== undefined ? p.estimatedBuildTimeDays : 1.5 // Default to 1.5 if not set
+      daysPerUnit: p.estimatedBuildTimeDays !== undefined ? p.estimatedBuildTimeDays : 1.5 
     }));
     setPlannableItems(augmentedPumps);
   }, [initialPumps, scheduledItems]);
@@ -469,7 +469,7 @@ export default function SchedulePage() {
           ) : filteredPlannableItems.length === 0 ? (
             <p className="text-center p-4 text-muted-foreground">No plannable items match filters or all are scheduled.</p>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 p-1">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 p-1">
               {filteredPlannableItems.map(item => (
                 <SchedulePumpCard
                   key={item.id}
@@ -617,3 +617,4 @@ export default function SchedulePage() {
     </div>
   );
 }
+
