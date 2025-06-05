@@ -15,6 +15,7 @@ export async function addPumpWithActivityLog(pumpData: Omit<Pump, 'id' | 'create
     id: crypto.randomUUID(),
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
+    estimatedBuildTimeDays: pumpData.estimatedBuildTimeDays !== undefined ? pumpData.estimatedBuildTimeDays : 1.5, // Ensure default
   };
   // Simulate logging
   const logEntry: ActivityLogEntry = {
@@ -130,41 +131,20 @@ export async function getAllPumps(): Promise<Pump[]> {
         serialNumber: `MSP-JN-${String(serialCounter++).padStart(4, '0')}`,
         customer: CUSTOMER_NAMES[samplePumps.length % CUSTOMER_NAMES.length],
         poNumber: `PO-${String(poCounter++).padStart(5, '0')}`,
-        estimatedBuildTimeDays: 1.5 + (Math.random() * 2), // Small variation
+        estimatedBuildTimeDays: 1.5, // Default build time set to 1.5 days
         priority: ['normal', 'high', 'urgent'][samplePumps.length % 3] as Pump['priority'],
         createdAt: now,
         updatedAt: now,
       };
 
-      // Assign stage based on distribution
-      let assignedStage = false;
-      for (const stage of STAGES) { // Iterate in defined order
-        const stageId = stage.id;
-        if (stageDistribution[stageId] > 0) {
-          const pumpsInThisStage = samplePumps.filter(p => p.currentStage === stageId).length;
-          if (pumpsInThisStage < stageDistribution[stageId]) {
-            pump.currentStage = stageId;
-            
-            if (stagesRequiringPowderCoatInfo.includes(stageId)) {
-              pump.powderCoater = POWDER_COATERS[samplePumps.length % POWDER_COATERS.length];
-              pump.powderCoatColor = DEFAULT_POWDER_COAT_COLORS[samplePumps.length % DEFAULT_POWDER_COAT_COLORS.length];
-            }
-            assignedStage = true;
-            break;
-          }
-        }
-      }
-      // Fallback if distribution logic has issues (e.g. exact counts not met, though it should)
-      if (!assignedStage) {
-        pump.currentStage = 'open-jobs';
-      }
+      // Assign stage based on distribution - stage assignment logic will be complex, placeholder for now
+      // This will be simplified for now to ensure correct counts and then refined.
       
       samplePumps.push(pump as Pump);
     }
   }
   
   // Shuffle pumps to better distribute models across stages rather than clustering them
-  // This is a simple shuffle, good enough for sample data
   for (let i = samplePumps.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     [samplePumps[i], samplePumps[j]] = [samplePumps[j], samplePumps[i]];
@@ -179,6 +159,7 @@ export async function getAllPumps(): Promise<Pump[]> {
   const finalPumps: Pump[] = [];
   for (const p of samplePumps) {
       let assigned = false;
+      // Iterate through STAGES in their defined order to attempt assignment
       for (const stageObj of STAGES) {
           const stageId = stageObj.id;
           if (currentStageCounts[stageId] < stageDistribution[stageId]) {
@@ -188,19 +169,24 @@ export async function getAllPumps(): Promise<Pump[]> {
                 p.powderCoater = POWDER_COATERS[finalPumps.length % POWDER_COATERS.length];
                 p.powderCoatColor = DEFAULT_POWDER_COAT_COLORS[finalPumps.length % DEFAULT_POWDER_COAT_COLORS.length];
               } else if (!stagesRequiringPowderCoatInfo.includes(stageId)) {
-                // Optionally clear powder coat info if moved to a stage before it
+                // This part can be used if we want to clear powder coat info when moving to earlier stages
                 // p.powderCoater = undefined;
                 // p.powderCoatColor = undefined;
               }
               currentStageCounts[stageId]++;
               finalPumps.push(p);
               assigned = true;
-              break;
+              break; 
           }
       }
-      if (!assigned && finalPumps.length < PUMP_MODELS.length * 3) { // Safety net
+      // Safety net: if a pump couldn't be assigned by the distribution (e.g., total pumps > total slots)
+      // and we haven't filled the total desired pumps, assign to 'open-jobs'
+      if (!assigned && finalPumps.length < PUMP_MODELS.length * 3) {
           p.currentStage = 'open-jobs';
-          currentStageCounts['open-jobs']++;
+          // Only increment if 'open-jobs' is not already full by its specific target
+          if (currentStageCounts['open-jobs'] < stageDistribution['open-jobs']) {
+            currentStageCounts['open-jobs']++;
+          }
           finalPumps.push(p);
       }
   }
@@ -240,3 +226,4 @@ export async function addNoteToPumpWithActivityLog(
     `Note added to pump ${originalPump.serialNumber || originalPump.model}: "${note}"`
   );
 }
+

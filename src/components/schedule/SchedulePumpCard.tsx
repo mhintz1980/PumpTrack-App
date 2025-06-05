@@ -144,11 +144,9 @@ export const SchedulePumpCard = React.memo(function SchedulePumpCard({
          <p>
           Actual Duration: {pump.actualDurationDays !== undefined ? `${pump.actualDurationDays} days` : 'N/A'}
         </p>
-        {/* This displays the value used by the calendar for block size, now sourced from estimatedBuildTimeDays */}
-        <p className="text-xs text-muted-foreground mt-0.5">
-            Schedule Block: {pump.daysPerUnit} days
-        </p>
+        {/* "Schedule Block" display removed from here */}
       </CardContent>
     </Card>
   );
 });
+
