@@ -68,9 +68,11 @@ export function EnhancedHeader({
     <TooltipProvider>
       <div className="bg-card p-4 shadow-md sticky top-0 z-20">
         <div className="container mx-auto flex flex-col lg:flex-row items-center justify-between gap-4">
-          {/* Left Group: Mobile Trigger, Search, Filters, Title */}
+          {/* Left Group: Mobile Trigger, Title, Search, Filters */}
           <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
             {isMobile && <SidebarTrigger className="h-7 w-7" />}
+            
+            <h1 className="text-xl sm:text-2xl font-bold text-primary whitespace-nowrap">{title}</h1>
             
             <div className="relative min-w-[150px] sm:min-w-[200px] max-w-[300px]">
               <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -139,8 +141,6 @@ export function EnhancedHeader({
                 </Tooltip>
               )}
             </div>
-            
-            <h1 className="text-xl sm:text-2xl font-bold text-primary whitespace-nowrap">{title}</h1>
           </div>
           
           {/* Right Group: Add Pump Button (if shown) */}
