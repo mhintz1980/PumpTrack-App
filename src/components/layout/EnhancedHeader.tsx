@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState } from 'react';
@@ -19,7 +20,8 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { SidebarTrigger } from '@/components/ui/sidebar';
+import { SidebarTrigger, useSidebar } from '@/components/ui/sidebar'; // Import useSidebar
+import { useIsMobile } from '@/hooks/use-mobile'; // Import useIsMobile
 
 interface EnhancedHeaderProps {
   title: string;
@@ -56,6 +58,7 @@ export function EnhancedHeader({
     (value) => Array.isArray(value) ? value.length > 0 : value !== undefined && value !== ''
   ).length;
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const isMobile = useIsMobile(); // Use the hook
 
   const handleClearFilters = () => {
     onFiltersChange({});
@@ -65,15 +68,12 @@ export function EnhancedHeader({
     <TooltipProvider>
       <div className="bg-card p-4 shadow-md sticky top-0 z-20">
         <div className="container mx-auto flex flex-col lg:flex-row items-center justify-between gap-4">
-          {/* Left side: Sidebar trigger and title */}
           <div className="flex items-center gap-2">
-            <SidebarTrigger className="h-7 w-7" />
+            {isMobile && <SidebarTrigger className="h-7 w-7" />} {/* Conditionally render SidebarTrigger */}
             <h1 className="text-2xl font-bold text-primary whitespace-nowrap">{title}</h1>
           </div>
           
-          {/* Right side: Search, filters, and optional add pump */}
           <div className="flex items-center gap-2 sm:gap-3 flex-wrap justify-center">
-            {/* Search Bar */}
             <div className="relative min-w-[200px] max-w-[300px]">
               <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
@@ -85,7 +85,6 @@ export function EnhancedHeader({
               />
             </div>
 
-            {/* Filters Dropdown */}
             <DropdownMenu open={isMenuOpen} onOpenChange={setIsMenuOpen}>
               <Tooltip>
                 <TooltipTrigger asChild>
@@ -120,7 +119,6 @@ export function EnhancedHeader({
               </DropdownMenuContent>
             </DropdownMenu>
 
-            {/* Clear Filters Button */}
             {activeFilterCount > 0 && (
               <Tooltip>
                 <TooltipTrigger asChild>
@@ -140,7 +138,6 @@ export function EnhancedHeader({
               </Tooltip>
             )}
 
-            {/* Add Pump Button (conditional) */}
             {showAddPump && onAddPump && (
               <Tooltip>
                 <TooltipTrigger asChild>
@@ -159,3 +156,5 @@ export function EnhancedHeader({
     </TooltipProvider>
   );
 }
+
+    

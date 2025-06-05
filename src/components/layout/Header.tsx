@@ -19,7 +19,8 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { SidebarTrigger } from '@/components/ui/sidebar'; // Import SidebarTrigger
+import { SidebarTrigger } from '@/components/ui/sidebar'; 
+import { useIsMobile } from '@/hooks/use-mobile'; // Import useIsMobile
 
 interface HeaderProps {
   onAddPump: () => void;
@@ -48,6 +49,7 @@ export function Header({
     (value) => Array.isArray(value) ? value.length > 0 : value !== undefined && value !== ''
   ).length;
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const isMobile = useIsMobile(); // Use the hook
 
   const handleClearFilters = () => {
     onFiltersChange({});
@@ -58,7 +60,7 @@ export function Header({
       <div className="bg-card p-4 shadow-md sticky top-0 z-20">
         <div className="container mx-auto flex flex-col sm:flex-row items-center justify-start gap-4">
           <div className="flex items-center gap-2">
-            <SidebarTrigger className="h-7 w-7" /> {/* Moved SidebarTrigger here */}
+            {isMobile && <SidebarTrigger className="h-7 w-7" />} {/* Conditionally render SidebarTrigger */}
             <h1 className="text-2xl font-bold text-primary">PumpTrack Workflow</h1>
           </div>
           <div className="flex items-center gap-2 sm:gap-3 flex-wrap justify-center">
@@ -130,3 +132,5 @@ export function Header({
     </TooltipProvider>
   );
 }
+
+    
