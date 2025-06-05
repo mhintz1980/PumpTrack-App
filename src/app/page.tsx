@@ -358,7 +358,7 @@ export default function HomePage() {
           onPumpMove={handlePumpMove}
           onMultiplePumpsMove={handleMultiplePumpsMove}
           onOpenPumpDetailsModal={handleOpenPumpDetailsModal}
-          onOpenGroupDetailsModal={onOpenGroupDetailsModal}
+          onOpenGroupDetailsModal={handleOpenGroupDetailsModal}
           selectedPumpIdsForDrag={selectedPumpIdsForDrag}
           onPumpCardClick={handlePumpCardClick}
           explodedGroups={explodedGroups}
