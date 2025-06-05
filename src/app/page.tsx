@@ -3,11 +3,11 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import type { Pump, StageId, ViewMode, Filters } from '@/types';
-import { STAGES, POWDER_COATERS, PUMP_MODELS, CUSTOMER_NAMES, DEFAULT_POWDER_COAT_COLORS, PRIORITY_LEVELS } from '@/lib/constants';
+import { STAGES, POWDER_COATERS, PUMP_MODELS, CUSTOMER_NAMES, PRIORITY_LEVELS } from '@/lib/constants';
 import { useToast } from '@/hooks/use-toast';
 import { EnhancedHeader } from '@/components/layout/EnhancedHeader';
 import { KanbanBoard } from '@/components/kanban/KanbanBoard';
-import { AddPumpForm } from '@/components/pump/AddPumpForm';
+// import { AddPumpForm } from '@/components/pump/AddPumpForm'; // Removed AddPumpForm import
 import { PumpDetailsModal } from '@/components/pump/PumpDetailsModal';
 import { MissingInfoModal } from '@/components/pump/MissingInfoModal';
 import { GroupedPumpDetailsModal } from '@/components/pump/GroupedPumpDetailsModal';
@@ -20,7 +20,7 @@ export default function HomePage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [isLoading, setIsLoading] = useState(true); // For initial data load
   
-  const [isAddPumpModalOpen, setIsAddPumpModalOpen] = useState(false);
+  // const [isAddPumpModalOpen, setIsAddPumpModalOpen] = useState(false); // Removed state for AddPumpModal
   const [selectedPumpForDetails, setSelectedPumpForDetails] = useState<Pump | null>(null);
   const [isPumpDetailsModalOpen, setIsPumpDetailsModalOpen] = useState(false);
   
@@ -44,8 +44,6 @@ export default function HomePage() {
     const fetchPumps = async () => {
       setIsLoading(true);
       try {
-        // For now, pumpService.getAllPumps() will return mock data.
-        // Later, this will fetch from the backend.
         const fetchedPumps = await pumpService.getAllPumps();
         setPumps(fetchedPumps);
       } catch (error) {
@@ -91,31 +89,11 @@ export default function HomePage() {
     setFilteredPumps(tempPumps);
   }, [pumps, filters, searchTerm]);
 
-  const handleAddPumps = useCallback(async (newPumpsData: Array<Omit<Pump, 'id' | 'createdAt' | 'updatedAt'>>) => {
-    const addedPumps: Pump[] = [];
-    let success = true;
-    for (const pumpData of newPumpsData) {
-      try {
-        const newPump = await pumpService.addPumpWithActivityLog(pumpData);
-        addedPumps.push(newPump);
-      } catch (error) {
-        console.error("Error adding pump:", error);
-        toast({ variant: "destructive", title: "Add Pump Failed", description: `Could not add pump ${pumpData.serialNumber || pumpData.model}.` });
-        success = false;
-        break; 
-      }
-    }
+  // Removed handleAddPumps function as it's no longer used on this page
+  // const handleAddPumps = useCallback(async (newPumpsData: Array<Omit<Pump, 'id' | 'createdAt' | 'updatedAt'>>) => {
+  //   ...
+  // }, [toast]);
 
-    if (success) {
-      setPumps(prev => [...prev, ...addedPumps]);
-      if (newPumpsData.length === 1) {
-        toast({ title: "Pump Added", description: `${addedPumps[0].serialNumber || addedPumps[0].model} has been added.` });
-      } else {
-        toast({ title: `${newPumpsData.length} Pumps Added`, description: "Batch added successfully." });
-      }
-    }
-    setIsAddPumpModalOpen(false);
-  }, [toast]);
 
   const handleUpdatePump = useCallback(async (updatedPumpData: Pump) => {
     const originalPump = pumps.find(p => p.id === updatedPumpData.id);
@@ -195,7 +173,7 @@ export default function HomePage() {
         } catch (error) {
           console.error(`Error moving pump ${pumpId}:`, error);
           toast({ variant: "destructive", title: "Move Failed", description: `Could not move pump ${pumpToMove.serialNumber || pumpId}.` });
-          return pumpToMove; // Return original on error to avoid losing it from UI optimistically
+          return pumpToMove; 
         }
       }
       return null;
@@ -228,9 +206,7 @@ export default function HomePage() {
     const updatesWithStage = { ...data, currentStage: missingInfoTargetStage };
 
     try {
-      // Use updatePump for this as it's primarily an info update + a stage move
-      // The log description in updatePump can be made more specific for this case if needed.
-      const originalPumpForLog = { ...pumpToUpdate, currentStage: pumpToUpdate.currentStage }; // Log from original stage
+      const originalPumpForLog = { ...pumpToUpdate, currentStage: pumpToUpdate.currentStage }; 
       const savedPump = await pumpService.updatePumpWithActivityLog(pumpId, updatesWithStage, originalPumpForLog, 'STAGE_MOVED', `Pump ${pumpToUpdate.serialNumber || pumpToUpdate.model} updated with powder coat info and moved to ${missingInfoTargetStage}.`);
       
       setPumps(prev => prev.map(p => p.id === pumpId ? savedPump : p));
@@ -328,7 +304,7 @@ export default function HomePage() {
   if (isLoading) {
     return (
       <div className="flex flex-col h-full items-center justify-center">
-        <p>Loading pump data...</p> {/* Replace with a proper loading spinner/skeleton later */}
+        <p>Loading pump data...</p> 
       </div>
     );
   }
@@ -337,8 +313,8 @@ export default function HomePage() {
     <div className="flex flex-col h-full">
       <EnhancedHeader
         title="PumpTrack Workflow"
-        showAddPump={true} // Add Pump button is now controlled by showAddPump prop
-        onAddPump={() => setIsAddPumpModalOpen(true)}
+        showAddPump={false} // Add Pump button is now hidden on this page
+        // onAddPump is removed as showAddPump is false
         searchTerm={searchTerm}
         onSearchChange={setSearchTerm}
         filters={filters}
@@ -366,11 +342,14 @@ export default function HomePage() {
         />
       </main>
 
+      {/* AddPumpForm component removed from here */}
+      {/* 
       <AddPumpForm
         isOpen={isAddPumpModalOpen}
         onClose={() => setIsAddPumpModalOpen(false)}
         onAddPump={handleAddPumps}
-      />
+      /> 
+      */}
 
       {selectedPumpForDetails && (
         <PumpDetailsModal
