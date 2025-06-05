@@ -2,35 +2,39 @@
 "use client";
 
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { Calendar as CalendarIcon, Package, Clock, Users, FileText, GripVertical, XCircle, RotateCcw, PlusCircle } from 'lucide-react';
+import { Calendar as CalendarIcon, Package, Clock, Users, FileText, GripVertical, XCircle, RotateCcw, PlusCircle, Layers } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
-import type { Pump, PriorityLevel, Filters } from '@/types';
+import type { Pump, PriorityLevel, Filters, ViewMode } from '@/types';
 import { PUMP_MODELS, CUSTOMER_NAMES, PRIORITY_LEVELS, POWDER_COATERS } from '@/lib/constants';
 import { useToast } from '@/hooks/use-toast';
 import { SchedulePumpCard } from '@/components/schedule/SchedulePumpCard';
 import { PumpDetailsModal } from '@/components/pump/PumpDetailsModal';
 import { EnhancedHeader } from '@/components/layout/EnhancedHeader';
 import { AddPumpForm } from '@/components/pump/AddPumpForm';
+import { GroupedKanbanCard } from '@/components/kanban/GroupedKanbanCard';
 import * as pumpService from '@/services/pumpService';
 
 interface PlannablePump extends Pump {
-  daysPerUnit: number; // Number of days the pump takes up on the calendar, derived from estimatedBuildTimeDays
+  daysPerUnit: number;
 }
 
 interface ScheduledPump extends PlannablePump {
   scheduledOnDayIndex: number;
-  instanceId: string; 
+  instanceId: string;
 }
 
 interface ScheduleTimelineEntry extends ScheduledPump {
   startDay: number;
   endDay: number;
-  duration: number; // This will be 'daysPerUnit'
+  duration: number;
 }
 
 type DraggedItemType = 'plannable-single' | 'plannable-batch' | 'scheduled';
@@ -65,14 +69,18 @@ export default function SchedulePage() {
   const [draggedItemData, setDraggedItemData] = useState<DraggedItemData | null>(null);
   const [selectedPlannableItemIds, setSelectedPlannableItemIds] = useState<string[]>([]);
 
-  const [selectedPumpForDetails, setSelectedPumpForDetails] = useState<Pump | null>(null); // Can be Pump or PlannablePump
+  const [selectedPumpForDetails, setSelectedPumpForDetails] = useState<Pump | null>(null);
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
+
+  const [plannableItemsViewMode, setPlannableItemsViewMode] = useState<ViewMode>('default');
+  const [explodedPlannableModels, setExplodedPlannableModels] = useState<Set<string>>(new Set());
+
 
   useEffect(() => {
     const fetchPumps = async () => {
       setIsLoading(true);
       try {
-        const fetchedPumps = await pumpService.getAllPumps(); 
+        const fetchedPumps = await pumpService.getAllPumps();
         setInitialPumps(fetchedPumps);
       } catch (error) {
         console.error("Failed to fetch pumps for schedule:", error);
@@ -87,13 +95,13 @@ export default function SchedulePage() {
 
   useEffect(() => {
     const scheduledPumpOriginalIds = new Set(scheduledItems.map(si => si.id));
-    const availableForPlanning = initialPumps.filter(p => 
-        p.currentStage !== 'shipped' && 
+    const availableForPlanning = initialPumps.filter(p =>
+        p.currentStage !== 'shipped' &&
         !scheduledPumpOriginalIds.has(p.id)
     );
-    const augmentedPumps: PlannablePump[] = availableForPlanning.map(p => ({ 
-      ...p, 
-      daysPerUnit: p.estimatedBuildTimeDays !== undefined ? p.estimatedBuildTimeDays : 1.5 
+    const augmentedPumps: PlannablePump[] = availableForPlanning.map(p => ({
+      ...p,
+      daysPerUnit: p.estimatedBuildTimeDays !== undefined ? p.estimatedBuildTimeDays : 1.5
     }));
     setPlannableItems(augmentedPumps);
   }, [initialPumps, scheduledItems]);
@@ -137,8 +145,8 @@ export default function SchedulePage() {
     const days = [];
     const today = new Date();
     const startDate = new Date(today);
-    startDate.setDate(today.getDate() - today.getDay()); 
-    for (let i = 0; i < 42; i++) { 
+    startDate.setDate(today.getDate() - today.getDay());
+    for (let i = 0; i < 42; i++) {
       const date = new Date(startDate);
       date.setDate(startDate.getDate() + i);
       days.push(date);
@@ -150,7 +158,7 @@ export default function SchedulePage() {
     const timeline: ScheduleTimelineEntry[] = [];
     scheduledItems.sort((a, b) => a.scheduledOnDayIndex - b.scheduledOnDayIndex).forEach(item => {
       const startDay = item.scheduledOnDayIndex;
-      const duration = item.daysPerUnit; 
+      const duration = item.daysPerUnit;
 
       timeline.push({
         ...item,
@@ -182,7 +190,7 @@ export default function SchedulePage() {
     e.stopPropagation();
     e.dataTransfer.setData('text/plain', item.id);
     e.dataTransfer.effectAllowed = 'move';
-    
+
     const targetElement = e.currentTarget as HTMLElement;
     if (targetElement) {
       targetElement.style.opacity = '0.5';
@@ -194,7 +202,7 @@ export default function SchedulePage() {
         setDraggedItemData({ type: 'plannable-batch', items: batchItems });
       } else {
         setDraggedItemData({ type: 'plannable-single', item });
-        setSelectedPlannableItemIds([item.id]); 
+        setSelectedPlannableItemIds([item.id]);
       }
     }, 0);
   }, [selectedPlannableItemIds, plannableItems]);
@@ -203,14 +211,14 @@ export default function SchedulePage() {
   const handleDragStartScheduledItem = useCallback((e: React.DragEvent, item: ScheduledPump) => {
     e.stopPropagation();
     e.dataTransfer.setData('application/pumptrack-instance-id', item.instanceId);
-    e.dataTransfer.setData('text/plain', item.instanceId); 
+    e.dataTransfer.setData('text/plain', item.instanceId);
     e.dataTransfer.effectAllowed = 'move';
-    
+
     const targetElement = e.currentTarget as HTMLElement;
     if (targetElement) {
       targetElement.style.opacity = '0.5';
     }
-    
+
     setTimeout(() => {
       setDraggedItemData({ type: 'scheduled', item });
     }, 0);
@@ -221,23 +229,23 @@ export default function SchedulePage() {
     if (draggedDOMElement) {
       draggedDOMElement.style.opacity = '1';
     }
-    if (draggedItemData) { 
+    if (draggedItemData) {
         setDraggedItemData(null);
     }
   }, [draggedItemData]);
 
 
   const handleDragOver = useCallback((e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault(); 
+    e.preventDefault();
     e.stopPropagation();
-    e.dataTransfer.dropEffect = 'move'; 
+    e.dataTransfer.dropEffect = 'move';
   }, []);
 
   const handleDropOnCalendar = useCallback((e: React.DragEvent<HTMLDivElement>, targetDayIndex: number) => {
     e.preventDefault();
     e.stopPropagation();
-    
-    const currentDraggedItem = draggedItemData; 
+
+    const currentDraggedItem = draggedItemData;
     if (!currentDraggedItem) {
       const idFromDataTransfer = e.dataTransfer.getData('text/plain');
       const itemToScheduleFromPlannable = plannableItems.find(p => p.id === idFromDataTransfer);
@@ -251,7 +259,7 @@ export default function SchedulePage() {
             }].sort((a,b) => a.scheduledOnDayIndex - b.scheduledOnDayIndex);
           });
           toast({ title: "Pump Scheduled (Fallback)", description: `${itemToScheduleFromPlannable.serialNumber || itemToScheduleFromPlannable.model} added to schedule.` });
-          setSelectedPlannableItemIds([]); 
+          setSelectedPlannableItemIds([]);
           setDraggedItemData(null);
           return;
       } else {
@@ -268,10 +276,10 @@ export default function SchedulePage() {
             return;
           }
       }
-      setDraggedItemData(null); 
+      setDraggedItemData(null);
       return;
     }
-    
+
     const dropTargetElement = e.currentTarget as HTMLElement;
     dropTargetElement.classList.remove('bg-primary/10', 'border-primary');
 
@@ -290,10 +298,10 @@ export default function SchedulePage() {
       const itemsToSchedule = currentDraggedItem.items;
       const newScheduledInstances: ScheduledPump[] = itemsToSchedule.map(item => ({
         ...item,
-        scheduledOnDayIndex: targetDayIndex, 
+        scheduledOnDayIndex: targetDayIndex,
         instanceId: crypto.randomUUID(),
       }));
-      
+
       setScheduledItems(prev => {
         const newScheduledOriginalIds = new Set(newScheduledInstances.map(item => item.id));
         const filteredPrev = prev.filter(si => !newScheduledOriginalIds.has(si.id));
@@ -310,17 +318,17 @@ export default function SchedulePage() {
       ).sort((a,b) => a.scheduledOnDayIndex - b.scheduledOnDayIndex));
       toast({ title: "Schedule Updated", description: `Rescheduled ${itemToMove.serialNumber || itemToMove.model}.` });
     }
-    
+
     setSelectedPlannableItemIds([]);
-    setDraggedItemData(null); 
+    setDraggedItemData(null);
   }, [draggedItemData, toast, plannableItems, scheduledItems]);
 
 
   const handleDropOnPlannableList = useCallback((e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     e.stopPropagation();
-    
-    const currentDraggedItem = draggedItemData; 
+
+    const currentDraggedItem = draggedItemData;
     if (!currentDraggedItem) {
       const instanceIdFromDataTransfer = e.dataTransfer.getData('application/pumptrack-instance-id') || e.dataTransfer.getData('text/plain');
       const itemToRemoveFromSchedule = scheduledItems.find(si => si.instanceId === instanceIdFromDataTransfer);
@@ -336,16 +344,16 @@ export default function SchedulePage() {
     }
 
     if (currentDraggedItem.type !== 'scheduled') {
-      setDraggedItemData(null); 
+      setDraggedItemData(null);
       return;
     }
 
     const itemToRemoveFromSchedule = currentDraggedItem.item;
     setScheduledItems(prev => prev.filter(item => item.instanceId !== itemToRemoveFromSchedule.instanceId));
     toast({ title: "Pump Unscheduled", description: `${itemToRemoveFromSchedule.serialNumber || itemToRemoveFromSchedule.model} removed from schedule.` });
-    
+
     setSelectedPlannableItemIds([]);
-    setDraggedItemData(null); 
+    setDraggedItemData(null);
   }, [draggedItemData, toast, scheduledItems]);
 
   const removeFromSchedule = useCallback((instanceIdToRemove: string) => {
@@ -364,10 +372,23 @@ export default function SchedulePage() {
   }, [toast]);
 
 
-  const handleOpenDetailsModal = useCallback((pump: Pump) => { 
+  const handleOpenDetailsModal = useCallback((pump: Pump) => {
     setSelectedPumpForDetails(pump);
     setIsDetailsModalOpen(true);
   }, []);
+  
+  const handleOpenGroupDetailsModal = useCallback((model: string, pumpsInGroup: Pump[]) => {
+    // This function can be passed to GroupedKanbanCard if needed
+    // For now, it's a placeholder. A GroupedPumpDetailsModal for plannable items could be created.
+    console.log(`Open group details for model ${model} with ${pumpsInGroup.length} pumps`);
+    // Example: Open the first pump's details, or implement a specific group modal
+    if (pumpsInGroup.length > 0) {
+        // Find the PlannablePump equivalent to pass to modal
+        const plannableEquivalent = plannableItems.find(pi => pi.id === pumpsInGroup[0].id);
+        if(plannableEquivalent) handleOpenDetailsModal(plannableEquivalent);
+    }
+  }, [plannableItems, handleOpenDetailsModal]);
+
 
   const handleCloseDetailsModal = useCallback(() => {
     setIsDetailsModalOpen(false);
@@ -383,11 +404,11 @@ export default function SchedulePage() {
     try {
         const savedPump = await pumpService.updatePumpWithActivityLog(updatedPump.id, updatedPump, originalPump);
         setInitialPumps(prev => prev.map(p => p.id === savedPump.id ? savedPump : p));
-        
-        setScheduledItems(prevScheduled => prevScheduled.map(sp => 
-            sp.id === savedPump.id ? { 
-              ...sp, 
-              ...savedPump, 
+
+        setScheduledItems(prevScheduled => prevScheduled.map(sp =>
+            sp.id === savedPump.id ? {
+              ...sp,
+              ...savedPump,
               daysPerUnit: savedPump.estimatedBuildTimeDays !== undefined ? savedPump.estimatedBuildTimeDays : 1.5
             } : sp
         ));
@@ -403,9 +424,9 @@ export default function SchedulePage() {
     try {
       const addedPumpsPromises = newPumpsData.map(pumpData => pumpService.addPumpWithActivityLog(pumpData));
       const successfullyAddedPumps = await Promise.all(addedPumpsPromises);
-      
+
       setInitialPumps(prev => [...successfullyAddedPumps, ...prev]);
-      
+
       if (successfullyAddedPumps.length === 1) {
         toast({ title: "Pump Added", description: `${successfullyAddedPumps[0].serialNumber || 'New Pump'} added to schedule planning.` });
       } else if (successfullyAddedPumps.length > 1) {
@@ -416,9 +437,41 @@ export default function SchedulePage() {
       toast({ variant: "destructive", title: "Add Failed", description: "Could not add new pump(s)." });
     } finally {
       setIsLoading(false);
-      setIsAddPumpModalOpen(false); 
+      setIsAddPumpModalOpen(false);
     }
   }, [toast]);
+
+  const handleTogglePlannableItemsViewMode = useCallback(() => {
+    setPlannableItemsViewMode(prevMode => {
+      const newMode = prevMode === 'default' ? 'condensed' : 'default';
+      if (newMode === 'default') {
+        setExplodedPlannableModels(new Set());
+      }
+      return newMode;
+    });
+  }, []);
+
+  const handleToggleExplodePlannableModel = useCallback((model: string) => {
+    setExplodedPlannableModels(prev => {
+      const newExploded = new Set(prev);
+      if (newExploded.has(model)) {
+        newExploded.delete(model);
+      } else {
+        newExploded.add(model);
+      }
+      return newExploded;
+    });
+  }, []);
+
+  const groupedPlannableItemsByModel = useMemo(() => {
+    return filteredPlannableItems.reduce((acc, pump) => {
+      if (!acc[pump.model]) {
+        acc[pump.model] = [];
+      }
+      acc[pump.model].push(pump);
+      return acc;
+    }, {} as Record<string, PlannablePump[]>);
+  }, [filteredPlannableItems]);
 
 
   const modelColors = PUMP_MODELS.reduce((acc, model, index) => {
@@ -434,7 +487,7 @@ export default function SchedulePage() {
   }, {} as Record<string, string>);
 
   const getColorForModelOnCalendar = (model: string) => modelColors[model] || 'bg-muted/70 border-muted-foreground';
-  
+
   const allPumpModels = PUMP_MODELS;
   const allCustomerNames = CUSTOMER_NAMES;
   const allPriorities = PRIORITY_LEVELS;
@@ -449,11 +502,32 @@ export default function SchedulePage() {
     <Card>
       <CardHeader>
         <div className="flex flex-col gap-y-2">
-            <div className="flex flex-wrap items-center gap-x-4">
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
               <CardTitle>Pumps to Schedule</CardTitle>
               <Button onClick={() => setIsAddPumpModalOpen(true)} size="sm" className="shrink-0">
                 <PlusCircle className="mr-2 h-4 w-4" /> Add Pump(s)
               </Button>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div className="flex items-center space-x-1">
+                      <Switch
+                        id="plannable-view-mode-toggle"
+                        checked={plannableItemsViewMode === 'condensed'}
+                        onCheckedChange={handleTogglePlannableItemsViewMode}
+                        className="h-4 w-7 data-[state=checked]:bg-primary data-[state=unchecked]:bg-input [&>span]:h-3 [&>span]:w-3 [&>span]:data-[state=checked]:translate-x-3 [&>span]:data-[state=unchecked]:translate-x-0.5"
+                        aria-label="Toggle grouped view for plannable pumps"
+                      />
+                      <Label htmlFor="plannable-view-mode-toggle" className="text-xs cursor-pointer select-none">
+                        Group
+                      </Label>
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom" className="text-xs py-1 px-2">
+                    <p>Toggle Grouped View</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             </div>
             <CardDescription className="text-sm text-muted-foreground text-left">
               Drag pumps from this list to the calendar. Use Ctrl/Meta+Click to select multiple.
@@ -461,7 +535,7 @@ export default function SchedulePage() {
           </div>
       </CardHeader>
       <CardContent>
-        <ScrollArea 
+        <ScrollArea
           className="h-[400px] border rounded-md p-2"
           onDrop={handleDropOnPlannableList}
           onDragOver={handleDragOver}
@@ -470,19 +544,93 @@ export default function SchedulePage() {
              <p className="text-center p-4 text-muted-foreground">Loading plannable pumps...</p>
           ) : filteredPlannableItems.length === 0 ? (
             <p className="text-center p-4 text-muted-foreground">No plannable items match filters or all are scheduled.</p>
-          ) : (
+          ) : plannableItemsViewMode === 'default' ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 p-1">
               {filteredPlannableItems.map(item => (
                 <SchedulePumpCard
                   key={item.id}
-                  pump={item} 
+                  pump={item}
                   isSelected={selectedPlannableItemIds.includes(item.id)}
                   onCardClick={handlePlannableItemClick}
                   onDragStart={(e) => handleDragStartPlannableItem(e, item)}
-                  onDragEnd={handleDragEnd} 
+                  onDragEnd={handleDragEnd}
                   onOpenDetailsModal={() => handleOpenDetailsModal(item)}
                 />
               ))}
+            </div>
+          ) : ( // Condensed View
+            <div className="space-y-3 p-1">
+              {Object.entries(groupedPlannableItemsByModel).map(([model, pumpsInGroup]) => {
+                if (pumpsInGroup.length === 0) return null;
+
+                if (explodedPlannableModels.has(model)) {
+                  return (
+                    <div key={model} className="space-y-2 py-2 rounded-md border border-dashed border-primary/30 bg-primary/5 p-2">
+                       <Button
+                          variant="link"
+                          size="sm"
+                          onClick={() => handleToggleExplodePlannableModel(model)}
+                          className="text-primary px-1 py-0 h-auto text-xs hover:underline mb-1"
+                        >
+                          {model} ({pumpsInGroup.length}) - Collapse
+                        </Button>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 p-1">
+                        {pumpsInGroup.map(pump => (
+                          <SchedulePumpCard
+                            key={pump.id}
+                            pump={pump}
+                            isSelected={selectedPlannableItemIds.includes(pump.id)}
+                            onCardClick={handlePlannableItemClick}
+                            onDragStart={(e) => handleDragStartPlannableItem(e, pump)}
+                            onDragEnd={handleDragEnd}
+                            onOpenDetailsModal={() => handleOpenDetailsModal(pump)}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  );
+                } else if (pumpsInGroup.length > 1) {
+                  return (
+                    <GroupedKanbanCard
+                      key={model}
+                      model={model}
+                      pumpsInGroup={pumpsInGroup}
+                      onDragStartCustomerGroup={(e, pumpsToDragFromGroupedCard: Pump[]) => {
+                        const plannablePumpsToDrag = pumpsToDragFromGroupedCard
+                          .map(p => filteredPlannableItems.find(item => item.id === p.id))
+                          .filter((p): p is PlannablePump => !!p);
+
+                        if (plannablePumpsToDrag.length > 0) {
+                          e.dataTransfer.setData('text/plain', plannablePumpsToDrag[0].id);
+                          e.dataTransfer.effectAllowed = 'move';
+                          const targetElement = e.currentTarget as HTMLElement;
+                          if (targetElement) targetElement.style.opacity = '0.5';
+                          targetElement.addEventListener('dragend', () => targetElement.style.opacity = '1', { once: true });
+
+
+                          setDraggedItemData({ type: 'plannable-batch', items: plannablePumpsToDrag });
+                          setSelectedPlannableItemIds(plannablePumpsToDrag.map(i => i.id));
+                        }
+                      }}
+                      onOpenGroupDetailsModal={() => handleOpenGroupDetailsModal(model, pumpsInGroup)}
+                      onToggleExplode={() => handleToggleExplodePlannableModel(model)}
+                    />
+                  );
+                } else { // Single pump in this "group"
+                  const singlePump = pumpsInGroup[0];
+                  return (
+                       <SchedulePumpCard
+                        key={singlePump.id}
+                        pump={singlePump}
+                        isSelected={selectedPlannableItemIds.includes(singlePump.id)}
+                        onCardClick={handlePlannableItemClick}
+                        onDragStart={(e) => handleDragStartPlannableItem(e, singlePump)}
+                        onDragEnd={handleDragEnd}
+                        onOpenDetailsModal={() => handleOpenDetailsModal(singlePump)}
+                      />
+                  );
+                }
+              })}
             </div>
           )}
         </ScrollArea>
@@ -520,7 +668,7 @@ export default function SchedulePage() {
                 className={cn(
                   "border rounded-sm p-1 text-xs relative flex flex-col bg-background hover:bg-muted/30 transition-colors",
                   date.getMonth() !== new Date().getMonth() && "bg-muted/20 text-muted-foreground/60",
-                  "min-h-[8rem]" 
+                  "min-h-[8rem]"
                 )}
                 onDragOver={handleDragOver}
                 onDrop={(e) => handleDropOnCalendar(e, dayIndex)}
@@ -528,20 +676,20 @@ export default function SchedulePage() {
                 onDragLeave={(e) => { e.currentTarget.classList.remove('bg-primary/10', 'border-primary'); }}
               >
                 <div className={cn("font-medium pb-0.5 text-right", date.toDateString() === new Date().toDateString() && "text-primary font-bold")}>{date.getDate()}</div>
-                <ScrollArea className="flex-grow space-y-0.5 overflow-y-auto"> 
+                <ScrollArea className="flex-grow space-y-0.5 overflow-y-auto">
                   {itemsStartingThisDay.map(item => (
                      <div
                         key={item.instanceId}
                         draggable={true}
                         onDragStart={(e) => handleDragStartScheduledItem(e, item)}
-                        onDragEnd={handleDragEnd} 
+                        onDragEnd={handleDragEnd}
                         title={`${item.model} - ${item.serialNumber || 'N/A'}\nCustomer: ${item.customer}\nPO: ${item.poNumber}\nSchedule Block: ${item.duration} days`}
                         className={cn(
                           "text-[10px] p-1 rounded mb-0.5 cursor-grab active:cursor-grabbing text-primary-foreground leading-tight border select-none",
                           getColorForModelOnCalendar(item.model),
                           "overflow-hidden transition-transform hover:scale-105"
                         )}
-                        style={{ minHeight: '1.4rem' }} 
+                        style={{ minHeight: '1.4rem' }}
                       >
                         <p className="font-semibold truncate">{item.model}</p>
                         <p className="truncate text-xs">{item.serialNumber || 'N/A'}</p>
@@ -593,7 +741,7 @@ export default function SchedulePage() {
         availablePONumbers={allPONumbers}
         availablePriorities={allPriorities.map(p => ({label: p.label, value: p.value}))}
       />
-      
+
       <main className="flex-grow overflow-hidden p-4 md:p-6 bg-background text-foreground">
         <div className="mb-6">
           <div className="flex flex-wrap gap-x-4 gap-y-2 text-sm text-muted-foreground">
@@ -609,14 +757,16 @@ export default function SchedulePage() {
       </main>
 
       <AddPumpForm isOpen={isAddPumpModalOpen} onClose={() => setIsAddPumpModalOpen(false)} onAddPump={handleAddPumps} />
-      
-      <PumpDetailsModal 
-        isOpen={isDetailsModalOpen} 
-        onClose={handleCloseDetailsModal} 
-        pump={selectedPumpForDetails} 
-        onUpdatePump={handleUpdatePump} 
+
+      <PumpDetailsModal
+        isOpen={isDetailsModalOpen}
+        onClose={handleCloseDetailsModal}
+        pump={selectedPumpForDetails}
+        onUpdatePump={handleUpdatePump}
       />
     </div>
   );
 }
 
+
+    
