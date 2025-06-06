@@ -298,14 +298,14 @@ export default function HomePage() {
 
   if (isLoading) {
     return (
-      <div className="flex flex-col h-full items-center justify-center">
-        <p>Loading pump data...</p> 
+      <div className="flex flex-col h-full items-center justify-center glass-board-container min-h-screen">
+        <p className="text-lg text-white">Loading pump data...</p> 
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="glass-board-container flex flex-col min-h-screen">
       <EnhancedHeader
         title="PumpTrack Workflow"
         // showAddPump is removed
@@ -321,7 +321,10 @@ export default function HomePage() {
         availablePONumbers={allPONumbers}
         availablePriorities={allPriorities.map(p => ({label: p.label, value: p.value}))}
       />
-      <main className="flex-grow overflow-hidden">
+      <main 
+        className="flex-grow overflow-hidden" 
+        style={{ paddingTop: 'var(--header-height-value)' }}
+      >
         <KanbanBoard
           pumps={filteredPumps}
           columnViewModes={columnViewModes}

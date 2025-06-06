@@ -52,6 +52,8 @@ body {
     --sidebar-accent-foreground: 0 0% 10%; /* Dark text */
     --sidebar-border: 210 100% 20%; /* Slightly lighter navy for borders within sidebar */
     --sidebar-ring: 38 92% 65%; /* Lighter orange for focus in sidebar */
+
+    --header-height-value: 88px; /* Define header height */
   }
 }
 
@@ -128,10 +130,10 @@ body {
 
 /* Glassomorphic Utility Classes */
 .glass-board-container {
-  @apply flex gap-6 p-6 overflow-x-auto;
+  @apply flex gap-6 p-0 overflow-x-auto; /* p-6 removed, p-0 or controlled by children */
   background: var(--glass-bg-gradient);
   position: relative;
-  height: calc(100vh - var(--header-height) - 2rem);
+  min-height: 100vh; /* Changed from fixed height calc */
 }
 
 .glass-board-container::before {

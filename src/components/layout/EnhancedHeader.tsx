@@ -63,13 +63,16 @@ export function EnhancedHeader({
 
   return (
     <TooltipProvider>
-      <div className="bg-card p-4 shadow-md sticky top-0 z-20">
+      <div 
+        className="p-4 sticky top-0 z-20 bg-transparent flex items-center"
+        style={{ height: 'var(--header-height-value)' }}
+      >
         <div className="container mx-auto flex flex-col lg:flex-row items-center justify-between gap-4">
           {/* Left Group: Mobile Trigger, Title, Search, Filters */}
           <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
             {isMobile && <SidebarTrigger className="h-7 w-7" />}
             
-            <h1 className="text-xl sm:text-2xl font-bold text-primary whitespace-nowrap">{title}</h1>
+            <h1 className="text-xl sm:text-2xl font-bold text-glass-text-primary whitespace-nowrap">{title}</h1>
             
             <div className="relative min-w-[150px] sm:min-w-[200px] max-w-[300px]">
               <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -78,7 +81,7 @@ export function EnhancedHeader({
                 placeholder="Search..."
                 value={searchTerm}
                 onChange={(e) => onSearchChange(e.target.value)}
-                className="pl-10 w-full h-9 text-sm"
+                className="pl-10 w-full h-9 text-sm bg-card/80 backdrop-blur-sm border-glass-border text-glass-text-primary placeholder:text-glass-text-muted focus:ring-glass-accent-purple"
                 aria-label="Search all fields"
               />
             </div>
@@ -92,6 +95,7 @@ export function EnhancedHeader({
                         variant="outline"
                         size="sm"
                         aria-label={activeFilterCount > 0 ? `Filters (${activeFilterCount} Applied), open menu` : "Open filters menu"}
+                        className="glass-button"
                       >
                         <Settings2 className="mr-1 sm:mr-2 h-4 w-4" />
                         <span className="hidden sm:inline">Filters</span>
@@ -99,13 +103,17 @@ export function EnhancedHeader({
                       </Button>
                     </DropdownMenuTrigger>
                   </TooltipTrigger>
-                  <TooltipContent>
+                  <TooltipContent className="glass-tooltip">
                     <p>Open filters menu</p>
                   </TooltipContent>
                 </Tooltip>
-                <DropdownMenuContent className="w-72 p-4" align="start">
-                  <DropdownMenuLabel>Filter Pumps</DropdownMenuLabel>
-                  <DropdownMenuSeparator />
+                <DropdownMenuContent 
+                    className="w-72 p-4 bg-glass-surface backdrop-blur-md border-glass-border text-glass-text-primary" 
+                    align="start"
+                    style={{ background: 'var(--glass-surface-active)', backdropFilter: 'blur(16px)' }}
+                >
+                  <DropdownMenuLabel className="text-glass-text-primary">Filter Pumps</DropdownMenuLabel>
+                  <DropdownMenuSeparator className="bg-glass-border" />
                   <PumpFilterControls
                     filters={filters}
                     onFiltersChange={onFiltersChange}
@@ -126,13 +134,13 @@ export function EnhancedHeader({
                       variant="ghost"
                       size="icon"
                       onClick={handleClearFilters}
-                      className="h-9 w-9"
+                      className="h-9 w-9 glass-button"
                       aria-label="Clear all filters"
                     >
                       <FilterX className="h-4 w-4" />
                     </Button>
                   </TooltipTrigger>
-                  <TooltipContent>
+                  <TooltipContent className="glass-tooltip">
                     <p>Clear all filters</p>
                   </TooltipContent>
                 </Tooltip>
