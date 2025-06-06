@@ -51,13 +51,13 @@ export function GroupedKanbanCard({
   };
 
   return (
-    <Card 
-      className="mb-3 shadow-md bg-card cursor-pointer w-[16.75rem]"
+    <Card
+      className="glass-card w-[16.75rem] group"
       onDoubleClick={handleDoubleClick}
       aria-label={`Grouped pumps for model ${model}, total ${totalQuantity}. Double-click to see details.`}
     >
-      <CardHeader className="p-3 flex flex-row items-center justify-between">
-        <CardTitle className="text-base font-semibold">
+      <CardHeader className="glass-card-header">
+        <CardTitle className="glass-card-title text-base">
           {model} (Total: {totalQuantity})
         </CardTitle>
         {onToggleExplode && (
@@ -67,33 +67,38 @@ export function GroupedKanbanCard({
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-7 w-7 text-muted-foreground hover:text-primary"
+                  className="glass-button h-7 w-7 opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity"
                   onClick={handleExplodeClick}
                   aria-label="Show individual pumps"
                 >
-                  <Layers className="h-4 w-4" />
+                  <Layers className="h-4 w-4" style={{color: 'var(--glass-accent-blue)'}} />
                 </Button>
               </TooltipTrigger>
-              <TooltipContent>
+              <TooltipContent className="glass-button">
                 <p>Show individual pumps</p>
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
         )}
       </CardHeader>
-      <CardContent className="p-3 pt-0 flex flex-wrap gap-2">
+      <CardContent className="glass-card-content flex flex-wrap gap-2">
         {Object.entries(customerCounts).map(([customer, count]) => (
           <Button
             key={customer}
             variant="secondary"
             size="sm"
-            className="text-xs h-auto py-1 px-2 cursor-grab active:cursor-grabbing"
+            className="glass-button text-xs h-auto py-1 px-2 cursor-grab active:cursor-grabbing"
+            style={{
+              background: 'var(--glass-surface-active)',
+              color: 'var(--glass-text-primary)',
+              border: '1px solid var(--glass-border)'
+            }}
             draggable={true}
             onDragStart={(e) => handleDragStart(e, customer)}
-            onDragEnd={onDragEnd} // Pass onDragEnd to the button
+            onDragEnd={onDragEnd}
             aria-label={`Drag ${count} ${model} pumps for customer ${customer}`}
           >
-            <span className="mr-1">•</span> {customer}: {count}
+            <span className="mr-1" style={{color: 'var(--glass-accent-blue)'}}>•</span> {customer}: {count}
           </Button>
         ))}
       </CardContent>

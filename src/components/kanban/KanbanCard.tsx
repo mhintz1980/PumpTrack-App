@@ -57,18 +57,19 @@ export const KanbanCard = React.memo(function KanbanCard({
       onDragStart={isDraggable ? (e) => onDragStart(e, pump.id) : undefined}
       onClick={onCardClick}
       className={cn(
-        "mb-3 shadow-md hover:shadow-lg hover:scale-[1.02] transition-all duration-150 ease-in-out bg-card group cursor-pointer",
-        priorityClass(),
-        isSelected && "ring-2 ring-primary ring-offset-1"
+        "glass-card group",
+        pump.priority === 'high' && "priority-high",
+        pump.priority === 'urgent' && "priority-urgent",
+        isSelected && "selected"
       )}
       aria-label={`Pump Model: ${pump.model}, Customer: ${pump.customer}, S/N: ${displaySerialNumber}, Priority: ${pump.priority || 'normal'}`}
     >
-      <CardHeader className="p-3 flex flex-row items-start justify-between space-y-0 pb-1">
+      <CardHeader className="glass-card-header">
         <div className="flex-grow pr-2">
-          <CardTitle className="text-sm font-semibold leading-none">
+          <CardTitle className="glass-card-title">
             {pump.model} - {pump.customer}
           </CardTitle>
-          <CardDescription className="text-xs text-muted-foreground mt-1">
+          <CardDescription className="glass-card-description">
             S/N: {displaySerialNumber}
           </CardDescription>
         </div>
@@ -80,14 +81,14 @@ export const KanbanCard = React.memo(function KanbanCard({
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-7 w-7 text-muted-foreground hover:text-primary opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity"
+                    className="glass-button h-7 w-7 opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity"
                     onClick={handleEyeClick}
                     aria-label="View pump details"
                   >
                     <Eye className="h-4 w-4" />
                   </Button>
                 </TooltipTrigger>
-                <TooltipContent>
+                <TooltipContent className="glass-button">
                   <p>View pump details</p>
                 </TooltipContent>
               </Tooltip>
@@ -97,11 +98,11 @@ export const KanbanCard = React.memo(function KanbanCard({
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <div className="cursor-grab" aria-label="Drag pump">
-                    <GripVertical className="h-5 w-5 text-muted-foreground" />
+                  <div className="cursor-grab glass-drag-handle" aria-label="Drag pump">
+                    <GripVertical className="h-5 w-5" />
                   </div>
                 </TooltipTrigger>
-                <TooltipContent>
+                <TooltipContent className="glass-button">
                   <p>Drag pump</p>
                 </TooltipContent>
               </Tooltip>
@@ -109,7 +110,7 @@ export const KanbanCard = React.memo(function KanbanCard({
           )}
         </div>
       </CardHeader>
-      <CardContent className="p-3 pt-0 text-xs text-muted-foreground space-y-0.5">
+      <CardContent className="glass-card-content">
         {pump.estimatedBuildTimeDays !== undefined && (
           <p>
             Build Time: {pump.estimatedBuildTimeDays} days

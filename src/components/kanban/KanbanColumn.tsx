@@ -64,20 +64,20 @@ export function KanbanColumn({
 
   return (
     <div
-      className="flex-shrink-0 w-[18.75rem] bg-secondary/50 rounded-lg shadow-sm h-full flex flex-col"
+      className="glass-column"
       onDragOver={onDragOver}
       onDrop={(e) => onDrop(e, stage.id)}
       aria-labelledby={`stage-title-${stage.id}`}
     >
-      <div className="p-3 border-b border-border flex items-center justify-between sticky top-0 bg-secondary/50 z-10 rounded-t-lg">
+      <div className="glass-column-header">
         <div className="flex items-center gap-2">
-          <Icon className="h-5 w-5 text-primary" />
-          <h2 id={`stage-title-${stage.id}`} className="text-md font-semibold text-foreground">
+          <Icon className="h-5 w-5 glass-column-icon" />
+          <h2 id={`stage-title-${stage.id}`} className="text-md font-semibold glass-column-title">
             {stage.title}
           </h2>
         </div>
         <div className="flex items-center gap-2">
-          <span className="text-xs font-medium text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
+          <span className="text-xs font-medium glass-column-count px-2 py-0.5 rounded-full">
             {pumps.length}
           </span>
           <TooltipProvider>
@@ -88,24 +88,24 @@ export function KanbanColumn({
                     id={switchId}
                     checked={viewMode === 'condensed'}
                     onCheckedChange={onToggleViewMode}
-                    className="h-4 w-7 data-[state=checked]:bg-primary data-[state=unchecked]:bg-input [&>span]:h-3 [&>span]:w-3 [&>span]:data-[state=checked]:translate-x-3 [&>span]:data-[state=unchecked]:translate-x-0.5"
+                    className="glass-switch h-4 w-7 [&>span]:h-3 [&>span]:w-3 [&>span]:data-[state=checked]:translate-x-3 [&>span]:data-[state=unchecked]:translate-x-0.5"
                     aria-label={`Toggle grouped view for ${stage.title}`}
                   />
-                   <Label htmlFor={switchId} className="text-xs cursor-pointer select-none">
+                   <Label htmlFor={switchId} className="text-xs cursor-pointer select-none" style={{color: 'var(--glass-text-secondary)'}}>
                     Group
                   </Label>
                 </div>
               </TooltipTrigger>
-              <TooltipContent side="bottom" className="text-xs py-1 px-2">
+              <TooltipContent side="bottom" className="text-xs py-1 px-2 glass-button">
                 <p>Toggle Grouped View</p>
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
         </div>
       </div>
-      <ScrollArea className="flex-grow p-4 kanban-column-content">
+      <ScrollArea className="flex-grow p-4 glass-scrollbar">
         {pumps.length === 0 ? (
-          <div className="flex items-center justify-center h-full text-sm text-muted-foreground italic">
+          <div className="glass-empty-state">
             No pumps in this stage.
           </div>
         ) : viewMode === 'default' ? (

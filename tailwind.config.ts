@@ -82,11 +82,42 @@ export default {
   				to: {
   					height: '0'
   				}
+  			},
+  			'glass-glow': {
+  				'0%': {
+  					boxShadow: '0 0 20px rgba(0, 212, 255, 0.2), 0 8px 32px rgba(0, 0, 0, 0.3)'
+  				},
+  				'100%': {
+  					boxShadow: '0 0 30px rgba(0, 212, 255, 0.4), 0 12px 40px rgba(0, 0, 0, 0.3)'
+  				}
+  			},
+  			'glass-float': {
+  				'0%, 100%': {
+  					transform: 'translateY(0px)'
+  				},
+  				'50%': {
+  					transform: 'translateY(-2px)'
+  				}
   			}
   		},
   		animation: {
   			'accordion-down': 'accordion-down 0.2s ease-out',
-  			'accordion-up': 'accordion-up 0.2s ease-out'
+  			'accordion-up': 'accordion-up 0.2s ease-out',
+  			'glass-glow': 'glass-glow 2s ease-in-out infinite alternate',
+  			'glass-float': 'glass-float 3s ease-in-out infinite'
+  		},
+  		backdropBlur: {
+  			'glass': '12px',
+  			'glass-subtle': '4px',
+  			'glass-intense': '16px'
+  		},
+  		boxShadow: {
+  			'glass': '0 8px 32px rgba(0, 0, 0, 0.3), 0 4px 16px rgba(0, 0, 0, 0.2)',
+  			'glass-hover': '0 12px 40px rgba(0, 212, 255, 0.2), 0 8px 24px rgba(0, 0, 0, 0.3)',
+  			'glass-sm': '0 2px 8px rgba(0, 0, 0, 0.3)',
+  			'glass-lg': '0 16px 48px rgba(0, 0, 0, 0.4), 0 8px 24px rgba(0, 0, 0, 0.3)',
+  			'glass-glow': '0 0 20px rgba(0, 212, 255, 0.2), 0 8px 32px rgba(0, 0, 0, 0.3)',
+  			'glass-glow-intense': '0 0 30px rgba(0, 212, 255, 0.4), 0 12px 40px rgba(0, 0, 0, 0.3)'
   		}
   	}
   },

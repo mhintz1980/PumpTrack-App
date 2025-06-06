@@ -85,7 +85,7 @@ export function KanbanBoard({
   };
 
   return (
-    <div className="flex gap-4 p-4 overflow-x-auto h-[calc(100vh-var(--header-height)-2rem)]" style={{'--header-height': '88px'} as React.CSSProperties}>
+    <div className="glass-board-container" style={{'--header-height': '88px'} as React.CSSProperties}>
       {STAGES.map((stage) => (
         <KanbanColumn
           key={stage.id}
