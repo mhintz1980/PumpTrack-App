@@ -98,7 +98,7 @@ export function PumpDetailsModal({ isOpen, onClose, pump, onUpdatePump }: PumpDe
   };
 
   const currentStageDetails = STAGES.find(s => s.id === pump.currentStage);
-  const relevantStagesForPowderCoatFields: StageId[] = ['fabrication', 'assembly', 'powder-coat', 'testing'];
+  const relevantStagesForPowderCoatFields: StageId[] = ['fabrication', 'assembly', 'powder-coat', 'testing', 'shipped']; // Also show for shipped
   const showPowderCoatFields = relevantStagesForPowderCoatFields.includes(pump.currentStage);
 
   const pumpModelOptions = PUMP_MODELS.map(m => ({ label: m, value: m }));
@@ -111,16 +111,17 @@ export function PumpDetailsModal({ isOpen, onClose, pump, onUpdatePump }: PumpDe
     <Dialog open={isOpen} onOpenChange={(open) => {if (!open) onClose()}}>
       <DialogContent className="sm:max-w-2xl max-h-[90vh] flex flex-col">
         <DialogHeader>
-          <DialogTitle>Pump Details: {pump.serialNumber || 'N/A'}</DialogTitle>
+          <DialogTitle>Pump Details: {pump.serialNumber || pump.model || 'N/A'}</DialogTitle>
           <DialogDescription>
             Currently in stage: <span className="font-semibold text-primary">{currentStageDetails?.title || pump.currentStage}</span>.
             View or edit pump information below.
           </DialogDescription>
         </DialogHeader>
-        <ScrollArea className="flex-grow pr-6 -mr-6 my-4">
+        <ScrollArea className="flex-grow my-4"> {/* Removed pr-6 -mr-6 */}
           <Form {...form}>
-            <form id="pumpDetailsForm" onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 py-2">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <form id="pumpDetailsForm" onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 px-1 py-2"> {/* Added px-1 for slight padding from scrollbar */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
+                {/* Left Column */}
                 <FormField
                   control={form.control}
                   name="model"
@@ -172,7 +173,7 @@ export function PumpDetailsModal({ isOpen, onClose, pump, onUpdatePump }: PumpDe
                     </FormItem>
                   )}
                 />
-                <FormField
+                 <FormField
                   control={form.control}
                   name="poNumber"
                   render={({ field }) => (
@@ -185,7 +186,7 @@ export function PumpDetailsModal({ isOpen, onClose, pump, onUpdatePump }: PumpDe
                     </FormItem>
                   )}
                 />
-                 <FormField
+                <FormField
                     control={form.control}
                     name="priority"
                     render={({ field }) => (
@@ -225,7 +226,7 @@ export function PumpDetailsModal({ isOpen, onClose, pump, onUpdatePump }: PumpDe
                     </FormItem>
                   )}
                 />
-                 {showPowderCoatFields && (
+                {showPowderCoatFields && (
                   <>
                     <FormField
                       control={form.control}
@@ -269,6 +270,8 @@ export function PumpDetailsModal({ isOpen, onClose, pump, onUpdatePump }: PumpDe
                   </>
                 )}
               </div>
+              
+              {/* Notes - Full Width Below Columns */}
               <FormField
                 control={form.control}
                 name="notes"
@@ -282,6 +285,7 @@ export function PumpDetailsModal({ isOpen, onClose, pump, onUpdatePump }: PumpDe
                   </FormItem>
                 )}
               />
+              {/* AiActions remains below Notes */}
               <AiActions pump={pump} />
             </form>
           </Form>
@@ -300,3 +304,4 @@ export function PumpDetailsModal({ isOpen, onClose, pump, onUpdatePump }: PumpDe
     </Dialog>
   );
 }
+
