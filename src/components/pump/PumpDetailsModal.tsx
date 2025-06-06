@@ -90,7 +90,6 @@ export function PumpDetailsModal({ isOpen, onClose, pump, onUpdatePump }: PumpDe
       powderCoatColor: data.powderCoatColor?.trim() === '' ? undefined : data.powderCoatColor,
       priority: data.priority,
       estimatedBuildTimeDays: data.estimatedBuildTimeDays === null ? undefined : data.estimatedBuildTimeDays,
-      // actualDurationDays is not edited here
       notes: data.notes?.trim() === '' ? undefined : data.notes,
     };
     onUpdatePump(updatedPumpData);
@@ -118,9 +117,9 @@ export function PumpDetailsModal({ isOpen, onClose, pump, onUpdatePump }: PumpDe
             View or edit pump information below.
           </DialogDescription>
         </DialogHeader>
-        <ScrollArea className="flex-grow pr-6 -mr-6">
+        <ScrollArea className="flex-grow pr-6 -mr-6 my-4">
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 py-2">
+            <form id="pumpDetailsForm" onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 py-2">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
@@ -283,22 +282,20 @@ export function PumpDetailsModal({ isOpen, onClose, pump, onUpdatePump }: PumpDe
                   </FormItem>
                 )}
               />
-
               <AiActions pump={pump} />
-
-              <DialogFooter className="pt-4">
-                <DialogClose asChild>
-                  <Button type="button" variant="outline" onClick={onClose} disabled={isSubmitting}>
-                    Close
-                  </Button>
-                </DialogClose>
-                <Button type="submit" disabled={isSubmitting}>
-                  {isSubmitting ? 'Saving...' : 'Save Changes'}
-                </Button>
-              </DialogFooter>
             </form>
           </Form>
         </ScrollArea>
+        <DialogFooter className="pt-4 border-t">
+          <DialogClose asChild>
+            <Button type="button" variant="outline" onClick={onClose} disabled={isSubmitting}>
+              Close
+            </Button>
+          </DialogClose>
+          <Button type="submit" form="pumpDetailsForm" disabled={isSubmitting}>
+            {isSubmitting ? 'Saving...' : 'Save Changes'}
+          </Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
