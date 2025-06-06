@@ -116,7 +116,7 @@ export function PumpDetailsModal({ isOpen, onClose, pump, onUpdatePump }: PumpDe
             View or edit pump information below.
           </DialogDescription>
         </DialogHeader>
-        <ScrollArea className="flex-1 min-h-0"> 
+        <ScrollArea className="flex-1 min-h-0 overflow-y-auto"> 
           <Form {...form}>
             <form id="pumpDetailsForm" onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 px-6 py-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
@@ -309,3 +309,5 @@ export function PumpDetailsModal({ isOpen, onClose, pump, onUpdatePump }: PumpDe
     </Dialog>
   );
 }
+
+    
