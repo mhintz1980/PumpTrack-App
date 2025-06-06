@@ -187,65 +187,75 @@ export default function SchedulePage() {
 
 
   const handleDragStartPlannableItem = useCallback((e: React.DragEvent, item: PlannablePump) => {
-    e.stopPropagation();
-    e.dataTransfer.setData('text/plain', item.id);
+    // e.stopPropagation(); // Removed for potentially better event flow
+    e.dataTransfer.setData('text/plain', item.id); // Browser needs this to initiate drag
     e.dataTransfer.effectAllowed = 'move';
 
     const targetElement = e.currentTarget as HTMLElement;
     if (targetElement) {
       targetElement.style.opacity = '0.5';
+      // Add a one-time event listener to reset opacity on drag end for this specific element
+      const onDragEndHandler = () => {
+        targetElement.style.opacity = '1';
+        targetElement.removeEventListener('dragend', onDragEndHandler);
+      };
+      targetElement.addEventListener('dragend', onDragEndHandler);
     }
 
+    // Defer state update slightly to allow browser to capture drag image
     setTimeout(() => {
       if (selectedPlannableItemIds.includes(item.id) && selectedPlannableItemIds.length > 1) {
         const batchItems = plannableItems.filter(p => selectedPlannableItemIds.includes(p.id));
         setDraggedItemData({ type: 'plannable-batch', items: batchItems });
       } else {
         setDraggedItemData({ type: 'plannable-single', item });
-        setSelectedPlannableItemIds([item.id]);
+        setSelectedPlannableItemIds([item.id]); // Ensure selection even if not batching initially
       }
     }, 0);
   }, [selectedPlannableItemIds, plannableItems]);
 
 
   const handleDragStartScheduledItem = useCallback((e: React.DragEvent, item: ScheduledPump) => {
-    e.stopPropagation();
+    // e.stopPropagation(); // Removed
     e.dataTransfer.setData('application/pumptrack-instance-id', item.instanceId);
-    e.dataTransfer.setData('text/plain', item.instanceId);
+    e.dataTransfer.setData('text/plain', item.instanceId); // Fallback for text
     e.dataTransfer.effectAllowed = 'move';
 
     const targetElement = e.currentTarget as HTMLElement;
     if (targetElement) {
       targetElement.style.opacity = '0.5';
+       const onDragEndHandler = () => {
+        targetElement.style.opacity = '1';
+        targetElement.removeEventListener('dragend', onDragEndHandler);
+      };
+      targetElement.addEventListener('dragend', onDragEndHandler);
     }
-
+    // Defer state update
     setTimeout(() => {
       setDraggedItemData({ type: 'scheduled', item });
-    }, 0);
+    },0);
   }, []);
 
   const handleDragEnd = useCallback((e: React.DragEvent) => {
-    const draggedDOMElement = e.target instanceof HTMLElement ? e.target : (e.currentTarget as HTMLElement);
-    if (draggedDOMElement) {
-      draggedDOMElement.style.opacity = '1';
-    }
-    if (draggedItemData) {
-        setDraggedItemData(null);
-    }
-  }, [draggedItemData]);
+    // Opacity of the dragged element is handled by the specific listener in onDragStart functions
+    setDraggedItemData(null); // Always clear the dragged item data
+    // setSelectedPlannableItemIds([]); // Optionally clear selection, or keep for further actions
+  }, []);
 
 
   const handleDragOver = useCallback((e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
-    e.stopPropagation();
+    // e.stopPropagation(); // Usually not needed on dragOver for simple move
     e.dataTransfer.dropEffect = 'move';
   }, []);
 
   const handleDropOnCalendar = useCallback((e: React.DragEvent<HTMLDivElement>, targetDayIndex: number) => {
     e.preventDefault();
-    e.stopPropagation();
+    // e.stopPropagation(); // Prevent drop from bubbling if multiple drop zones are nested
 
-    const currentDraggedItem = draggedItemData;
+    const currentDraggedItem = draggedItemData; // Use state first
+    
+    // Fallback logic if draggedItemData is somehow null (e.g., state update issue)
     if (!currentDraggedItem) {
       const idFromDataTransfer = e.dataTransfer.getData('text/plain');
       const itemToScheduleFromPlannable = plannableItems.find(p => p.id === idFromDataTransfer);
@@ -260,7 +270,7 @@ export default function SchedulePage() {
           });
           toast({ title: "Pump Scheduled (Fallback)", description: `${itemToScheduleFromPlannable.serialNumber || itemToScheduleFromPlannable.model} added to schedule.` });
           setSelectedPlannableItemIds([]);
-          setDraggedItemData(null);
+          setDraggedItemData(null); // Clear state
           return;
       } else {
           const scheduledItemInstanceId = e.dataTransfer.getData('application/pumptrack-instance-id');
@@ -272,16 +282,14 @@ export default function SchedulePage() {
                 : si
             ).sort((a,b) => a.scheduledOnDayIndex - b.scheduledOnDayIndex));
             toast({ title: "Schedule Updated (Fallback)", description: `Rescheduled ${itemToMoveFromScheduled.serialNumber || itemToMoveFromScheduled.model}.` });
-            setDraggedItemData(null);
+            setDraggedItemData(null); // Clear state
             return;
           }
       }
-      setDraggedItemData(null);
+      setDraggedItemData(null); // Ensure cleared
       return;
     }
 
-    const dropTargetElement = e.currentTarget as HTMLElement;
-    dropTargetElement.classList.remove('bg-primary/10', 'border-primary');
 
     if (currentDraggedItem.type === 'plannable-single') {
       const itemToSchedule = currentDraggedItem.item;
@@ -320,31 +328,31 @@ export default function SchedulePage() {
     }
 
     setSelectedPlannableItemIds([]);
-    setDraggedItemData(null);
+    setDraggedItemData(null); // Important: clear after processing
   }, [draggedItemData, toast, plannableItems, scheduledItems]);
 
 
   const handleDropOnPlannableList = useCallback((e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
-    e.stopPropagation();
+    // e.stopPropagation();
 
     const currentDraggedItem = draggedItemData;
     if (!currentDraggedItem) {
+      // Fallback for unexpected null draggedItemData
       const instanceIdFromDataTransfer = e.dataTransfer.getData('application/pumptrack-instance-id') || e.dataTransfer.getData('text/plain');
       const itemToRemoveFromSchedule = scheduledItems.find(si => si.instanceId === instanceIdFromDataTransfer);
       if (itemToRemoveFromSchedule) {
         setScheduledItems(prev => prev.filter(item => item.instanceId !== itemToRemoveFromSchedule.instanceId));
         toast({ title: "Pump Unscheduled (Fallback)", description: `${itemToRemoveFromSchedule.serialNumber || itemToRemoveFromSchedule.model} removed from schedule.` });
-        setSelectedPlannableItemIds([]);
-        setDraggedItemData(null);
-        return;
       }
       setDraggedItemData(null);
       return;
     }
 
+
     if (currentDraggedItem.type !== 'scheduled') {
-      setDraggedItemData(null);
+       // Only 'scheduled' items can be dropped back here to be unscheduled.
+      setDraggedItemData(null); // Clear if it was a plannable item somehow dropped on itself.
       return;
     }
 
@@ -353,7 +361,7 @@ export default function SchedulePage() {
     toast({ title: "Pump Unscheduled", description: `${itemToRemoveFromSchedule.serialNumber || itemToRemoveFromSchedule.model} removed from schedule.` });
 
     setSelectedPlannableItemIds([]);
-    setDraggedItemData(null);
+    setDraggedItemData(null); // Clear after processing
   }, [draggedItemData, toast, scheduledItems]);
 
   const removeFromSchedule = useCallback((instanceIdToRemove: string) => {
@@ -378,7 +386,6 @@ export default function SchedulePage() {
   }, []);
   
   const handleOpenGroupDetailsModal = useCallback((model: string, pumpsInGroup: Pump[]) => {
-    console.log(`Open group details for model ${model} with ${pumpsInGroup.length} pumps`);
     if (pumpsInGroup.length > 0) {
         const plannableEquivalent = plannableItems.find(pi => pi.id === pumpsInGroup[0].id);
         if(plannableEquivalent) handleOpenDetailsModal(plannableEquivalent);
@@ -554,14 +561,14 @@ export default function SchedulePage() {
                 />
               ))}
             </div>
-          ) : ( // Condensed View
+          ) : ( 
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 p-1">
               {Object.entries(groupedPlannableItemsByModel).map(([model, pumpsInGroup]) => {
                 if (pumpsInGroup.length === 0) return null;
 
                 if (explodedPlannableModels.has(model)) {
                   return (
-                    <div key={model} className="space-y-2 py-2 rounded-md border border-dashed border-primary/30 bg-primary/5 p-2 col-span-full"> {/* Exploded groups take full width */}
+                    <div key={model} className="space-y-2 py-2 rounded-md border border-dashed border-primary/30 bg-primary/5 p-2 col-span-full">
                        <Button
                           variant="link"
                           size="sm"
@@ -597,22 +604,39 @@ export default function SchedulePage() {
                           .filter((p): p is PlannablePump => !!p);
 
                         if (plannablePumpsToDrag.length > 0) {
-                          e.dataTransfer.setData('text/plain', plannablePumpsToDrag[0].id);
-                          e.dataTransfer.effectAllowed = 'move';
+                          try {
+                            e.dataTransfer.setData('application/pumptrack-batch-drag', JSON.stringify(plannablePumpsToDrag.map(p => p.id)));
+                            e.dataTransfer.setData('text/plain', `Batch of ${plannablePumpsToDrag.length} ${model} pumps for ${plannablePumpsToDrag[0].customer}`);
+                            e.dataTransfer.effectAllowed = 'move';
+                          } catch (err) {
+                             console.error("Error setting dataTransfer for group drag:", err);
+                             return; 
+                          }
+                          
                           const targetElement = e.currentTarget as HTMLElement;
-                          if (targetElement) targetElement.style.opacity = '0.5';
-                          targetElement.addEventListener('dragend', () => targetElement.style.opacity = '1', { once: true });
-
-
-                          setDraggedItemData({ type: 'plannable-batch', items: plannablePumpsToDrag });
-                          setSelectedPlannableItemIds(plannablePumpsToDrag.map(i => i.id));
+                          if (targetElement) {
+                            targetElement.style.opacity = '0.5';
+                            // Add a one-time event listener to reset opacity
+                            const onGroupDragEndHandler = () => {
+                              targetElement.style.opacity = '1';
+                              targetElement.removeEventListener('dragend', onGroupDragEndHandler);
+                            };
+                            targetElement.addEventListener('dragend', onGroupDragEndHandler);
+                          }
+                          
+                          // Defer state update
+                          setTimeout(() => {
+                            setDraggedItemData({ type: 'plannable-batch', items: plannablePumpsToDrag });
+                            setSelectedPlannableItemIds(plannablePumpsToDrag.map(i => i.id));
+                          }, 0);
                         }
                       }}
+                      onDragEnd={handleDragEnd} // Pass handleDragEnd for subgroup buttons
                       onOpenGroupDetailsModal={() => handleOpenGroupDetailsModal(model, pumpsInGroup)}
                       onToggleExplode={() => handleToggleExplodePlannableModel(model)}
                     />
                   );
-                } else { // Single pump in this "group"
+                } else { 
                   const singlePump = pumpsInGroup[0];
                   return (
                        <SchedulePumpCard
@@ -678,7 +702,7 @@ export default function SchedulePage() {
                         key={item.instanceId}
                         draggable={true}
                         onDragStart={(e) => handleDragStartScheduledItem(e, item)}
-                        onDragEnd={handleDragEnd}
+                        onDragEnd={handleDragEnd} // Use global drag end
                         title={`${item.model} - ${item.serialNumber || 'N/A'}\nCustomer: ${item.customer}\nPO: ${item.poNumber}\nSchedule Block: ${item.duration} days`}
                         className={cn(
                           "text-[10px] p-1 rounded mb-0.5 cursor-grab active:cursor-grabbing text-primary-foreground leading-tight border select-none",
@@ -764,4 +788,3 @@ export default function SchedulePage() {
   );
 }
 
-    

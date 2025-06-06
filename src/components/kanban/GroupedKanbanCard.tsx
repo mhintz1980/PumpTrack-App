@@ -12,6 +12,7 @@ interface GroupedKanbanCardProps {
   model: string;
   pumpsInGroup: Pump[];
   onDragStartCustomerGroup: (event: React.DragEvent<HTMLButtonElement>, pumpsToDrag: Pump[]) => void;
+  onDragEnd?: (event: React.DragEvent<HTMLButtonElement>) => void; // Added onDragEnd prop
   onOpenGroupDetailsModal?: (model: string, pumpsInGroup: Pump[]) => void;
   onToggleExplode?: () => void;
 }
@@ -20,6 +21,7 @@ export function GroupedKanbanCard({
   model, 
   pumpsInGroup, 
   onDragStartCustomerGroup,
+  onDragEnd, // Consuming onDragEnd
   onOpenGroupDetailsModal,
   onToggleExplode,
 }: GroupedKanbanCardProps) {
@@ -85,9 +87,10 @@ export function GroupedKanbanCard({
             key={customer}
             variant="secondary"
             size="sm"
-            className="text-xs h-auto py-1 px-2 cursor-grab"
+            className="text-xs h-auto py-1 px-2 cursor-grab active:cursor-grabbing"
             draggable={true}
             onDragStart={(e) => handleDragStart(e, customer)}
+            onDragEnd={onDragEnd} // Pass onDragEnd to the button
             aria-label={`Drag ${count} ${model} pumps for customer ${customer}`}
           >
             <span className="mr-1">•</span> {customer}: {count}
