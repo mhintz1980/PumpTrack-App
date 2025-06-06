@@ -98,8 +98,7 @@ export function PumpDetailsModal({ isOpen, onClose, pump, onUpdatePump }: PumpDe
   };
 
   const currentStageDetails = STAGES.find(s => s.id === pump.currentStage);
-  // Always show Powder Coater and Powder Coat Color fields for layout consistency
-  const showPowderCoatFields = true; 
+  const showPowderCoatFields = true; // Always show for layout consistency
 
   const pumpModelOptions = PUMP_MODELS.map(m => ({ label: m, value: m }));
   const customerOptions = CUSTOMER_NAMES.map(c => ({ label: c, value: c }));
@@ -117,10 +116,12 @@ export function PumpDetailsModal({ isOpen, onClose, pump, onUpdatePump }: PumpDe
             View or edit pump information below.
           </DialogDescription>
         </DialogHeader>
-        <ScrollArea className="flex-grow my-4"> 
+        <ScrollArea className="flex-1 min-h-0"> {/* Changed className here */}
           <Form {...form}>
-            <form id="pumpDetailsForm" onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 px-1 py-2"> 
+            {/* Moved my-4 and px-1 py-2 to the form element */}
+            <form id="pumpDetailsForm" onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 my-4 px-1 py-2">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
+                {/* Model */}
                 <FormField
                   control={form.control}
                   name="model"
@@ -140,6 +141,7 @@ export function PumpDetailsModal({ isOpen, onClose, pump, onUpdatePump }: PumpDe
                     </FormItem>
                   )}
                 />
+                {/* Serial Number */}
                 <FormField
                   control={form.control}
                   name="serialNumber"
@@ -153,6 +155,7 @@ export function PumpDetailsModal({ isOpen, onClose, pump, onUpdatePump }: PumpDe
                     </FormItem>
                   )}
                 />
+                {/* Customer */}
                 <FormField
                   control={form.control}
                   name="customer"
@@ -172,6 +175,7 @@ export function PumpDetailsModal({ isOpen, onClose, pump, onUpdatePump }: PumpDe
                     </FormItem>
                   )}
                 />
+                {/* PO Number */}
                  <FormField
                   control={form.control}
                   name="poNumber"
@@ -185,6 +189,7 @@ export function PumpDetailsModal({ isOpen, onClose, pump, onUpdatePump }: PumpDe
                     </FormItem>
                   )}
                 />
+                {/* Priority */}
                 <FormField
                     control={form.control}
                     name="priority"
@@ -204,6 +209,7 @@ export function PumpDetailsModal({ isOpen, onClose, pump, onUpdatePump }: PumpDe
                       </FormItem>
                     )}
                   />
+                {/* Build Time */}
                 <FormField
                   control={form.control}
                   name="estimatedBuildTimeDays"
@@ -269,8 +275,9 @@ export function PumpDetailsModal({ isOpen, onClose, pump, onUpdatePump }: PumpDe
                     />
                   </>
                 )}
-              </div>
+              </div> {/* End of grid */}
               
+              {/* Notes */}
               <FormField
                 control={form.control}
                 name="notes"
@@ -284,6 +291,7 @@ export function PumpDetailsModal({ isOpen, onClose, pump, onUpdatePump }: PumpDe
                   </FormItem>
                 )}
               />
+              {/* AI Actions */}
               <AiActions pump={pump} />
             </form>
           </Form>
