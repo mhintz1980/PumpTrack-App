@@ -120,7 +120,7 @@ export function PumpDetailsModal({ isOpen, onClose, pump, onUpdatePump }: PumpDe
           <Form {...form}>
             <form id="pumpDetailsForm" onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 px-6 py-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
-                {/* Model */}
+                {/* Row 1: Pump Model (Left Side) */}
                 <FormField
                   control={form.control}
                   name="model"
@@ -140,21 +140,7 @@ export function PumpDetailsModal({ isOpen, onClose, pump, onUpdatePump }: PumpDe
                     </FormItem>
                   )}
                 />
-                {/* Serial Number */}
-                <FormField
-                  control={form.control}
-                  name="serialNumber"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Serial Number</FormLabel>
-                      <FormControl>
-                        <Input {...field} value={field.value || ''} placeholder="MSP-JN-XXXX or leave blank" disabled={isSubmitting} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                {/* Customer */}
+                {/* Row 1: Customer Name (Right Side) */}
                 <FormField
                   control={form.control}
                   name="customer"
@@ -174,7 +160,21 @@ export function PumpDetailsModal({ isOpen, onClose, pump, onUpdatePump }: PumpDe
                     </FormItem>
                   )}
                 />
-                {/* PO Number */}
+                {/* Row 2: Serial Number (Left Side) */}
+                <FormField
+                  control={form.control}
+                  name="serialNumber"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Serial Number</FormLabel>
+                      <FormControl>
+                        <Input {...field} value={field.value || ''} placeholder="MSP-JN-XXXX or leave blank" disabled={isSubmitting} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                {/* Row 2: PO Number (Right Side) */}
                  <FormField
                   control={form.control}
                   name="poNumber"
@@ -230,7 +230,7 @@ export function PumpDetailsModal({ isOpen, onClose, pump, onUpdatePump }: PumpDe
                     </FormItem>
                   )}
                 />
-                {/* Powder Coater and Color fields will always be rendered now */}
+                {/* Powder Coater and Color fields */}
                 {showPowderCoatFields && (
                   <>
                     <FormField
@@ -309,5 +309,3 @@ export function PumpDetailsModal({ isOpen, onClose, pump, onUpdatePump }: PumpDe
     </Dialog>
   );
 }
-
-    
