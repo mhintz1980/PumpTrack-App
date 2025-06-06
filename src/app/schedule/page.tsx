@@ -75,6 +75,17 @@ export default function SchedulePage() {
   const [plannableItemsViewMode, setPlannableItemsViewMode] = useState<ViewMode>('default');
   const [explodedPlannableModels, setExplodedPlannableModels] = useState<Set<string>>(new Set());
 
+  const [clientRenderInfo, setClientRenderInfo] = useState<{ todayString: string; currentMonth: number; todayEpoch: number; } | null>(null);
+
+  useEffect(() => {
+    const now = new Date();
+    setClientRenderInfo({
+      todayString: now.toDateString(),
+      currentMonth: now.getMonth(),
+      todayEpoch: new Date(now.toDateString()).getTime(), // Store epoch of today for consistent month comparison
+    });
+  }, []);
+
 
   useEffect(() => {
     const fetchPumps = async () => {
@@ -143,16 +154,20 @@ export default function SchedulePage() {
 
   const calendarDays = useMemo(() => {
     const days = [];
-    const today = new Date();
-    const startDate = new Date(today);
-    startDate.setDate(today.getDate() - today.getDay());
-    for (let i = 0; i < 42; i++) {
+    // For SSR and initial client render, calendarDays might be based on server's 'new Date()'
+    // or client's 'new Date()' respectively. This is generally fine for establishing the grid.
+    // The dynamic "today" and "current month" styling is handled by clientRenderInfo state.
+    const todayForGrid = clientRenderInfo ? new Date(clientRenderInfo.todayEpoch) : new Date();
+
+    const startDate = new Date(todayForGrid);
+    startDate.setDate(todayForGrid.getDate() - todayForGrid.getDay()); // Start week on Sunday
+    for (let i = 0; i < 42; i++) { // 6 weeks
       const date = new Date(startDate);
       date.setDate(startDate.getDate() + i);
       days.push(date);
     }
     return days;
-  }, []);
+  }, [clientRenderInfo]); // Recompute if clientRenderInfo changes (e.g. day boundary crossed during session)
 
   const scheduleTimeline = useMemo(() => {
     const timeline: ScheduleTimelineEntry[] = [];
@@ -187,14 +202,12 @@ export default function SchedulePage() {
 
 
   const handleDragStartPlannableItem = useCallback((e: React.DragEvent, item: PlannablePump) => {
-    // e.stopPropagation(); // Removed for potentially better event flow
-    e.dataTransfer.setData('text/plain', item.id); // Browser needs this to initiate drag
+    e.dataTransfer.setData('text/plain', item.id); 
     e.dataTransfer.effectAllowed = 'move';
 
     const targetElement = e.currentTarget as HTMLElement;
     if (targetElement) {
       targetElement.style.opacity = '0.5';
-      // Add a one-time event listener to reset opacity on drag end for this specific element
       const onDragEndHandler = () => {
         targetElement.style.opacity = '1';
         targetElement.removeEventListener('dragend', onDragEndHandler);
@@ -202,23 +215,21 @@ export default function SchedulePage() {
       targetElement.addEventListener('dragend', onDragEndHandler);
     }
 
-    // Defer state update slightly to allow browser to capture drag image
     setTimeout(() => {
       if (selectedPlannableItemIds.includes(item.id) && selectedPlannableItemIds.length > 1) {
         const batchItems = plannableItems.filter(p => selectedPlannableItemIds.includes(p.id));
         setDraggedItemData({ type: 'plannable-batch', items: batchItems });
       } else {
         setDraggedItemData({ type: 'plannable-single', item });
-        setSelectedPlannableItemIds([item.id]); // Ensure selection even if not batching initially
+        setSelectedPlannableItemIds([item.id]); 
       }
     }, 0);
   }, [selectedPlannableItemIds, plannableItems]);
 
 
   const handleDragStartScheduledItem = useCallback((e: React.DragEvent, item: ScheduledPump) => {
-    // e.stopPropagation(); // Removed
     e.dataTransfer.setData('application/pumptrack-instance-id', item.instanceId);
-    e.dataTransfer.setData('text/plain', item.instanceId); // Fallback for text
+    e.dataTransfer.setData('text/plain', item.instanceId); 
     e.dataTransfer.effectAllowed = 'move';
 
     const targetElement = e.currentTarget as HTMLElement;
@@ -230,32 +241,25 @@ export default function SchedulePage() {
       };
       targetElement.addEventListener('dragend', onDragEndHandler);
     }
-    // Defer state update
     setTimeout(() => {
       setDraggedItemData({ type: 'scheduled', item });
     },0);
   }, []);
 
   const handleDragEnd = useCallback((e: React.DragEvent) => {
-    // Opacity of the dragged element is handled by the specific listener in onDragStart functions
-    setDraggedItemData(null); // Always clear the dragged item data
-    // setSelectedPlannableItemIds([]); // Optionally clear selection, or keep for further actions
+    setDraggedItemData(null); 
   }, []);
 
 
   const handleDragOver = useCallback((e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
-    // e.stopPropagation(); // Usually not needed on dragOver for simple move
     e.dataTransfer.dropEffect = 'move';
   }, []);
 
   const handleDropOnCalendar = useCallback((e: React.DragEvent<HTMLDivElement>, targetDayIndex: number) => {
     e.preventDefault();
-    // e.stopPropagation(); // Prevent drop from bubbling if multiple drop zones are nested
-
-    const currentDraggedItem = draggedItemData; // Use state first
+    const currentDraggedItem = draggedItemData; 
     
-    // Fallback logic if draggedItemData is somehow null (e.g., state update issue)
     if (!currentDraggedItem) {
       const idFromDataTransfer = e.dataTransfer.getData('text/plain');
       const itemToScheduleFromPlannable = plannableItems.find(p => p.id === idFromDataTransfer);
@@ -270,7 +274,7 @@ export default function SchedulePage() {
           });
           toast({ title: "Pump Scheduled (Fallback)", description: `${itemToScheduleFromPlannable.serialNumber || itemToScheduleFromPlannable.model} added to schedule.` });
           setSelectedPlannableItemIds([]);
-          setDraggedItemData(null); // Clear state
+          setDraggedItemData(null); 
           return;
       } else {
           const scheduledItemInstanceId = e.dataTransfer.getData('application/pumptrack-instance-id');
@@ -282,11 +286,11 @@ export default function SchedulePage() {
                 : si
             ).sort((a,b) => a.scheduledOnDayIndex - b.scheduledOnDayIndex));
             toast({ title: "Schedule Updated (Fallback)", description: `Rescheduled ${itemToMoveFromScheduled.serialNumber || itemToMoveFromScheduled.model}.` });
-            setDraggedItemData(null); // Clear state
+            setDraggedItemData(null); 
             return;
           }
       }
-      setDraggedItemData(null); // Ensure cleared
+      setDraggedItemData(null); 
       return;
     }
 
@@ -328,17 +332,14 @@ export default function SchedulePage() {
     }
 
     setSelectedPlannableItemIds([]);
-    setDraggedItemData(null); // Important: clear after processing
+    setDraggedItemData(null); 
   }, [draggedItemData, toast, plannableItems, scheduledItems]);
 
 
   const handleDropOnPlannableList = useCallback((e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
-    // e.stopPropagation();
-
     const currentDraggedItem = draggedItemData;
     if (!currentDraggedItem) {
-      // Fallback for unexpected null draggedItemData
       const instanceIdFromDataTransfer = e.dataTransfer.getData('application/pumptrack-instance-id') || e.dataTransfer.getData('text/plain');
       const itemToRemoveFromSchedule = scheduledItems.find(si => si.instanceId === instanceIdFromDataTransfer);
       if (itemToRemoveFromSchedule) {
@@ -351,8 +352,7 @@ export default function SchedulePage() {
 
 
     if (currentDraggedItem.type !== 'scheduled') {
-       // Only 'scheduled' items can be dropped back here to be unscheduled.
-      setDraggedItemData(null); // Clear if it was a plannable item somehow dropped on itself.
+      setDraggedItemData(null); 
       return;
     }
 
@@ -361,7 +361,7 @@ export default function SchedulePage() {
     toast({ title: "Pump Unscheduled", description: `${itemToRemoveFromSchedule.serialNumber || itemToRemoveFromSchedule.model} removed from schedule.` });
 
     setSelectedPlannableItemIds([]);
-    setDraggedItemData(null); // Clear after processing
+    setDraggedItemData(null); 
   }, [draggedItemData, toast, scheduledItems]);
 
   const removeFromSchedule = useCallback((instanceIdToRemove: string) => {
@@ -616,7 +616,6 @@ export default function SchedulePage() {
                           const targetElement = e.currentTarget as HTMLElement;
                           if (targetElement) {
                             targetElement.style.opacity = '0.5';
-                            // Add a one-time event listener to reset opacity
                             const onGroupDragEndHandler = () => {
                               targetElement.style.opacity = '1';
                               targetElement.removeEventListener('dragend', onGroupDragEndHandler);
@@ -624,14 +623,13 @@ export default function SchedulePage() {
                             targetElement.addEventListener('dragend', onGroupDragEndHandler);
                           }
                           
-                          // Defer state update
                           setTimeout(() => {
                             setDraggedItemData({ type: 'plannable-batch', items: plannablePumpsToDrag });
                             setSelectedPlannableItemIds(plannablePumpsToDrag.map(i => i.id));
                           }, 0);
                         }
                       }}
-                      onDragEnd={handleDragEnd} // Pass handleDragEnd for subgroup buttons
+                      onDragEnd={handleDragEnd} 
                       onOpenGroupDetailsModal={() => handleOpenGroupDetailsModal(model, pumpsInGroup)}
                       onToggleExplode={() => handleToggleExplodePlannableModel(model)}
                     />
@@ -682,12 +680,16 @@ export default function SchedulePage() {
             const itemsStartingThisDay = scheduleTimeline
               .filter(item => item.startDay === dayIndex)
               .sort((a,b) => (a.priority === 'urgent' ? -1 : b.priority === 'urgent' ? 1 : 0));
+
+            const isTodayClient = clientRenderInfo && date.toDateString() === clientRenderInfo.todayString;
+            const isDifferentMonthClient = clientRenderInfo && date.getMonth() !== clientRenderInfo.currentMonth;
+
             return (
               <div
                 key={date.toISOString()}
                 className={cn(
                   "border rounded-sm p-1 text-xs relative flex flex-col bg-background hover:bg-muted/30 transition-colors",
-                  date.getMonth() !== new Date().getMonth() && "bg-muted/20 text-muted-foreground/60",
+                  isDifferentMonthClient && "bg-muted/20 text-muted-foreground/60",
                   "min-h-[8rem]"
                 )}
                 onDragOver={handleDragOver}
@@ -695,15 +697,15 @@ export default function SchedulePage() {
                 onDragEnter={(e) => { e.currentTarget.classList.add('bg-primary/10', 'border-primary'); }}
                 onDragLeave={(e) => { e.currentTarget.classList.remove('bg-primary/10', 'border-primary'); }}
               >
-                <div className={cn("font-medium pb-0.5 text-right", date.toDateString() === new Date().toDateString() && "text-primary font-bold")}>{date.getDate()}</div>
+                <div className={cn("font-medium pb-0.5 text-right", isTodayClient && "text-primary font-bold")}>{date.getDate()}</div>
                 <ScrollArea className="flex-grow space-y-0.5 overflow-y-auto">
                   {itemsStartingThisDay.map(item => (
                      <div
                         key={item.instanceId}
                         draggable={true}
                         onDragStart={(e) => handleDragStartScheduledItem(e, item)}
-                        onDragEnd={handleDragEnd} // Use global drag end
-                        title={`${item.model} - ${item.serialNumber || 'N/A'}\nCustomer: ${item.customer}\nPO: ${item.poNumber}\nSchedule Block: ${item.duration} days`}
+                        onDragEnd={handleDragEnd} 
+                        title={`${item.model} - ${item.serialNumber || 'N/A'}\nCustomer: ${item.customer}\nPO: ${item.poNumber}\nSchedule Block: ${item.daysPerUnit} days`}
                         className={cn(
                           "text-[10px] p-1 rounded mb-0.5 cursor-grab active:cursor-grabbing text-primary-foreground leading-tight border select-none",
                           getColorForModelOnCalendar(item.model),
@@ -787,4 +789,3 @@ export default function SchedulePage() {
     </div>
   );
 }
-
