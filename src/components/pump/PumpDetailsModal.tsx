@@ -98,7 +98,7 @@ export function PumpDetailsModal({ isOpen, onClose, pump, onUpdatePump }: PumpDe
   };
 
   const currentStageDetails = STAGES.find(s => s.id === pump.currentStage);
-  const showPowderCoatFields = true; // Always show for layout consistency
+  const showPowderCoatFields = true; 
 
   const pumpModelOptions = PUMP_MODELS.map(m => ({ label: m, value: m }));
   const customerOptions = CUSTOMER_NAMES.map(c => ({ label: c, value: c }));
@@ -108,18 +108,17 @@ export function PumpDetailsModal({ isOpen, onClose, pump, onUpdatePump }: PumpDe
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => {if (!open) onClose()}}>
-      <DialogContent className="sm:max-w-2xl max-h-[90vh] flex flex-col">
-        <DialogHeader>
+      <DialogContent className="sm:max-w-2xl max-h-[90vh] flex flex-col p-0">
+        <DialogHeader className="p-6 pb-4 border-b">
           <DialogTitle>Pump Details: {pump.serialNumber || pump.model || 'N/A'}</DialogTitle>
           <DialogDescription>
             Currently in stage: <span className="font-semibold text-primary">{currentStageDetails?.title || pump.currentStage}</span>.
             View or edit pump information below.
           </DialogDescription>
         </DialogHeader>
-        <ScrollArea className="flex-1 min-h-0"> {/* Changed className here */}
+        <ScrollArea className="flex-1 min-h-0"> 
           <Form {...form}>
-            {/* Moved my-4 and px-1 py-2 to the form element */}
-            <form id="pumpDetailsForm" onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 my-4 px-1 py-2">
+            <form id="pumpDetailsForm" onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 px-6 py-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
                 {/* Model */}
                 <FormField
@@ -285,7 +284,7 @@ export function PumpDetailsModal({ isOpen, onClose, pump, onUpdatePump }: PumpDe
                   <FormItem>
                     <FormLabel>Notes</FormLabel>
                     <FormControl>
-                      <Textarea placeholder="Add any relevant notes for this pump..." {...field} value={field.value || ''} rows={3} disabled={isSubmitting}/>
+                      <Textarea placeholder="Add any relevant notes for this pump..." {...field} value={field.value || ''} rows={3} className="resize-none" disabled={isSubmitting}/>
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -296,7 +295,7 @@ export function PumpDetailsModal({ isOpen, onClose, pump, onUpdatePump }: PumpDe
             </form>
           </Form>
         </ScrollArea>
-        <DialogFooter className="pt-4 border-t">
+        <DialogFooter className="p-6 pt-4 border-t">
           <DialogClose asChild>
             <Button type="button" variant="outline" onClick={onClose} disabled={isSubmitting}>
               Close
