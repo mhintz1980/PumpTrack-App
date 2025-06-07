@@ -12,6 +12,7 @@ import { PumpDetailsModal } from '@/components/pump/PumpDetailsModal';
 import { MissingInfoModal } from '@/components/pump/MissingInfoModal';
 import { GroupedPumpDetailsModal } from '@/components/pump/GroupedPumpDetailsModal';
 import * as pumpService from '@/services/pumpService';
+import HexGlassBackground from '@/components/HexGlassBackground';
 
 export default function HomePage() {
   const [pumps, setPumps] = useState<Pump[]>([]);
@@ -298,29 +299,32 @@ export default function HomePage() {
 
   if (isLoading) {
     return (
-      <div className="flex flex-col h-full items-center justify-center glass-board-container min-h-screen">
-        <p className="text-lg text-white">Loading pump data...</p> 
-      </div>
+      <HexGlassBackground>
+        <div className="flex flex-col h-full items-center justify-center min-h-screen">
+          <p className="text-lg text-glass-text-primary">Loading pump data...</p>
+        </div>
+      </HexGlassBackground>
     );
   }
 
   return (
-    <div className="glass-board-container flex flex-col min-h-screen">
-      <EnhancedHeader
-        title="PumpTrack Workflow"
-        // showAddPump is removed
-        // onAddPump is removed
-        searchTerm={searchTerm}
-        onSearchChange={setSearchTerm}
-        filters={filters}
-        onFiltersChange={setFilters}
-        availablePumpModels={allPumpModels}
-        availablePowderCoaters={allPowderCoaters}
-        availableCustomers={allCustomerNames}
-        availableSerialNumbers={allSerialNumbers}
-        availablePONumbers={allPONumbers}
-        availablePriorities={allPriorities.map(p => ({label: p.label, value: p.value}))}
-      />
+    <HexGlassBackground>
+      <div className="flex flex-col min-h-screen">
+        <EnhancedHeader
+          title="PumpTrack Workflow"
+          // showAddPump is removed
+          // onAddPump is removed
+          searchTerm={searchTerm}
+          onSearchChange={setSearchTerm}
+          filters={filters}
+          onFiltersChange={setFilters}
+          availablePumpModels={allPumpModels}
+          availablePowderCoaters={allPowderCoaters}
+          availableCustomers={allCustomerNames}
+          availableSerialNumbers={allSerialNumbers}
+          availablePONumbers={allPONumbers}
+          availablePriorities={allPriorities.map(p => ({label: p.label, value: p.value}))}
+        />
       <main 
         className="flex-grow overflow-hidden" 
         style={{ paddingTop: 'var(--header-height-value)' }}
@@ -373,7 +377,8 @@ export default function HomePage() {
           onOpenIndividualPumpDetails={handleOpenPumpDetailsModal}
         />
       )}
-    </div>
+      </div>
+    </HexGlassBackground>
   );
 }
     
