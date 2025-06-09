@@ -1,3 +1,4 @@
+
 'use client';
 
 import React from 'react';
@@ -121,7 +122,7 @@ const HexGlassBackground: React.FC<HexGlassBackgroundProps> = ({ children }) => 
           {/* Very subtle lighting effect */}
           <filter id="subtleReflection" x="0%" y="0%" width="100%" height="100%">
             <feSpecularLighting in="SourceGraphic" result="specOut"
-                               specularExponent="10" lighting-color="white">
+                               specularExponent="10" lightingColor="white">
               <fePointLight x="0" y="-50" z="100"/>
             </feSpecularLighting>
             <feComposite in="SourceGraphic" in2="specOut"
@@ -130,7 +131,7 @@ const HexGlassBackground: React.FC<HexGlassBackgroundProps> = ({ children }) => 
 
           {/* Almost imperceptible shadow */}
           <filter id="flatShadow" x="0%" y="0%" width="100%" height="100%">
-            <feDropShadow dx="0.5" dy="0.5" stdDeviation="0.5" flood-opacity="0.2" flood-color="#000000"/>
+            <feDropShadow dx="0.5" dy="0.5" stdDeviation="0.5" floodOpacity="0.2" floodColor="#000000"/>
           </filter>
         </defs>
 
