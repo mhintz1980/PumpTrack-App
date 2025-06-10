@@ -12,7 +12,7 @@ import { PumpDetailsModal } from '@/components/pump/PumpDetailsModal';
 import { MissingInfoModal } from '@/components/pump/MissingInfoModal';
 import { GroupedPumpDetailsModal } from '@/components/pump/GroupedPumpDetailsModal';
 import * as pumpService from '@/services/pumpService';
-import HexGlassBackground from '@/components/HexGlassBackground';
+// HexGlassBackground is no longer used
 
 export default function HomePage() {
   const [pumps, setPumps] = useState<Pump[]>([]);
@@ -298,33 +298,41 @@ export default function HomePage() {
   const allPONumbers = Array.from(new Set(pumps.map(p => p.poNumber).filter(Boolean as unknown as (value: string | undefined) => value is string))).sort();
 
   if (isLoading) {
+    // You might want a simpler loading state if HexGlassBackground is removed
     return (
-      <HexGlassBackground>
-        <div className="flex flex-col h-full items-center justify-center min-h-screen">
-          <p className="text-lg text-glass-text-primary">Loading pump data...</p>
-        </div>
-      </HexGlassBackground>
+      <div className="flex flex-col h-full items-center justify-center min-h-screen bg-gray-100">
+        <p className="text-lg text-gray-700">Loading pump data...</p>
+      </div>
     );
   }
 
   return (
-    <HexGlassBackground>
-      <div className="flex flex-col min-h-screen">
-        <EnhancedHeader
-          title="PumpTrack Workflow"
-          // showAddPump is removed
-          // onAddPump is removed
-          searchTerm={searchTerm}
-          onSearchChange={setSearchTerm}
-          filters={filters}
-          onFiltersChange={setFilters}
-          availablePumpModels={allPumpModels}
-          availablePowderCoaters={allPowderCoaters}
-          availableCustomers={allCustomerNames}
-          availableSerialNumbers={allSerialNumbers}
-          availablePONumbers={allPONumbers}
-          availablePriorities={allPriorities.map(p => ({label: p.label, value: p.value}))}
-        />
+    <div 
+      className="flex flex-col min-h-screen"
+      style={{
+        backgroundImage: "url('/images/your-background-image.png')", // Replace 'your-background-image.png' with your actual image file in public/images
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+        backgroundRepeat: "no-repeat",
+        backgroundAttachment: "fixed"
+      }}
+      data-ai-hint="abstract background" // Example hint
+    >
+      <EnhancedHeader
+        title="PumpTrack Workflow"
+        // showAddPump is removed
+        // onAddPump is removed
+        searchTerm={searchTerm}
+        onSearchChange={setSearchTerm}
+        filters={filters}
+        onFiltersChange={setFilters}
+        availablePumpModels={allPumpModels}
+        availablePowderCoaters={allPowderCoaters}
+        availableCustomers={allCustomerNames}
+        availableSerialNumbers={allSerialNumbers}
+        availablePONumbers={allPONumbers}
+        availablePriorities={allPriorities.map(p => ({label: p.label, value: p.value}))}
+      />
       <main 
         className="flex-grow overflow-hidden" 
         style={{ paddingTop: 'var(--header-height-value)' }}
@@ -377,8 +385,7 @@ export default function HomePage() {
           onOpenIndividualPumpDetails={handleOpenPumpDetailsModal}
         />
       )}
-      </div>
-    </HexGlassBackground>
+    </div>
   );
 }
     
