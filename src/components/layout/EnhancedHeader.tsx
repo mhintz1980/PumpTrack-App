@@ -108,12 +108,12 @@ export function EnhancedHeader({
                   </TooltipContent>
                 </Tooltip>
                 <DropdownMenuContent 
-                    className="w-72 p-4 bg-glass-surface backdrop-blur-md border-glass-border text-glass-text-primary" 
+                    className="w-72 p-4"
                     align="start"
-                    style={{ background: 'var(--glass-surface-active)', backdropFilter: 'blur(16px)' }}
+                    style={{ background: 'var(--dropdown-background)', backdropFilter: 'blur(16px)', border: '1px solid var(--dropdown-border)', color: 'var(--dropdown-text)' }}
                 >
-                  <DropdownMenuLabel className="text-glass-text-primary">Filter Pumps</DropdownMenuLabel>
-                  <DropdownMenuSeparator className="bg-glass-border" />
+                  <DropdownMenuLabel style={{ color: 'var(--dropdown-text)' }}>Filter Pumps</DropdownMenuLabel>
+                  <DropdownMenuSeparator style={{ background: 'var(--dropdown-separator)' }} />
                   <PumpFilterControls
                     filters={filters}
                     onFiltersChange={onFiltersChange}

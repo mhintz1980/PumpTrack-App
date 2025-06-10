@@ -2,61 +2,26 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer utilities {
+  .text-glass-text-primary {
+    color: var(--glass-text-primary);
+  }
+}
+@layer components {
+  .radix-popper-content-wrapper .SelectContent {
+    background-color: var(--dropdown-background);
+    border-color: var(--dropdown-border);
+    color: var(--dropdown-text);
+    backdrop-filter: blur(16px);
+  }
+  .glass-card {
+    background: var(--glass-surface);
+    border: 1px solid var(--glass-border);
+  }
+}
 body {
   font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
 }
-
-@layer base {
-  :root {
-    --background: 0 0% 100%; /* Clean White (#FFFFFF) */
-    --foreground: 0 0% 33%; /* Mid-Gray Copy (#555555) */
-
-    --card: 0 0% 100%; /* White */
-    --card-foreground: 0 0% 33%; /* Mid-Gray Copy */
-
-    --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 33%;
-
-    --primary: 207 100% 36%; /* Primary Brand Blue (#0067B7) */
-    --primary-foreground: 0 0% 98%; /* Off-white for text on primary */
-
-    --secondary: 220 17% 97%; /* Light-Gray Section BG (#F7F8FA) */
-    --secondary-foreground: 0 0% 33%; /* Mid-Gray Copy for text on secondary */
-
-    --muted: 220 17% 95%; /* Slightly darker Light-Gray for muted elements */
-    --muted-foreground: 0 0% 40%; /* Slightly lighter Mid-Gray for text on muted */
-
-    --accent: 38 92% 56%; /* Accent / CTA Orange (#F6A32B) */
-    --accent-foreground: 0 0% 10%; /* Dark text for contrast on orange */
-
-    --destructive: 0 84.2% 60.2%; /* Keeping current red for destructive actions */
-    --destructive-foreground: 0 0% 98%;
-
-    --border: 220 17% 90%; /* Lighter gray for borders */
-    --input: 220 17% 92%; /* Lighter gray for input backgrounds */
-    --ring: 207 100% 45%; /* Brighter/Lighter Primary Brand Blue for focus rings */
-
-    --chart-1: 12 76% 61%;
-    --chart-2: 173 58% 39%;
-    --chart-3: 197 37% 24%;
-    --chart-4: 43 74% 66%;
-    --chart-5: 27 87% 67%;
-    --radius: 0.5rem;
-
-    /* Sidebar specific colors */
-    --sidebar-background: 210 100% 15%; /* Deep Navy Header (#00284C) */
-    --sidebar-foreground: 0 0% 98%; /* Off-white for text on sidebar */
-    --sidebar-primary: 38 92% 56%; /* Accent / CTA Orange for active/hover in sidebar */
-    --sidebar-primary-foreground: 0 0% 10%; /* Dark text for contrast on sidebar primary */
-    --sidebar-accent: 38 92% 56%; /* Same as sidebar primary */
-    --sidebar-accent-foreground: 0 0% 10%; /* Dark text */
-    --sidebar-border: 210 100% 20%; /* Slightly lighter navy for borders within sidebar */
-    --sidebar-ring: 38 92% 65%; /* Lighter orange for focus in sidebar */
-
-    --header-height-value: 88px; /* Define header height */
-  }
-}
-
 @layer base {
   * {
     @apply border-border;

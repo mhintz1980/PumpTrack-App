@@ -2,6 +2,7 @@
 "use client";
 
 import React from 'react';
+import { SelectContent, SelectItem } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { Combobox } from '@/components/ui/combobox';
 import type { Filters } from '@/types';
@@ -57,12 +58,18 @@ export function PumpFilterControls({
           className="mt-1 h-8 text-sm"
           multiple={true}
         />
+        {/* The Combobox component internally uses SelectContent, which needs styling. 
+            While we can't directly style the SelectContent here without modifying the Combobox component itself,
+            the styling was applied globally in src/app/globals.css and to the SelectContent component
+            in src/components/ui/combobox.tsx.
+        */}
       </div>
       <div>
         <Label htmlFor="customerFilter" className="text-xs text-glass-text-primary">Customer</Label>
         <Combobox
           options={customerOptions}
           value={filters.customer || []}
+
           onChange={(value) => handleComboboxChange('customer', value as string[])}
           placeholder="All Customers"
           searchPlaceholder="Search customers..."
@@ -76,6 +83,7 @@ export function PumpFilterControls({
         <Combobox
           options={poNumberOptions}
           value={filters.poNumber || []}
+
           onChange={(value) => handleComboboxChange('poNumber', value as string[])}
           placeholder="All PO Numbers"
           searchPlaceholder="Search PO numbers..."
@@ -89,6 +97,7 @@ export function PumpFilterControls({
         <Combobox
           options={modelOptions}
           value={filters.model || []}
+
           onChange={(value) => handleComboboxChange('model', value as string[])}
           placeholder="All Models"
           searchPlaceholder="Search models..."
@@ -102,6 +111,7 @@ export function PumpFilterControls({
         <Combobox
           options={powderCoaterOptions}
           value={filters.powderCoater || []}
+
           onChange={(value) => handleComboboxChange('powderCoater', value as string[])}
           placeholder="All Coaters"
           searchPlaceholder="Search coaters..."
@@ -115,6 +125,7 @@ export function PumpFilterControls({
         <Combobox
           options={availablePriorities}
           value={filters.priority || []}
+
           onChange={(value) => handleComboboxChange('priority', value as string[])}
           placeholder="All Priorities"
           searchPlaceholder="Search priorities..."
