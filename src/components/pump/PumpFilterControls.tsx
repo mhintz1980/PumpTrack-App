@@ -46,7 +46,7 @@ export function PumpFilterControls({
   return (
     <div className="space-y-4">
       <div>
-        <Label htmlFor="serialNumberFilter" className="text-xs">Serial Number</Label>
+        <Label htmlFor="serialNumberFilter" className="text-xs text-glass-text-primary">Serial Number</Label>
         <Combobox
           options={serialNumberOptions}
           value={filters.serialNumber || []}
@@ -59,7 +59,7 @@ export function PumpFilterControls({
         />
       </div>
       <div>
-        <Label htmlFor="customerFilter" className="text-xs">Customer</Label>
+        <Label htmlFor="customerFilter" className="text-xs text-glass-text-primary">Customer</Label>
         <Combobox
           options={customerOptions}
           value={filters.customer || []}
@@ -72,7 +72,7 @@ export function PumpFilterControls({
         />
       </div>
       <div>
-        <Label htmlFor="poNumberFilter" className="text-xs">PO Number</Label>
+        <Label htmlFor="poNumberFilter" className="text-xs text-glass-text-primary">PO Number</Label>
         <Combobox
           options={poNumberOptions}
           value={filters.poNumber || []}
@@ -85,7 +85,7 @@ export function PumpFilterControls({
         />
       </div>
       <div>
-        <Label htmlFor="modelFilter" className="text-xs">Model</Label>
+        <Label htmlFor="modelFilter" className="text-xs text-glass-text-primary">Model</Label>
         <Combobox
           options={modelOptions}
           value={filters.model || []}
@@ -98,7 +98,7 @@ export function PumpFilterControls({
         />
       </div>
       <div>
-        <Label htmlFor="powderCoaterFilter" className="text-xs">Powder Coater</Label>
+        <Label htmlFor="powderCoaterFilter" className="text-xs text-glass-text-primary">Powder Coater</Label>
         <Combobox
           options={powderCoaterOptions}
           value={filters.powderCoater || []}
@@ -111,7 +111,7 @@ export function PumpFilterControls({
         />
       </div>
       <div>
-        <Label htmlFor="priorityFilter" className="text-xs">Priority</Label>
+        <Label htmlFor="priorityFilter" className="text-xs text-glass-text-primary">Priority</Label>
         <Combobox
           options={availablePriorities}
           value={filters.priority || []}
