@@ -310,7 +310,7 @@ export default function HomePage() {
     <div 
       className="flex flex-col min-h-screen"
       style={{
-        backgroundImage: "url('/images/your-background-image.png')", // Replace 'your-background-image.png' with your actual image file in public/images
+        backgroundImage: "url('/images/44.png')", // Replace 'your-background-image.png' with your actual image file in public/images
         backgroundSize: "cover",
         backgroundPosition: "center",
         backgroundRepeat: "no-repeat",
