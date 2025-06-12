@@ -75,15 +75,8 @@ export default function HomePage() {
 
   return (
     <div
-      className="flex flex-col min-h-screen"
-      style={{
-        backgroundImage: "url('/images/44.png')",
-        backgroundSize: "cover",
-        backgroundPosition: "center",
-        backgroundRepeat: "no-repeat",
-        backgroundAttachment: "fixed"
-      }}
-      data-ai-hint="abstract background"
+      className="flex flex-col min-h-screen glass-board-container"
+      data-ai-hint="abstract background" // Retaining this for your image hint reminder
     >
       <EnhancedHeader
         title="PumpTrack Workflow"

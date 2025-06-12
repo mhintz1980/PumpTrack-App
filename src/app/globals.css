@@ -151,6 +151,9 @@ body {
     --dropdown-border: var(--glass-border-hover);
     --dropdown-text: var(--glass-text-primary);
     --dropdown-separator: var(--glass-border);
+
+    /* Define header height variable */
+    --header-height-value: 64px;
   }
 
   .dark {
@@ -598,4 +601,5 @@ body {
   transition-duration: 300ms;
   transition-timing-function: ease-in-out;
 }
+
 
