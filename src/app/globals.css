@@ -232,13 +232,13 @@ body {
     --glass-surface: hsla(var(--glass-surface-hsl-values), 0.65); /* Translucent */
     --glass-border : hsla(215, 20%, 80%, 0.14); /* Light, translucent border for dark glass */
     --glass-text   : #f8fafc; /* White text (slate-50) */
+    --glass-surface-hover: hsla(var(--glass-surface-hsl-values), 0.75); /* Darker surface, MORE opaque for hover */
+
 
     /* Update existing dropdown vars to use new glass vars for Radix Popovers */
     --dropdown-background: var(--glass-surface);
     --dropdown-border: var(--glass-border);
     --dropdown-text: var(--glass-text);
-    /* For highlighted items inside the now dark glass popover */
-    --glass-surface-hover: hsla(var(--glass-surface-hsl-values), 0.75); /* Darker surface, slightly more opaque for hover */
 
 
     --header-height-value: 64px;
@@ -662,46 +662,54 @@ body {
   transition-timing-function: ease-in-out;
 }
 
-/* DropdownMenuContent in EnhancedHeader (now dark glass theme) */
+/* DropdownMenuContent in EnhancedHeader (dark glass theme) */
 .enhanced-header-filters {
-  background: var(--glass-surface) !important; 
-  backdrop-filter: blur(16px) !important;
-  border: 1px solid var(--glass-border) !important; 
-  color: var(--glass-text) !important; 
+  @apply bg-glass-surface text-glass-text border border-glass-border backdrop-blur-md backdrop-saturate-150;
+  /* Ensure !important is removed if @apply handles specificity, or add selectively if needed */
 }
 .enhanced-header-filters .DropdownMenuLabel {
   color: var(--glass-text) !important;
 }
 .enhanced-header-filters .DropdownMenuSeparator {
-  border-color: var(--glass-border) !important; 
-  opacity: 0.5; /* Make separator slightly more subtle */
+  background-color: var(--glass-border) !important; /* Use background-color for separator line */
+  opacity: 0.5;
 }
 .enhanced-header-filters .Label { /* Target ShadCN Label within this context */
   color: var(--glass-text) !important;
 }
-.enhanced-header-filters [role="option"]:focus,
-.enhanced-header-filters [data-highlighted] {
+.enhanced-header-filters [role="option"]:focus, /* Assuming options are present, though typically cmdk-item for combobox */
+.enhanced-header-filters [cmdk-item][data-highlighted] { /* Specific for cmdk items in Combobox */
   background-color: var(--glass-surface-hover) !important; 
-  color: var(--glass-accent-blue) !important; /* Light blue for text on dark hover */
+  color: var(--glass-accent-blue) !important;
 }
-.enhanced-header-filters [aria-selected="true"] .lucide-check {
-    color: var(--glass-accent-blue) !important; /* Light blue for checkmark */
+.enhanced-header-filters [role="option"][aria-selected="true"] .lucide-check,
+.enhanced-header-filters [cmdk-item][aria-selected="true"] .lucide-check {
+    color: var(--glass-accent-blue) !important;
 }
-.enhanced-header-filters .CommandInput {
-  background-color: var(--glass-surface) !important; 
-  border-color: var(--glass-border) !important; 
+.enhanced-header-filters .CommandInput { /* CommandInput specifically within enhanced-header-filters */
+  @apply bg-glass-surface text-glass-text border-glass-border;
+  background-color: var(--glass-surface) !important; /* Reinforce for CommandInput if @apply is not enough */
+  border-color: var(--glass-border) !important;
   color: var(--glass-text) !important;
 }
 .enhanced-header-filters .CommandInput::placeholder {
   color: var(--glass-text) !important;
   opacity: 0.6;
 }
+.enhanced-header-filters .CommandEmpty {
+  color: var(--glass-text) !important;
+  opacity: 0.8;
+}
+.enhanced-header-filters .ScrollAreaScrollbar > .ScrollAreaThumb {
+  background-color: var(--glass-border) !important;
+}
 
 
 /* GLOBAL Radix popover styling (for Select/Combobox dropdowns - dark glass theme) */
 @layer components {
   [data-radix-popper-content-wrapper] > [role="dialog"], 
-  [data-radix-popper-content-wrapper] > [role="listbox"] 
+  [data-radix-popper-content-wrapper] > [role="listbox"],
+  [data-radix-popper-content-wrapper] > [data-cmdk-root] /* Target CMDK root for Combobox popovers */
   {
     @apply bg-glass-surface text-glass-text border border-glass-border backdrop-blur-md backdrop-saturate-150;
   }
@@ -714,8 +722,8 @@ body {
   [data-radix-popper-content-wrapper] > * [role="option"]:focus,
   [data-radix-popper-content-wrapper] > * [role="option"][data-highlighted],
   [data-radix-popper-content-wrapper] > * [cmdk-item][data-highlighted] {
-    background-color: var(--glass-surface-hover) !important; /* Use the specific dark glass hover var */
-    color: var(--glass-accent-blue) !important; /* Accent color for text on hover */
+    background-color: var(--glass-surface-hover) !important;
+    color: var(--glass-accent-blue) !important;
   }
   [data-radix-popper-content-wrapper] > * [role="option"][aria-selected="true"] .lucide-check,
   [data-radix-popper-content-wrapper] > * [cmdk-item][aria-selected="true"] .lucide-check {
@@ -730,13 +738,13 @@ body {
     opacity: 0.8;
   }
   [data-radix-popper-content-wrapper] > * .CommandInput {
-    @apply bg-glass-surface text-glass-text border-glass-border;
+    /* @apply bg-glass-surface text-glass-text border-glass-border; Using !important below is more direct */
     background-color: var(--glass-surface) !important;
     border-color: var(--glass-border) !important;
     color: var(--glass-text) !important;
   }
   [data-radix-popper-content-wrapper] > * .CommandInput::placeholder {
-     @apply text-glass-text opacity-60;
+     /* @apply text-glass-text opacity-60; Using !important below is more direct */
      color: var(--glass-text) !important;
      opacity: 0.6 !important;
   }
