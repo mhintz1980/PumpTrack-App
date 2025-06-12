@@ -12,7 +12,7 @@ import {
   DialogDescription,
   DialogClose,
   DialogFooter,
-} from '@/components/ui/dialog'; // Adjusted imports
+} from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import type { Pump } from '@/types';
@@ -44,7 +44,7 @@ export function GroupedPumpDetailsModal({
         <DialogOverlay />
         <DialogContent className={cn(
           "sm:max-w-2xl max-h-[90vh] flex flex-col p-0"
-          // "glass-dialog-theme" class is now applied by default in DialogContent component
+          // The "glass-dialog-theme" class is now applied by default from DialogContent component
         )}>
           <DialogHeader className="p-6 pb-4 border-b border-[var(--glass-border)]">
             <DialogTitle>Details for Model: {modelName}</DialogTitle>

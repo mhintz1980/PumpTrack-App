@@ -16,7 +16,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogClose,
-} from '@/components/ui/dialog'; // Adjusted imports
+} from '@/components/ui/dialog';
 import {
   Form,
   FormControl,
@@ -115,7 +115,7 @@ export function PumpDetailsModal({ isOpen, onClose, pump, onUpdatePump }: PumpDe
         <DialogOverlay />
         <DialogContent className={cn(
           "sm:max-w-2xl max-h-[90vh] flex flex-col p-0"
-          // "glass-dialog-theme" class is now applied by default in DialogContent component
+          // The "glass-dialog-theme" class is now applied by default from DialogContent component
         )}>
           <DialogHeader className="p-6 pb-4 border-b border-[var(--glass-border)]">
             <DialogTitle>Pump Details: {pump.serialNumber || pump.model || 'N/A'}</DialogTitle>

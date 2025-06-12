@@ -15,7 +15,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog'; // Adjusted imports
+} from '@/components/ui/dialog';
 import {
   Form,
   FormControl,
@@ -155,7 +155,7 @@ export function AddPumpForm({ isOpen, onClose, onAddPump }: AddPumpFormProps) {
         <DialogOverlay />
         <DialogContent className={cn(
           "sm:max-w-md"
-          // "glass-dialog-theme" class is now applied by default in DialogContent component
+          // The "glass-dialog-theme" class is now applied by default from DialogContent component
           )}>
           <DialogHeader>
             <DialogTitle>Add New Pump(s)</DialogTitle>

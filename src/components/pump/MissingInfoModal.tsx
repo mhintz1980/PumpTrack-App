@@ -15,7 +15,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog'; // Adjusted imports
+} from '@/components/ui/dialog';
 import {
   Form,
   FormControl,
@@ -84,7 +84,7 @@ export function MissingInfoModal({ isOpen, onClose, pump, targetStageId, onSave 
         <DialogOverlay />
         <DialogContent className={cn(
           "sm:max-w-[425px]"
-          // "glass-dialog-theme" class is now applied by default in DialogContent component
+          // The "glass-dialog-theme" class is now applied by default from DialogContent component
           )}>
           <DialogHeader>
             <DialogTitle>Missing Information</DialogTitle>
