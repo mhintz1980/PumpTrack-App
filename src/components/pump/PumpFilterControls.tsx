@@ -18,7 +18,7 @@ interface PumpFilterControlsProps {
   availablePriorities: { label: string; value: string }[];
 }
 
-export function PumpFilterControls({
+export function PumpFilterControls({ 
   filters,
   onFiltersChange,
   availablePumpModels,
@@ -44,7 +44,7 @@ export function PumpFilterControls({
   const poNumberOptions = availablePONumbers.map(po => ({ label: po, value: po }));
 
   return (
-    <div className="space-y-4">
+    <div className="p-6 bg-glass-surface text-glass-text border border-glass-border backdrop-blur-md backdrop-saturate-150 rounded-lg space-y-4">
       <div>
         <Label htmlFor="serialNumberFilter" className="text-xs text-glass-text-primary">Serial Number</Label>
         <Combobox
@@ -54,7 +54,7 @@ export function PumpFilterControls({
           placeholder="All Serial Numbers"
           searchPlaceholder="Search serial numbers..."
           emptyText="No serial number found."
-          className="mt-1 h-8 text-sm filters-combobox"
+          className="mt-1 h-8 text-sm"
           multiple={true}
         />
       </div>
@@ -67,7 +67,7 @@ export function PumpFilterControls({
           placeholder="All Customers"
           searchPlaceholder="Search customers..."
           emptyText="No customer found."
-          className="mt-1 h-8 text-sm filters-combobox"
+          className="mt-1 h-8 text-sm"
           multiple={true}
         />
       </div>
@@ -80,7 +80,7 @@ export function PumpFilterControls({
           placeholder="All PO Numbers"
           searchPlaceholder="Search PO numbers..."
           emptyText="No PO number found."
-          className="mt-1 h-8 text-sm filters-combobox"
+          className="mt-1 h-8 text-sm"
           multiple={true}
         />
       </div>
@@ -93,7 +93,7 @@ export function PumpFilterControls({
           placeholder="All Models"
           searchPlaceholder="Search models..."
           emptyText="No model found."
-          className="mt-1 h-8 text-sm filters-combobox"
+          className="mt-1 h-8 text-sm"
           multiple={true}
         />
       </div>
@@ -106,7 +106,7 @@ export function PumpFilterControls({
           placeholder="All Coaters"
           searchPlaceholder="Search coaters..."
           emptyText="No coater found."
-          className="mt-1 h-8 text-sm filters-combobox"
+          className="mt-1 h-8 text-sm"
           multiple={true}
         />
       </div>
@@ -119,7 +119,7 @@ export function PumpFilterControls({
           placeholder="All Priorities"
           searchPlaceholder="Search priorities..."
           emptyText="No priority found."
-          className="mt-1 h-8 text-sm filters-combobox"
+          className="mt-1 h-8 text-sm"
           multiple={true}
         />
       </div>

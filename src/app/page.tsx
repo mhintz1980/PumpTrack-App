@@ -1,27 +1,17 @@
 
 "use client";
 
-import React from 'react';
-import dynamic from 'next/dynamic';
+import React from 'react'; // React import is often implicit in Next.js but good for clarity
+import { useHomePageLogic } from '@/app/useHomePageLogic';
 import { EnhancedHeader } from '@/components/layout/EnhancedHeader';
-const KanbanBoard = dynamic(() =>
-  import('@/components/kanban/KanbanBoard').then(m => m.KanbanBoard)
-);
-const PumpDetailsModal = dynamic(() =>
-  import('@/components/pump/PumpDetailsModal').then(m => m.PumpDetailsModal)
-);
-const MissingInfoModal = dynamic(() =>
-  import('@/components/pump/MissingInfoModal').then(m => m.MissingInfoModal)
-);
-const GroupedPumpDetailsModal = dynamic(() =>
-  import('@/components/pump/GroupedPumpDetailsModal').then(m => m.GroupedPumpDetailsModal)
-);
-import { useHomePageLogic } from './useHomePageLogic';
-// HexGlassBackground is no longer used
+import { KanbanBoard } from '@/components/kanban/KanbanBoard';
+import { PumpDetailsModal } from '@/components/pump/PumpDetailsModal';
+import { MissingInfoModal } from '@/components/pump/MissingInfoModal';
+import { GroupedPumpDetailsModal } from '@/components/pump/GroupedPumpDetailsModal';
+import { Loader2 } from 'lucide-react'; // For loading indicator
 
 export default function HomePage() {
   const {
-    pumps,
     filteredPumps,
     filters,
     setFilters,
@@ -29,54 +19,64 @@ export default function HomePage() {
     setSearchTerm,
     isLoading,
     selectedPumpForDetails,
-    setSelectedPumpForDetails,
     isPumpDetailsModalOpen,
     setIsPumpDetailsModalOpen,
     missingInfoPump,
-    setMissingInfoPump,
-    missingInfoTargetStage,
-    setMissingInfoTargetStage,
     isMissingInfoModalOpen,
     setIsMissingInfoModalOpen,
-    selectedPumpIdsForDrag,
-    setSelectedPumpIdsForDrag,
+    missingInfoTargetStage,
     selectedGroupForDetails,
-    setSelectedGroupForDetails,
     isGroupDetailsModalOpen,
     setIsGroupDetailsModalOpen,
-    explodedGroups,
-    setExplodedGroups,
-    columnViewModes,
-    setColumnViewModes,
     handleUpdatePump,
     handlePumpMove,
-    handleMultiplePumpsMove,
     handleSaveMissingInfo,
     handleOpenPumpDetailsModal,
-    handlePumpCardClick,
-    handleOpenGroupDetailsModal,
-    handleToggleColumnViewMode,
-    handleToggleExplodeGroup,
     allPumpModels,
     allCustomerNames,
     allPriorities,
     allPowderCoaters,
     allSerialNumbers,
     allPONumbers,
+    columnViewModes,
+    onToggleColumnViewMode,
+    onMultiplePumpsMove,
+    onOpenGroupDetailsModal,
+    selectedPumpIdsForDrag,
+    onPumpCardClick,
+    explodedGroups,
+    onToggleExplodeGroup,
   } = useHomePageLogic();
 
   if (isLoading) {
     return (
-      <div className="flex flex-col h-full items-center justify-center min-h-screen bg-gray-100">
-        <p className="text-lg text-gray-700">Loading pump data...</p>
+      <div className="flex flex-col min-h-screen items-center justify-center bg-gray-100"
+        style={{
+          // Keep background style consistent with main view or use a simpler one for loading
+          backgroundImage: "url('/images/YOUR_IMAGE_FILENAME_HERE')",
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          backgroundRepeat: 'no-repeat',
+        }}
+        data-ai-hint="abstract background"
+      >
+        <Loader2 className="h-12 w-12 animate-spin text-primary" />
+        <p className="mt-4 text-xl text-glass-text-primary font-semibold">Loading Pump Data...</p>
       </div>
     );
   }
 
   return (
     <div
-      className="flex flex-col min-h-screen glass-board-container"
-      data-ai-hint="abstract background" // Retaining this for your image hint reminder
+      className="flex flex-col min-h-screen"
+      style={{
+        backgroundImage: "url('/images/YOUR_IMAGE_FILENAME_HERE')", // Replace with your actual image path
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat',
+        // backgroundAttachment: 'fixed', // Optional: if you want the background to be fixed during scroll
+      }}
+      data-ai-hint="abstract background" // Update hint if image changes
     >
       <EnhancedHeader
         title="PumpTrack Workflow"
@@ -92,37 +92,38 @@ export default function HomePage() {
         availablePriorities={allPriorities.map(p => ({label: p.label, value: p.value}))}
       />
       <main
-        className="flex-grow overflow-hidden"
-        style={{ paddingTop: 'var(--header-height-value)' }}
+        className="flex-grow overflow-hidden" // Ensure main content can scroll if KanbanBoard overflows
+        style={{ paddingTop: 'var(--header-height-value)' }} // Account for fixed header height
       >
         <KanbanBoard
-          pumps={filteredPumps}
+          pumps={filteredPumps} // Use filteredPumps for the board
           columnViewModes={columnViewModes}
-          onToggleColumnViewMode={handleToggleColumnViewMode}
+          onToggleColumnViewMode={onToggleColumnViewMode}
           onPumpMove={handlePumpMove}
-          onMultiplePumpsMove={handleMultiplePumpsMove}
+          onMultiplePumpsMove={onMultiplePumpsMove}
           onOpenPumpDetailsModal={handleOpenPumpDetailsModal}
-          onOpenGroupDetailsModal={handleOpenGroupDetailsModal}
+          onOpenGroupDetailsModal={onOpenGroupDetailsModal}
           selectedPumpIdsForDrag={selectedPumpIdsForDrag}
-          onPumpCardClick={handlePumpCardClick}
+          onPumpCardClick={onPumpCardClick}
           explodedGroups={explodedGroups}
-          onToggleExplodeGroup={handleToggleExplodeGroup}
+          onToggleExplodeGroup={onToggleExplodeGroup}
         />
       </main>
 
+      {/* Modals */}
       {selectedPumpForDetails && (
         <PumpDetailsModal
           isOpen={isPumpDetailsModalOpen}
-          onClose={() => { setIsPumpDetailsModalOpen(false); setSelectedPumpForDetails(null); }}
+          onClose={() => setIsPumpDetailsModalOpen(false)}
           pump={selectedPumpForDetails}
           onUpdatePump={handleUpdatePump}
         />
       )}
 
-      {missingInfoPump && (
+      {missingInfoPump && missingInfoTargetStage && (
         <MissingInfoModal
           isOpen={isMissingInfoModalOpen}
-          onClose={() => { setIsMissingInfoModalOpen(false); setMissingInfoPump(null); setMissingInfoTargetStage(null);}}
+          onClose={() => setIsMissingInfoModalOpen(false)}
           pump={missingInfoPump}
           targetStageId={missingInfoTargetStage}
           onSave={handleSaveMissingInfo}
@@ -132,10 +133,7 @@ export default function HomePage() {
       {selectedGroupForDetails && (
         <GroupedPumpDetailsModal
           isOpen={isGroupDetailsModalOpen}
-          onClose={() => {
-            setIsGroupDetailsModalOpen(false);
-            setSelectedGroupForDetails(null);
-          }}
+          onClose={() => setIsGroupDetailsModalOpen(false)}
           modelName={selectedGroupForDetails.model}
           pumpsInGroup={selectedGroupForDetails.pumps}
           onOpenIndividualPumpDetails={handleOpenPumpDetailsModal}
@@ -144,4 +142,3 @@ export default function HomePage() {
     </div>
   );
 }
-    
