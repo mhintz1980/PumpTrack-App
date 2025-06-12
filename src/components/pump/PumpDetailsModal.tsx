@@ -99,7 +99,7 @@ export function PumpDetailsModal({ isOpen, onClose, pump, onUpdatePump }: PumpDe
   };
 
   const currentStageDetails = STAGES.find(s => s.id === pump.currentStage);
-  const showPowderCoatFields = true; 
+  const showPowderCoatFields = true;
 
   const pumpModelOptions = PUMP_MODELS.map(m => ({ label: m, value: m }));
   const customerOptions = CUSTOMER_NAMES.map(c => ({ label: c, value: c }));
@@ -111,20 +111,18 @@ export function PumpDetailsModal({ isOpen, onClose, pump, onUpdatePump }: PumpDe
     <Dialog open={isOpen} onOpenChange={(open) => {if (!open) onClose()}}>
       <DialogContent className={cn(
         "sm:max-w-2xl max-h-[90vh] flex flex-col p-0 glass-dialog-theme"
-        // Removed direct style application, will be handled by glass-dialog-theme class
       )}>
-        <DialogHeader className="p-6 pb-4 border-b border-[var(--glass-border)]"> {/* Use glass border for header separator */}
+        <DialogHeader className="p-6 pb-4 border-b border-[var(--glass-border)]">
           <DialogTitle>Pump Details: {pump.serialNumber || pump.model || 'N/A'}</DialogTitle>
-          <DialogDescription> {/* This will be styled by .glass-dialog-theme [class*="text-muted-foreground"] */}
+          <DialogDescription>
             Currently in stage: <span className="font-semibold text-[var(--glass-accent-blue)]">{currentStageDetails?.title || pump.currentStage}</span>.
             View or edit pump information below.
           </DialogDescription>
         </DialogHeader>
-        <ScrollArea className="flex-1 min-h-0 overflow-y-auto"> 
+        <ScrollArea className="flex-1 min-h-0 overflow-y-auto">
           <Form {...form}>
             <form id="pumpDetailsForm" onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 px-6 py-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
-                {/* Row 1: Pump Model (Left Side) */}
                 <FormField
                   control={form.control}
                   name="model"
@@ -139,13 +137,12 @@ export function PumpDetailsModal({ isOpen, onClose, pump, onUpdatePump }: PumpDe
                         searchPlaceholder="Search models..."
                         emptyText="No model found."
                         disabled={isSubmitting}
-                        // className for trigger button will be targeted by CSS in globals.css
+                        className="w-full min-w-0"
                       />
                       <FormMessage />
                     </FormItem>
                   )}
                 />
-                {/* Row 1: Customer Name (Right Side) */}
                 <FormField
                   control={form.control}
                   name="customer"
@@ -160,12 +157,12 @@ export function PumpDetailsModal({ isOpen, onClose, pump, onUpdatePump }: PumpDe
                         searchPlaceholder="Search customers..."
                         emptyText="No customer found."
                         disabled={isSubmitting}
+                        className="w-full min-w-0"
                       />
                       <FormMessage />
                     </FormItem>
                   )}
                 />
-                {/* Row 2: Serial Number (Left Side) */}
                 <FormField
                   control={form.control}
                   name="serialNumber"
@@ -173,13 +170,12 @@ export function PumpDetailsModal({ isOpen, onClose, pump, onUpdatePump }: PumpDe
                     <FormItem>
                       <FormLabel>Serial Number</FormLabel>
                       <FormControl>
-                        <Input {...field} value={field.value || ''} placeholder="MSP-JN-XXXX or leave blank" disabled={isSubmitting} />
+                        <Input {...field} value={field.value || ''} placeholder="MSP-JN-XXXX or leave blank" disabled={isSubmitting} className="w-full min-w-0" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
-                {/* Row 2: PO Number (Right Side) */}
                  <FormField
                   control={form.control}
                   name="poNumber"
@@ -187,13 +183,12 @@ export function PumpDetailsModal({ isOpen, onClose, pump, onUpdatePump }: PumpDe
                     <FormItem>
                       <FormLabel>PO Number</FormLabel>
                       <FormControl>
-                        <Input {...field} disabled={isSubmitting} />
+                        <Input {...field} disabled={isSubmitting} className="w-full min-w-0" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
-                {/* Priority */}
                 <FormField
                     control={form.control}
                     name="priority"
@@ -208,12 +203,12 @@ export function PumpDetailsModal({ isOpen, onClose, pump, onUpdatePump }: PumpDe
                           searchPlaceholder="Search priorities..."
                           emptyText="No priority found."
                           disabled={isSubmitting}
+                          className="w-full min-w-0"
                         />
                         <FormMessage />
                       </FormItem>
                     )}
                   />
-                {/* Build Time */}
                 <FormField
                   control={form.control}
                   name="estimatedBuildTimeDays"
@@ -229,13 +224,13 @@ export function PumpDetailsModal({ isOpen, onClose, pump, onUpdatePump }: PumpDe
                           value={field.value === null || field.value === undefined ? '' : String(field.value)}
                           onChange={e => field.onChange(e.target.value === '' ? null : parseFloat(e.target.value))}
                           disabled={isSubmitting}
+                          className="w-full min-w-0"
                         />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
-                {/* Powder Coater and Color fields */}
                 {showPowderCoatFields && (
                   <>
                     <FormField
@@ -252,6 +247,7 @@ export function PumpDetailsModal({ isOpen, onClose, pump, onUpdatePump }: PumpDe
                             searchPlaceholder="Search coaters..."
                             emptyText="No coater found."
                             disabled={isSubmitting}
+                            className="w-full min-w-0"
                           />
                           <FormMessage />
                         </FormItem>
@@ -272,6 +268,7 @@ export function PumpDetailsModal({ isOpen, onClose, pump, onUpdatePump }: PumpDe
                             emptyText="No color found. Type to add."
                             allowCustomValue={true}
                             disabled={isSubmitting}
+                            className="w-full min-w-0"
                           />
                           <FormMessage />
                         </FormItem>
@@ -279,9 +276,7 @@ export function PumpDetailsModal({ isOpen, onClose, pump, onUpdatePump }: PumpDe
                     />
                   </>
                 )}
-              </div> {/* End of grid */}
-              
-              {/* Notes */}
+              </div>
               <FormField
                 control={form.control}
                 name="notes"
@@ -289,18 +284,17 @@ export function PumpDetailsModal({ isOpen, onClose, pump, onUpdatePump }: PumpDe
                   <FormItem>
                     <FormLabel>Notes</FormLabel>
                     <FormControl>
-                      <Textarea placeholder="Add any relevant notes for this pump..." {...field} value={field.value || ''} rows={3} className="resize-none" disabled={isSubmitting}/>
+                      <Textarea placeholder="Add any relevant notes for this pump..." {...field} value={field.value || ''} rows={3} className="resize-none w-full min-w-0" disabled={isSubmitting}/>
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-              {/* AI Actions */}
               <AiActions pump={pump} />
             </form>
           </Form>
         </ScrollArea>
-        <DialogFooter className="p-6 pt-4 border-t border-[var(--glass-border)]"> {/* Use glass border for footer separator */}
+        <DialogFooter className="p-6 pt-4 border-t border-[var(--glass-border)]">
           <DialogClose asChild>
             <Button type="button" variant="outline" onClick={onClose} disabled={isSubmitting} className="dialog-footer-button-outline">
               Close

@@ -10,113 +10,121 @@
 }
 @layer components {
   /* Styles for Radix SelectContent (used by Combobox popovers) */
+  /* These rules are general and will be enhanced by the new global popper rule */
   .radix-popper-content-wrapper .SelectContent {
-    background-color: var(--dropdown-background) !important;
-    border-color: var(--dropdown-border) !important;
-    color: var(--dropdown-text) !important;
-    backdrop-filter: blur(16px);
+    background-color: var(--dropdown-background) !important; /* Will use new --glass-surface via --dropdown-background */
+    border-color: var(--dropdown-border) !important; /* Will use new --glass-border via --dropdown-border */
+    color: var(--dropdown-text) !important; /* Will use new --glass-text via --dropdown-text */
+    backdrop-filter: blur(12px); /* Ensure blur is applied if not covered by global popper */
   }
   .radix-popper-content-wrapper .SelectContent [role="option"] {
     color: var(--dropdown-text) !important; /* Ensure item text is light */
   }
   .radix-popper-content-wrapper .SelectContent [role="option"]:focus,
   .radix-popper-content-wrapper .SelectContent [data-highlighted] { /* data-highlighted for keyboard nav */
-    background-color: var(--glass-surface-hover) !important; 
+    background-color: var(--glass-surface-hover) !important; /* Existing light glass hover, consider changing if popover is dark */
     color: var(--glass-accent-purple) !important; /* Use accent for focused/highlighted item text */
   }
   .radix-popper-content-wrapper .SelectContent [aria-selected="true"] .lucide-check {
-      color: var(--glass-accent-purple) !important; 
+      color: var(--glass-accent-purple) !important;
   }
    .radix-popper-content-wrapper .SelectContent .ScrollAreaScrollbar > .ScrollAreaThumb {
-    background-color: var(--glass-border) !important; /* Scrollbar thumb color */
+    background-color: var(--glass-border) !important; /* Scrollbar thumb color based on new var */
   }
   .radix-popper-content-wrapper .SelectContent .CommandEmpty { /* cmdk empty state */
     color: var(--dropdown-text) !important;
   }
   .radix-popper-content-wrapper .SelectContent .CommandInput { /* cmdk input */
-    background-color: var(--glass-surface-subtle) !important;
-    border-color: var(--glass-border-hover) !important;
-    color: var(--dropdown-text) !important;
+    @apply bg-glass-surface text-glass-text border-glass-border; /* Use new Tailwind utilities */
+    /* background-color: var(--glass-surface-subtle) !important; */ /* Old way */
+    /* border-color: var(--glass-border-hover) !important; */
+    /* color: var(--dropdown-text) !important; */
   }
   .radix-popper-content-wrapper .SelectContent .CommandInput::placeholder {
-    color: var(--glass-text-muted) !important;
+    /* color: var(--glass-text-muted) !important; */
+    @apply text-glass-text opacity-60;
   }
 
 
-  .glass-card {
-    background: var(--glass-surface);
-    border: 1px solid var(--glass-border);
-  }
+  /* .glass-card defined further down with the main glass theme */
 
-  /* Styles for Glass Themed Dialog */
+  /* Styles for Glass Themed Dialog (Main Dialog Box itself) */
   .glass-dialog-theme {
-    background: var(--glass-surface-active) !important;
-    color: var(--glass-text-primary) !important;
-    border: 1px solid var(--glass-border) !important;
-    backdrop-filter: blur(16px);
-    box-shadow: var(--glass-shadow-xl) !important; 
+    @apply bg-glass-surface text-glass-text border border-glass-border backdrop-blur-md backdrop-saturate-150;
+    box-shadow: var(--glass-shadow-xl) !important; /* Keep existing shadow */
   }
 
+  /* Text within glass dialog, if not directly text-glass-text */
   .glass-dialog-theme [class*="text-muted-foreground"],
-  .glass-dialog-theme .DialogDescription { /* Target ShadCN's DialogDescription */
-    color: var(--glass-text-muted) !important;
+  .glass-dialog-theme .DialogDescription {
+     color: var(--glass-text) !important;
+     opacity: 0.8; /* Slightly less prominent than primary text */
   }
-  .glass-dialog-theme label { 
-     color: var(--glass-text-primary) !important;
+  .glass-dialog-theme label {
+     color: var(--glass-text) !important;
   }
-  
-  .glass-dialog-theme input[type="text"],
-  .glass-dialog-theme input[type="number"],
-  .glass-dialog-theme input[type="password"],
+
+  /* Scoped baseline for form fields within .glass-dialog-theme */
+  .glass-dialog-theme [role="combobox"],
+  .glass-dialog-theme input,
   .glass-dialog-theme textarea {
-    background-color: var(--glass-surface-subtle) !important;
-    border-color: var(--glass-border-hover) !important;
-    color: var(--glass-text-primary) !important;
+    @apply bg-glass-surface text-glass-text border-glass-border backdrop-blur-md backdrop-saturate-150;
+    /* Override ShadCN defaults that might persist */
+    --tw-bg-opacity: 1 !important; /* Ensure Tailwind bg utility applies fully */
+    background-color: var(--glass-surface) !important;
+    border-color: var(--glass-border) !important;
+    color: var(--glass-text) !important;
   }
-  .glass-dialog-theme input[type="text"]::placeholder,
-  .glass-dialog-theme input[type="number"]::placeholder,
-  .glass-dialog-theme input[type="password"]::placeholder,
+  .glass-dialog-theme [role="combobox"]::placeholder,
+  .glass-dialog-theme input::placeholder,
   .glass-dialog-theme textarea::placeholder {
-    color: var(--glass-text-muted) !important;
+    @apply text-glass-text opacity-60;
+     color: var(--glass-text) !important; /* Ensure placeholder color */
+     opacity: 0.6 !important;
   }
+
   .glass-dialog-theme input:focus-visible,
-  .glass-dialog-theme textarea:focus-visible {
-    border-color: var(--glass-accent-blue) !important; 
+  .glass-dialog-theme textarea:focus-visible,
+  .glass-dialog-theme [role="combobox"]:focus-visible {
+    border-color: var(--glass-accent-blue) !important; /* Keep accent for focus */
     box-shadow: 0 0 0 1px var(--glass-accent-blue) !important;
   }
 
-  /* Combobox trigger styling within glass dialog */
+  /* Combobox trigger styling within glass dialog - ensure it uses the new vars */
   .glass-dialog-theme button[role="combobox"] {
-    background-color: var(--glass-surface-subtle) !important;
-    border-color: var(--glass-border-hover) !important;
-    color: var(--glass-text-primary) !important; /* For the main button text if not overridden by span */
+    @apply bg-glass-surface text-glass-text border-glass-border backdrop-blur-md backdrop-saturate-150;
   }
   .glass-dialog-theme button[role="combobox"]:hover {
-    background-color: var(--glass-surface) !important;
-    border-color: var(--glass-border) !important;
+    /* Define a slightly different hover, e.g., make it a bit lighter or change border */
+    background-color: hsl(var(--glass-surface-hsl-values), 0.6) !important; /* Example: slightly more opaque */
+    border-color: var(--glass-accent-blue) !important;
   }
-  .glass-dialog-theme button[role="combobox"] > span { 
-     color: var(--glass-text-primary) !important; /* For selected value text */
+  .glass-dialog-theme button[role="combobox"] > span {
+     color: var(--glass-text) !important;
   }
    /* Ensure placeholder text in combobox button is also styled */
   .glass-dialog-theme button[role="combobox"][class*="text-muted-foreground"] > span {
-     color: var(--glass-text-muted) !important;
+     @apply text-glass-text opacity-60;
+     color: var(--glass-text) !important;
+     opacity: 0.6 !important;
   }
   .glass-dialog-theme button[role="combobox"] svg { /* Arrow icon */
-    color: var(--glass-text-muted) !important;
+    color: var(--glass-text) !important;
+    opacity: 0.7;
   }
 
-  /* Combobox trigger styling for filters dropdown */
-  .filters-combobox { 
-    background-color: var(--glass-surface-subtle) !important;
+  /* Combobox trigger styling for filters dropdown (outside glass-dialog-theme) */
+  /* This already exists and uses the "light" glass theme vars - keep as is unless specified */
+  .filters-combobox {
+    background-color: var(--glass-surface-subtle) !important; /* Uses existing light glass var */
     border-color: var(--glass-border-hover) !important;
-    color: var(--glass-text-primary) !important; 
+    color: var(--glass-text-primary) !important;
   }
   .filters-combobox:hover {
     background-color: var(--glass-surface) !important;
     border-color: var(--glass-border) !important;
   }
-  .filters-combobox > span { 
+  .filters-combobox > span {
     color: var(--glass-text-primary) !important;
   }
   .filters-combobox[class*="text-muted-foreground"] > span {
@@ -129,21 +137,19 @@
 
   /* Dialog Footer Buttons */
   .glass-dialog-theme .dialog-footer-button-outline {
-    background: var(--glass-surface) !important;
-    border: 1px solid var(--glass-border) !important;
-    color: var(--glass-text-primary) !important;
+    @apply bg-glass-surface text-glass-text border-glass-border backdrop-blur-md backdrop-saturate-150;
   }
   .glass-dialog-theme .dialog-footer-button-outline:hover {
-    background: var(--glass-surface-hover) !important;
-    border-color: var(--glass-border-hover) !important;
+    background-color: hsl(var(--glass-surface-hsl-values), 0.6) !important;
+    border-color: var(--glass-accent-blue) !important;
   }
   .glass-dialog-theme .save-button-override {
-    background-color: var(--glass-accent-blue) !important; 
-    color: var(--glass-text-primary) !important; 
+    background-color: var(--glass-accent-blue) !important;
+    color: var(--glass-text-primary) !important; /* Keep primary text for save button if it's different from --glass-text */
     border: 1px solid transparent !important;
   }
   .glass-dialog-theme .save-button-override:hover {
-    background-color: var(--glass-bg-secondary) !important; 
+    background-color: var(--glass-bg-secondary) !important; /* Existing hover */
   }
 }
 
@@ -165,19 +171,19 @@ body {
     --card-foreground: 222.2 84% 4.9%;
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
-    --primary: 204 74% 45%; 
+    --primary: 204 74% 45%;
     --primary-foreground: 210 40% 98%;
     --secondary: 210 40% 96.1%;
     --secondary-foreground: 222.2 47.4% 11.2%;
     --muted: 210 40% 96.1%;
     --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 174 67% 63%; 
+    --accent: 174 67% 63%;
     --accent-foreground: 222.2 47.4% 11.2%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
-    --ring: 204 74% 45%; 
+    --ring: 204 74% 45%;
     --radius: 0.75rem;
 
     --chart-1: 204 70% 50%;
@@ -186,20 +192,29 @@ body {
     --chart-4: 24 80% 55%;
     --chart-5: 160 70% 45%;
 
-    --sidebar-background: hsl(210, 30%, 12%); 
+    --sidebar-background: hsl(210, 30%, 12%);
     --sidebar-foreground: hsl(210, 20%, 85%);
     --sidebar-primary: hsl(var(--primary));
     --sidebar-primary-foreground: hsl(var(--primary-foreground));
-    --sidebar-accent: hsl(var(--primary) / 0.1); 
+    --sidebar-accent: hsl(var(--primary) / 0.1);
     --sidebar-accent-foreground: hsl(var(--primary));
     --sidebar-border: hsl(210, 30%, 20%);
     --sidebar-ring: hsl(var(--ring));
-    
-    /* Glass Theme Dropdown Content Styling Variables */
-    --dropdown-background: var(--glass-surface-active); 
-    --dropdown-border: var(--glass-border-hover);
-    --dropdown-text: var(--glass-text-primary);
-    --dropdown-separator: var(--glass-border);
+
+    /* New Dark Glass Theme Variables */
+    --glass-surface-hsl-values: 215 50% 12%; /* For use in hsla() */
+    --glass-surface: hsla(var(--glass-surface-hsl-values), 0.45); /* Translucent #0d1a2d */
+    --glass-border : hsla(215, 20%, 80%, 0.14); /* Light, translucent border for dark glass */
+    --glass-text   : #f8fafc; /* White text (slate-50) */
+
+    /* Update existing dropdown vars to use new glass vars for Radix Popovers (used by Select/Combobox) */
+    /* These will apply to popovers triggered from ANYWHERE, per user's explicit CSS for [data-radix-popper-content-wrapper] */
+    --dropdown-background: var(--glass-surface);
+    --dropdown-border: var(--glass-border);
+    --dropdown-text: var(--glass-text);
+    /* For highlighted items inside the now dark glass popover, we need a light highlight */
+    --glass-surface-hover: hsla(215, 20%, 80%, 0.1); /* A light translucent hover for dark popover items */
+
 
     --header-height-value: 64px;
   }
@@ -211,19 +226,19 @@ body {
     --card-foreground: 210 40% 98%;
     --popover: 222.2 84% 4.9%;
     --popover-foreground: 210 40% 98%;
-    --primary: 204 70% 60%; 
+    --primary: 204 70% 60%;
     --primary-foreground: 222.2 47.4% 11.2%;
     --secondary: 217.2 32.6% 17.5%;
     --secondary-foreground: 210 40% 98%;
     --muted: 217.2 32.6% 17.5%;
     --muted-foreground: 215 20.2% 65.1%;
-    --accent: 174 60% 70%; 
+    --accent: 174 60% 70%;
     --accent-foreground: 210 40% 98%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 210 40% 98%;
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
-    --ring: 204 70% 60%; 
+    --ring: 204 70% 60%;
 
     --chart-1: hsl(204 70% 60%);
     --chart-2: hsl(174 60% 60%);
@@ -237,13 +252,13 @@ body {
     --sidebar-accent-foreground: hsl(var(--primary));
     --sidebar-border: hsl(220, 25%, 15%);
 
-    /* Ensure glass dropdown variables are also defined/overridden for dark if necessary */
-    /* (Likely they correctly inherit from the light theme's glass variable definitions) */
+    /* Dark theme might use the same --glass-* vars or define its own if needed */
+    /* For now, it will inherit the ones from :root */
   }
 }
 
-/* Custom scrollbar for Kanban board columns */
-.kanban-column-content::-webkit-scrollbar {
+/* Custom scrollbar for Kanban board columns - OLD LIGHT THEME */
+/* .kanban-column-content::-webkit-scrollbar {
   width: 8px;
 }
 .kanban-column-content::-webkit-scrollbar-track {
@@ -254,62 +269,64 @@ body {
 }
 .kanban-column-content::-webkit-scrollbar-thumb:hover {
   @apply bg-primary/70;
-}
+} */
 
-/* Blue-Yellow Glassomorphic Design System */
+/* Blue-Yellow Glassomorphic Design System - CURRENT KANBAN THEME */
+/* These are the variables for the MAIN kanban page's glass theme, not the dark glass for modals */
 :root {
   /* Background Colors */
-  --glass-bg-primary: #246caa;
+  --glass-bg-primary: #246caa; /* This is the current light blue glass theme base */
   --glass-bg-secondary: #16406c;
   --glass-bg-gradient: linear-gradient(135deg, #246caa 0%, #358ed4 50%, #16406c 100%);
-  
-  /* Glass Surface Colors - Columns */
-  --glass-surface: rgba(255, 255, 255, 0.1);
-  --glass-surface-hover: rgba(255, 255, 255, 0.15);
-  --glass-surface-active: rgba(255, 255, 255, 0.2);
-  --glass-surface-subtle: rgba(255, 255, 255, 0.08);
-  
-  /* Glass Card Colors */
+
+  /* Glass Surface Colors - Columns (Light glass theme) */
+  /* --glass-surface: rgba(255, 255, 255, 0.1);  Replaced by new dark --glass-surface for modals */
+  /* --glass-surface-hover: rgba(255, 255, 255, 0.15); Replaced by new dark --glass-surface-hover for modals */
+  /* --glass-surface-active: rgba(255, 255, 255, 0.2); Replaced by new dark --glass-surface for modals */
+  /* --glass-surface-subtle: rgba(255, 255, 255, 0.08); */
+
+  /* Glass Card Colors (Light glass theme) */
   --glass-card-surface: rgba(255, 255, 255, 0.1);
   --glass-card-surface-hover: rgba(255, 255, 255, 0.15);
-  
-  /* Border Colors */
-  --glass-border: rgba(255, 255, 255, 0.15);
-  --glass-border-hover: rgba(255, 255, 255, 0.25);
-  
-  /* Text Colors */
-  --glass-text-primary: #fffbe8;
+
+  /* Border Colors (Light glass theme) */
+  /* --glass-border: rgba(255, 255, 255, 0.15); Replaced by new dark --glass-border for modals */
+  --glass-border-hover: rgba(255, 255, 255, 0.25); /* Used by .filters-combobox */
+
+  /* Text Colors (Light glass theme) */
+  --glass-text-primary: #fffbe8; /* Used by .filters-combobox */
   --glass-text-secondary: #e6e6d6;
-  --glass-text-muted: #c3c4c6;
-  --glass-text-accent: #fffbe8; /* was #ffffff */
-  
-  /* Accent Colors */
+  --glass-text-muted: #c3c4c6; /* Used by .filters-combobox */
+  /* --glass-text-accent: #fffbe8; Replaced by new dark --glass-text for modals */
+
+  /* Accent Colors (Light glass theme) */
   --glass-accent-blue: #358ed4;
-  --glass-accent-purple: #FFD12B; 
-  --glass-accent-light-purple: #FFDA4F; 
+  --glass-accent-purple: #FFD12B;
+  --glass-accent-light-purple: #FFDA4F;
   --glass-accent-glow-blue: rgba(53, 142, 212, 0.3);
-  --glass-accent-glow-purple: rgba(255, 209, 43, 0.3); 
-  
-  /* Shadow Colors */
+  --glass-accent-glow-purple: rgba(255, 209, 43, 0.3);
+
+  /* Shadow Colors (Light glass theme) */
   --glass-shadow-base: rgba(0, 0, 0, 0.3);
   --glass-shadow-intense: rgba(0, 0, 0, 0.5);
-  --glass-shadow-glow: rgba(255, 209, 43, 0.2); 
-  
-  /* Shadow System */
+  --glass-shadow-glow: rgba(255, 209, 43, 0.2);
+  --glass-shadow-xl: 0 12px 40px var(--glass-shadow-base), 0 8px 24px rgba(0,0,0,0.3); /* Used by .glass-dialog-theme */
+
+  /* Shadow System (Light glass theme) - some of these are used by Kanban page */
   --glass-shadow-sm: 0 2px 8px var(--glass-shadow-base);
   --glass-shadow-md: 0 4px 16px var(--glass-shadow-base), 0 2px 8px rgba(0,0,0,0.2);
   --glass-shadow-lg: 0 8px 32px var(--glass-shadow-base), 0 4px 16px rgba(0,0,0,0.2);
-  --glass-shadow-xl: 0 12px 40px var(--glass-shadow-base), 0 8px 24px rgba(0,0,0,0.3);
+  /* --glass-shadow-xl: 0 12px 40px var(--glass-shadow-base), 0 8px 24px rgba(0,0,0,0.3); */
   --glass-shadow-glow-effect: 0 0 20px var(--glass-shadow-glow), 0 8px 32px var(--glass-shadow-base);
   --glass-shadow-glow-intense: 0 0 30px var(--glass-accent-glow-blue), 0 12px 40px var(--glass-shadow-base);
 }
 
-/* Glassomorphic Utility Classes */
+/* Glassomorphic Utility Classes for Kanban Page (Light Glass Theme) */
 .glass-board-container {
-  @apply flex gap-6 p-0 overflow-x-auto; 
-  background: var(--glass-bg-gradient);
+  @apply flex gap-6 p-0 overflow-x-auto;
+  background: var(--glass-bg-gradient); /* Light glass theme background */
   position: relative;
-  min-height: 100vh; 
+  min-height: 100vh;
 }
 
 .glass-board-container::before {
@@ -327,16 +344,16 @@ body {
 
 .glass-column {
   @apply flex-shrink-0 w-[18.75rem] h-full flex flex-col;
-  background: var(--glass-surface);
+  background: rgba(255, 255, 255, 0.1); /* Explicit light glass */
   backdrop-filter: blur(12px);
-  border: 1px solid var(--glass-border);
+  border: 1px solid rgba(255, 255, 255, 0.15); /* Explicit light glass border */
   border-radius: 20px;
   box-shadow: var(--glass-shadow-lg);
   transition: all 0.3s ease-in-out;
 }
 
 .glass-column:hover {
-  background: var(--glass-surface-hover);
+  background: rgba(255, 255, 255, 0.15);
   border-color: var(--glass-border-hover);
   box-shadow: var(--glass-shadow-glow-effect);
   transform: translateY(-2px);
@@ -344,9 +361,9 @@ body {
 
 .glass-column-header {
   @apply p-4 flex items-center justify-between sticky top-0 z-10;
-  background: var(--glass-surface-active);
+  background: rgba(255, 255, 255, 0.2); /* Explicit light glass active */
   backdrop-filter: blur(16px);
-  border-bottom: 1px solid var(--glass-border);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.15);
   border-radius: 20px 20px 0 0;
 }
 
@@ -362,23 +379,34 @@ body {
 }
 
 .glass-column-count {
-  background: var(--glass-surface-active);
+  background: rgba(255, 255, 255, 0.2); /* Explicit light glass active */
   color: var(--glass-text-secondary);
-  border: 1px solid var(--glass-border);
+  border: 1px solid rgba(255, 255, 255, 0.15);
   backdrop-filter: blur(8px);
 }
 
-.glass-card {
+.glass-card { /* This is for Kanban cards on the main page */
   @apply mb-4 cursor-pointer;
-  background: var(--glass-card-surface);
+  background: var(--glass-card-surface); /* Uses light glass card var */
   backdrop-filter: blur(8px);
-  border: 1px solid var(--glass-border);
+  border: 1px solid var(--glass-border-hover); /* Uses light glass border var */
   border-radius: 16px;
   box-shadow: var(--glass-shadow-md);
   transition: all 0.3s ease-in-out;
   position: relative;
   overflow: hidden;
 }
+.glass-dialog-theme .glass-card { /* Kanban cards INSIDE a dark glass dialog */
+   @apply bg-glass-surface text-glass-text border-glass-border backdrop-blur-md backdrop-saturate-150;
+}
+.glass-dialog-theme .glass-card .glass-card-title,
+.glass-dialog-theme .glass-card .glass-card-description {
+  color: var(--glass-text) !important; /* Ensure text inside cards in dark dialog is also light */
+}
+.glass-dialog-theme .glass-card .glass-card-description {
+  opacity: 0.8;
+}
+
 
 .glass-card::before {
   content: '';
@@ -408,7 +436,7 @@ body {
   background: transparent;
 }
 
-.glass-card-title {
+.glass-card-title { /* Title for light glass cards on main page */
   color: var(--glass-text-primary);
   font-weight: 600;
   font-size: 0.875rem;
@@ -416,8 +444,8 @@ body {
   text-shadow: 0 1px 2px rgba(0,0,0,0.3);
 }
 
-.glass-card-description {
-  color: var(--glass-text-muted); 
+.glass-card-description { /* Description for light glass cards on main page */
+  color: var(--glass-text-muted);
   font-size: 0.75rem;
   margin-top: 0.25rem;
 }
@@ -428,45 +456,45 @@ body {
 }
 
 .glass-card.priority-high {
-  border-left: 3px solid #FFD12B; 
+  border-left: 3px solid #FFD12B;
   box-shadow: var(--glass-shadow-md), -3px 0 12px rgba(255, 209, 43, 0.3);
 }
 
 .glass-card.priority-urgent {
-  border-left: 3px solid #ef4444; 
+  border-left: 3px solid #ef4444;
   box-shadow: var(--glass-shadow-md), -3px 0 12px rgba(239, 68, 68, 0.3);
 }
 
 .glass-card.selected {
-  border-color: var(--glass-accent-purple); 
-  box-shadow: 0 0 0 2px var(--glass-accent-glow-purple), var(--glass-shadow-glow-effect); 
+  border-color: var(--glass-accent-purple);
+  box-shadow: 0 0 0 2px var(--glass-accent-glow-purple), var(--glass-shadow-glow-effect);
 }
 
-.glass-button {
+.glass-button { /* General light glass button, e.g., in Kanban column header */
   @apply transition-all duration-300 ease-in-out;
-  background: var(--glass-surface);
+  background: rgba(255,255,255,0.1); /* Light glass */
   backdrop-filter: blur(8px);
-  border: 1px solid var(--glass-border);
+  border: 1px solid rgba(255,255,255,0.15); /* Light glass border */
   border-radius: 12px;
   color: var(--glass-text-primary);
   box-shadow: var(--glass-shadow-sm);
 }
 
 .glass-button:hover {
-  background: var(--glass-surface-hover);
+  background: rgba(255,255,255,0.15);
   border-color: var(--glass-border-hover);
   box-shadow: var(--glass-shadow-glow-effect);
   transform: translateY(-1px);
 }
 
-.glass-switch {
-  background: var(--glass-surface) !important;
-  border: 1px solid var(--glass-border) !important;
+.glass-switch { /* For Kanban column group toggle */
+  background: rgba(255,255,255,0.1) !important;
+  border: 1px solid rgba(255,255,255,0.15) !important;
 }
 
 .glass-switch[data-state="checked"] {
-  background: var(--glass-accent-purple) !important; 
-  box-shadow: 0 0 12px var(--glass-accent-glow-purple); 
+  background: var(--glass-accent-purple) !important;
+  box-shadow: 0 0 12px var(--glass-accent-glow-purple);
 }
 
 .glass-scrollbar::-webkit-scrollbar {
@@ -474,19 +502,19 @@ body {
 }
 
 .glass-scrollbar::-webkit-scrollbar-track {
-  background: var(--glass-surface-subtle);
+  background: rgba(255,255,255,0.08); /* Light glass subtle */
   border-radius: 12px;
 }
 
 .glass-scrollbar::-webkit-scrollbar-thumb {
-  background: var(--glass-surface-active);
+  background: rgba(255,255,255,0.2); /* Light glass active */
   border-radius: 12px;
-  border: 1px solid var(--glass-border);
+  border: 1px solid rgba(255,255,255,0.15);
 }
 
 .glass-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: var(--glass-accent-purple); 
-  box-shadow: 0 0 8px var(--glass-accent-glow-purple); 
+  background: var(--glass-accent-purple);
+  box-shadow: 0 0 8px var(--glass-accent-glow-purple);
 }
 
 .glass-empty-state {
@@ -501,15 +529,15 @@ body {
 }
 
 .glass-drag-handle:hover {
-  color: var(--glass-accent-purple); 
-  filter: drop-shadow(0 0 4px var(--glass-accent-glow-purple)); 
+  color: var(--glass-accent-purple);
+  filter: drop-shadow(0 0 4px var(--glass-accent-glow-purple));
 }
 
 .glass-card:focus-visible,
-.glass-button:focus-visible {
-  outline: 2px solid var(--glass-accent-purple); 
+.glass-button:focus-visible { /* For light glass cards/buttons on main page */
+  outline: 2px solid var(--glass-accent-purple);
   outline-offset: 2px;
-  box-shadow: 0 0 0 4px var(--glass-accent-glow-purple); 
+  box-shadow: 0 0 0 4px var(--glass-accent-glow-purple);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -518,7 +546,7 @@ body {
   .glass-button {
     transition: none;
   }
-  
+
   .glass-card:hover,
   .glass-column:hover {
     transform: none;
@@ -537,9 +565,9 @@ body {
   right: 0;
   bottom: 0;
   background:
-    radial-gradient(circle at 10% 20%, rgba(255, 209, 43, 0.05) 0%, transparent 20%), 
-    radial-gradient(circle at 90% 80%, rgba(53, 142, 212, 0.05) 0%, transparent 20%), 
-    radial-gradient(circle at 40% 40%, rgba(255, 209, 43, 0.03) 0%, transparent 30%); 
+    radial-gradient(circle at 10% 20%, rgba(255, 209, 43, 0.05) 0%, transparent 20%),
+    radial-gradient(circle at 90% 80%, rgba(53, 142, 212, 0.05) 0%, transparent 20%),
+    radial-gradient(circle at 40% 40%, rgba(255, 209, 43, 0.03) 0%, transparent 30%);
   animation: glass-float 6s ease-in-out infinite;
   pointer-events: none;
   z-index: 0;
@@ -550,13 +578,18 @@ body {
   z-index: 1;
 }
 
-.glass-tooltip {
-  background: var(--glass-surface-active) !important;
+.glass-tooltip { /* For light glass tooltips on main page */
+  background: rgba(255,255,255,0.2) !important;
   backdrop-filter: blur(12px) !important;
-  border: 1px solid var(--glass-border) !important;
+  border: 1px solid rgba(255,255,255,0.15) !important;
   color: var(--glass-text-primary) !important;
   box-shadow: var(--glass-shadow-lg) !important;
 }
+.glass-dialog-theme .glass-tooltip { /* Tooltips INSIDE a dark glass dialog */
+   @apply bg-glass-surface text-glass-text border-glass-border backdrop-blur-md backdrop-saturate-150;
+   box-shadow: var(--glass-shadow-lg) !important; /* Or a dark glass appropriate shadow */
+}
+
 
 .glass-switch[data-state="checked"] > span {
   background: var(--glass-text-primary) !important;
@@ -574,25 +607,25 @@ body {
 }
 
 .glass-column[data-drag-over="true"] {
-  background: var(--glass-surface-hover);
-  border-color: var(--glass-accent-purple); 
-  box-shadow: 0 0 0 2px var(--glass-accent-glow-purple), var(--glass-shadow-glow-effect); 
+  background: rgba(255,255,255,0.15); /* Light glass hover */
+  border-color: var(--glass-accent-purple);
+  box-shadow: 0 0 0 2px var(--glass-accent-glow-purple), var(--glass-shadow-glow-effect);
 }
 
 
-.glass-card:focus-visible {
+.glass-card:focus-visible { /* For light glass cards */
   outline: none;
-  border-color: var(--glass-accent-purple); 
-  box-shadow: 0 0 0 3px var(--glass-accent-glow-purple), var(--glass-shadow-glow-effect); 
+  border-color: var(--glass-accent-purple);
+  box-shadow: 0 0 0 3px var(--glass-accent-glow-purple), var(--glass-shadow-glow-effect);
 }
 
-.glass-button:focus-visible {
+.glass-button:focus-visible { /* For light glass buttons */
   outline: none;
-  border-color: var(--glass-accent-purple); 
-  box-shadow: 0 0 0 2px var(--glass-accent-glow-purple), var(--glass-shadow-sm); 
+  border-color: var(--glass-accent-purple);
+  box-shadow: 0 0 0 2px var(--glass-accent-glow-purple), var(--glass-shadow-sm);
 }
 
-.glass-card-title,
+.glass-card-title, /* For light glass cards */
 .glass-column-title {
   text-shadow: 0 1px 3px rgba(0,0,0,0.5);
 }
@@ -604,8 +637,8 @@ body {
   left: 0;
   width: 4px;
   height: 100%;
-  background: linear-gradient(180deg, #FFD12B, #FFC107); 
-  box-shadow: 0 0 8px rgba(255, 209, 43, 0.5); 
+  background: linear-gradient(180deg, #FFD12B, #FFC107);
+  box-shadow: 0 0 8px rgba(255, 209, 43, 0.5);
   border-radius: 16px 0 0 16px;
 }
 
@@ -616,8 +649,8 @@ body {
   left: 0;
   width: 4px;
   height: 100%;
-  background: linear-gradient(180deg, #ef4444, #dc2626); 
-  box-shadow: 0 0 8px rgba(239, 68, 68, 0.5); 
+  background: linear-gradient(180deg, #ef4444, #dc2626);
+  box-shadow: 0 0 8px rgba(239, 68, 68, 0.5);
   border-radius: 16px 0 0 16px;
 }
 
@@ -629,26 +662,92 @@ body {
 
 .glass-card,
 .glass-column,
-.glass-button {
+.glass-button { /* Affects light glass theme components */
   transition-duration: 300ms;
   transition-timing-function: ease-in-out;
 }
 
-/* Ensure DropdownMenuContent in EnhancedHeader has glass theme */
+/* Ensure DropdownMenuContent in EnhancedHeader has THEME-APPROPRIATE glass theme */
+/* EnhancedHeader itself is part of the main Kanban page's light glass theme */
 .enhanced-header-filters {
-  background: var(--dropdown-background) !important;
+  background: rgba(255,255,255,0.2) !important; /* Light glass active */
   backdrop-filter: blur(16px) !important;
-  border: 1px solid var(--dropdown-border) !important;
-  color: var(--dropdown-text) !important;
+  border: 1px solid rgba(255,255,255,0.15) !important; /* Light glass border */
+  color: var(--glass-text-primary) !important; /* Light glass text */
 }
-.enhanced-header-filters .DropdownMenuLabel, /* Target ShadCN internal naming if needed */
-.enhanced-header-filters .DropdownMenuSeparator { /* Target ShadCN internal naming */
-  color: var(--dropdown-text) !important;
-  border-color: var(--dropdown-separator) !important; /* For separator */
-}
-/* Ensure labels within the filter dropdown are also correctly colored */
-.enhanced-header-filters .Label { /* If you are using <Label> from ShadCN for filter titles */
+.enhanced-header-filters .DropdownMenuLabel {
   color: var(--glass-text-primary) !important;
 }
+.enhanced-header-filters .DropdownMenuSeparator {
+  border-color: rgba(255,255,255,0.1) !important; /* Light glass separator */
+}
+.enhanced-header-filters .Label {
+  color: var(--glass-text-primary) !important;
+}
+/* Style items inside EnhancedHeader filters dropdown */
+.enhanced-header-filters [role="option"]:focus,
+.enhanced-header-filters [data-highlighted] {
+  background-color: rgba(255,255,255,0.15) !important; /* Light glass hover */
+  color: var(--glass-accent-purple) !important;
+}
+.enhanced-header-filters [aria-selected="true"] .lucide-check {
+    color: var(--glass-accent-purple) !important;
+}
+.enhanced-header-filters .CommandInput {
+  background-color: rgba(255,255,255,0.08) !important; /* Light glass subtle */
+  border-color: rgba(255,255,255,0.25) !important; /* Light glass border hover */
+  color: var(--glass-text-primary) !important;
+}
+.enhanced-header-filters .CommandInput::placeholder {
+  color: var(--glass-text-muted) !important;
+  opacity: 0.8;
+}
 
 
+/* Radix popover outside modal - GLOBAL styling for ALL Radix poppers */
+/* This ensures that Combobox/Select popovers will get the dark glass theme */
+/* if their trigger is inside .glass-dialog-theme, they should look like their parent */
+/* This rule is global and might affect other popovers, as requested */
+@layer components {
+  [data-radix-popper-content-wrapper] > [role="dialog"], /* For Combobox PopoverContent which is a Dialog */
+  [data-radix-popper-content-wrapper] > [role="listbox"] /* For Select PopoverContent */
+  {
+    @apply bg-glass-surface text-glass-text border border-glass-border backdrop-blur-md backdrop-saturate-150;
+  }
+
+  /* Styling for items within these globally styled dark glass popovers */
+  [data-radix-popper-content-wrapper] > * [role="option"],
+  [data-radix-popper-content-wrapper] > * [cmdk-item] { /* Target cmdk items in Combobox */
+    color: var(--glass-text) !important;
+  }
+  [data-radix-popper-content-wrapper] > * [role="option"]:focus,
+  [data-radix-popper-content-wrapper] > * [role="option"][data-highlighted],
+  [data-radix-popper-content-wrapper] > * [cmdk-item][data-highlighted] {
+    background-color: hsla(var(--glass-surface-hsl-values), 0.6) !important; /* Darker surface, slightly more opaque for hover */
+    color: var(--glass-accent-blue) !important; /* Accent color for text on hover */
+  }
+  [data-radix-popper-content-wrapper] > * [role="option"][aria-selected="true"] .lucide-check,
+  [data-radix-popper-content-wrapper] > * [cmdk-item][aria-selected="true"] .lucide-check {
+      color: var(--glass-accent-blue) !important;
+  }
+
+  [data-radix-popper-content-wrapper] > * .ScrollAreaScrollbar > .ScrollAreaThumb {
+    background-color: var(--glass-border) !important;
+  }
+  [data-radix-popper-content-wrapper] > * .CommandEmpty {
+    color: var(--glass-text) !important;
+    opacity: 0.8;
+  }
+  [data-radix-popper-content-wrapper] > * .CommandInput {
+    @apply bg-glass-surface text-glass-text border-glass-border;
+    /* Ensure specificity if needed or rely on direct application */
+    background-color: var(--glass-surface) !important;
+    border-color: var(--glass-border) !important;
+    color: var(--glass-text) !important;
+  }
+  [data-radix-popper-content-wrapper] > * .CommandInput::placeholder {
+     @apply text-glass-text opacity-60;
+     color: var(--glass-text) !important;
+     opacity: 0.6 !important;
+  }
+}

@@ -59,7 +59,11 @@ export default {
   				'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
   				border: 'hsl(var(--sidebar-border))',
   				ring: 'hsl(var(--sidebar-ring))'
-  			}
+  			},
+        // Added new glass theme colors
+        'glass-surface': 'var(--glass-surface)',
+        'glass-border' : 'var(--glass-border)',
+        'glass-text'   : 'var(--glass-text)',
   		},
   		borderRadius: {
   			lg: 'var(--radius)',
@@ -107,10 +111,14 @@ export default {
   			'glass-float': 'glass-float 3s ease-in-out infinite'
   		},
   		backdropBlur: {
-  			'glass': '12px',
+  			'glass': '12px', // Default blur for glass theme
   			'glass-subtle': '4px',
-  			'glass-intense': '16px'
+  			'glass-intense': '16px',
+        'md': '12px', // Added for consistency with @apply backdrop-blur-md
   		},
+      saturate: {
+        '150': '1.5', // Added for consistency with @apply backdrop-saturate-150
+      },
   		boxShadow: {
   			'glass': '0 8px 32px rgba(0, 0, 0, 0.3), 0 4px 16px rgba(0, 0, 0, 0.2)',
   			'glass-hover': '0 12px 40px rgba(0, 212, 255, 0.2), 0 8px 24px rgba(0, 0, 0, 0.3)',
