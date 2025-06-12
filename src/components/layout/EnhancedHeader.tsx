@@ -4,7 +4,7 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Settings2, FilterX, SearchIcon } from 'lucide-react'; // Removed PlusCircle
+import { Settings2, FilterX, SearchIcon } from 'lucide-react'; 
 import type { Filters } from '@/types';
 import { PumpFilterControls } from '@/components/pump/PumpFilterControls';
 import {
@@ -22,10 +22,10 @@ import {
 } from "@/components/ui/tooltip";
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { cn } from '@/lib/utils';
 
 interface EnhancedHeaderProps {
   title: string;
-  // showAddPump and onAddPump props removed
   searchTerm: string;
   onSearchChange: (term: string) => void;
   filters: Filters;
@@ -68,7 +68,6 @@ export function EnhancedHeader({
         style={{ height: 'var(--header-height-value)' }}
       >
         <div className="container mx-auto flex flex-col lg:flex-row items-center justify-between gap-4">
-          {/* Left Group: Mobile Trigger, Title, Search, Filters */}
           <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
             {isMobile && <SidebarTrigger className="h-7 w-7" />}
             
@@ -108,12 +107,15 @@ export function EnhancedHeader({
                   </TooltipContent>
                 </Tooltip>
                 <DropdownMenuContent 
-                    className="w-72 p-4"
+                    className={cn(
+                      "w-72 p-4",
+                      "enhanced-header-filters" // Apply class for specific styling
+                    )}
                     align="start"
-                    style={{ background: 'var(--dropdown-background)', backdropFilter: 'blur(16px)', border: '1px solid var(--dropdown-border)', color: 'var(--dropdown-text)' }}
+                    // Removed inline styles as they are now handled by 'enhanced-header-filters' class
                 >
-                  <DropdownMenuLabel style={{ color: 'var(--dropdown-text)' }}>Filter Pumps</DropdownMenuLabel>
-                  <DropdownMenuSeparator style={{ background: 'var(--dropdown-separator)' }} />
+                  <DropdownMenuLabel>Filter Pumps</DropdownMenuLabel>
+                  <DropdownMenuSeparator/>
                   <PumpFilterControls
                     filters={filters}
                     onFiltersChange={onFiltersChange}
@@ -148,9 +150,9 @@ export function EnhancedHeader({
             </div>
           </div>
           
-          {/* Add Pump button is removed from here */}
         </div>
       </div>
     </TooltipProvider>
   );
 }
+

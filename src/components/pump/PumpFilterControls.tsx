@@ -42,7 +42,6 @@ export function PumpFilterControls({
   const powderCoaterOptions = availablePowderCoaters.map(pc => ({ label: pc, value: pc }));
   const serialNumberOptions = availableSerialNumbers.map(sn => ({ label: sn, value: sn}));
   const poNumberOptions = availablePONumbers.map(po => ({ label: po, value: po }));
-  // availablePriorities is already in { label, value } format
 
   return (
     <div className="space-y-4">
@@ -55,26 +54,20 @@ export function PumpFilterControls({
           placeholder="All Serial Numbers"
           searchPlaceholder="Search serial numbers..."
           emptyText="No serial number found."
-          className="mt-1 h-8 text-sm"
+          className="mt-1 h-8 text-sm filters-combobox"
           multiple={true}
         />
-        {/* The Combobox component internally uses SelectContent, which needs styling. 
-            While we can't directly style the SelectContent here without modifying the Combobox component itself,
-            the styling was applied globally in src/app/globals.css and to the SelectContent component
-            in src/components/ui/combobox.tsx.
-        */}
       </div>
       <div>
         <Label htmlFor="customerFilter" className="text-xs text-glass-text-primary">Customer</Label>
         <Combobox
           options={customerOptions}
           value={filters.customer || []}
-
           onChange={(value) => handleComboboxChange('customer', value as string[])}
           placeholder="All Customers"
           searchPlaceholder="Search customers..."
           emptyText="No customer found."
-          className="mt-1 h-8 text-sm"
+          className="mt-1 h-8 text-sm filters-combobox"
           multiple={true}
         />
       </div>
@@ -83,12 +76,11 @@ export function PumpFilterControls({
         <Combobox
           options={poNumberOptions}
           value={filters.poNumber || []}
-
           onChange={(value) => handleComboboxChange('poNumber', value as string[])}
           placeholder="All PO Numbers"
           searchPlaceholder="Search PO numbers..."
           emptyText="No PO number found."
-          className="mt-1 h-8 text-sm"
+          className="mt-1 h-8 text-sm filters-combobox"
           multiple={true}
         />
       </div>
@@ -97,12 +89,11 @@ export function PumpFilterControls({
         <Combobox
           options={modelOptions}
           value={filters.model || []}
-
           onChange={(value) => handleComboboxChange('model', value as string[])}
           placeholder="All Models"
           searchPlaceholder="Search models..."
           emptyText="No model found."
-          className="mt-1 h-8 text-sm"
+          className="mt-1 h-8 text-sm filters-combobox"
           multiple={true}
         />
       </div>
@@ -111,12 +102,11 @@ export function PumpFilterControls({
         <Combobox
           options={powderCoaterOptions}
           value={filters.powderCoater || []}
-
           onChange={(value) => handleComboboxChange('powderCoater', value as string[])}
           placeholder="All Coaters"
           searchPlaceholder="Search coaters..."
           emptyText="No coater found."
-          className="mt-1 h-8 text-sm"
+          className="mt-1 h-8 text-sm filters-combobox"
           multiple={true}
         />
       </div>
@@ -125,15 +115,15 @@ export function PumpFilterControls({
         <Combobox
           options={availablePriorities}
           value={filters.priority || []}
-
           onChange={(value) => handleComboboxChange('priority', value as string[])}
           placeholder="All Priorities"
           searchPlaceholder="Search priorities..."
           emptyText="No priority found."
-          className="mt-1 h-8 text-sm"
+          className="mt-1 h-8 text-sm filters-combobox"
           multiple={true}
         />
       </div>
     </div>
   );
 }
+

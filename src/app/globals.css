@@ -9,12 +9,40 @@
   }
 }
 @layer components {
+  /* Styles for Radix SelectContent (used by Combobox popovers) */
   .radix-popper-content-wrapper .SelectContent {
-    background-color: var(--dropdown-background);
-    border-color: var(--dropdown-border);
-    color: var(--dropdown-text);
+    background-color: var(--dropdown-background) !important;
+    border-color: var(--dropdown-border) !important;
+    color: var(--dropdown-text) !important;
     backdrop-filter: blur(16px);
   }
+  .radix-popper-content-wrapper .SelectContent [role="option"] {
+    color: var(--dropdown-text) !important; /* Ensure item text is light */
+  }
+  .radix-popper-content-wrapper .SelectContent [role="option"]:focus,
+  .radix-popper-content-wrapper .SelectContent [data-highlighted] { /* data-highlighted for keyboard nav */
+    background-color: var(--glass-surface-hover) !important; 
+    color: var(--glass-accent-purple) !important; /* Use accent for focused/highlighted item text */
+  }
+  .radix-popper-content-wrapper .SelectContent [aria-selected="true"] .lucide-check {
+      color: var(--glass-accent-purple) !important; 
+  }
+   .radix-popper-content-wrapper .SelectContent .ScrollAreaScrollbar > .ScrollAreaThumb {
+    background-color: var(--glass-border) !important; /* Scrollbar thumb color */
+  }
+  .radix-popper-content-wrapper .SelectContent .CommandEmpty { /* cmdk empty state */
+    color: var(--dropdown-text) !important;
+  }
+  .radix-popper-content-wrapper .SelectContent .CommandInput { /* cmdk input */
+    background-color: var(--glass-surface-subtle) !important;
+    border-color: var(--glass-border-hover) !important;
+    color: var(--dropdown-text) !important;
+  }
+  .radix-popper-content-wrapper .SelectContent .CommandInput::placeholder {
+    color: var(--glass-text-muted) !important;
+  }
+
+
   .glass-card {
     background: var(--glass-surface);
     border: 1px solid var(--glass-border);
@@ -26,14 +54,14 @@
     color: var(--glass-text-primary) !important;
     border: 1px solid var(--glass-border) !important;
     backdrop-filter: blur(16px);
-    box-shadow: var(--glass-shadow-xl) !important; /* Ensure shadow var is defined or use a fallback */
+    box-shadow: var(--glass-shadow-xl) !important; 
   }
 
-  /* Override default muted foreground for descriptions inside glass dialog */
-  .glass-dialog-theme [class*="text-muted-foreground"] {
+  .glass-dialog-theme [class*="text-muted-foreground"],
+  .glass-dialog-theme .DialogDescription { /* Target ShadCN's DialogDescription */
     color: var(--glass-text-muted) !important;
   }
-  .glass-dialog-theme label { /* Ensure form labels are also using the primary glass text color */
+  .glass-dialog-theme label { 
      color: var(--glass-text-primary) !important;
   }
   
@@ -53,7 +81,7 @@
   }
   .glass-dialog-theme input:focus-visible,
   .glass-dialog-theme textarea:focus-visible {
-    border-color: var(--glass-accent-blue) !important; /* Use blue accent for focus */
+    border-color: var(--glass-accent-blue) !important; 
     box-shadow: 0 0 0 1px var(--glass-accent-blue) !important;
   }
 
@@ -61,21 +89,43 @@
   .glass-dialog-theme button[role="combobox"] {
     background-color: var(--glass-surface-subtle) !important;
     border-color: var(--glass-border-hover) !important;
-    color: var(--glass-text-primary) !important;
+    color: var(--glass-text-primary) !important; /* For the main button text if not overridden by span */
   }
   .glass-dialog-theme button[role="combobox"]:hover {
     background-color: var(--glass-surface) !important;
     border-color: var(--glass-border) !important;
   }
   .glass-dialog-theme button[role="combobox"] > span { 
-     color: var(--glass-text-primary) !important;
+     color: var(--glass-text-primary) !important; /* For selected value text */
   }
+   /* Ensure placeholder text in combobox button is also styled */
   .glass-dialog-theme button[role="combobox"][class*="text-muted-foreground"] > span {
      color: var(--glass-text-muted) !important;
   }
-  .glass-dialog-theme button[role="combobox"] svg { 
+  .glass-dialog-theme button[role="combobox"] svg { /* Arrow icon */
     color: var(--glass-text-muted) !important;
   }
+
+  /* Combobox trigger styling for filters dropdown */
+  .filters-combobox { 
+    background-color: var(--glass-surface-subtle) !important;
+    border-color: var(--glass-border-hover) !important;
+    color: var(--glass-text-primary) !important; 
+  }
+  .filters-combobox:hover {
+    background-color: var(--glass-surface) !important;
+    border-color: var(--glass-border) !important;
+  }
+  .filters-combobox > span { 
+    color: var(--glass-text-primary) !important;
+  }
+  .filters-combobox[class*="text-muted-foreground"] > span {
+    color: var(--glass-text-muted) !important;
+  }
+  .filters-combobox svg {
+    color: var(--glass-text-muted) !important;
+  }
+
 
   /* Dialog Footer Buttons */
   .glass-dialog-theme .dialog-footer-button-outline {
@@ -88,12 +138,12 @@
     border-color: var(--glass-border-hover) !important;
   }
   .glass-dialog-theme .save-button-override {
-    background-color: var(--glass-accent-blue) !important; /* Blue accent */
-    color: var(--glass-text-primary) !important; /* Light text for contrast */
+    background-color: var(--glass-accent-blue) !important; 
+    color: var(--glass-text-primary) !important; 
     border: 1px solid transparent !important;
   }
   .glass-dialog-theme .save-button-override:hover {
-    background-color: var(--glass-bg-secondary) !important; /* Darker blue on hover */
+    background-color: var(--glass-bg-secondary) !important; 
   }
 }
 
@@ -115,19 +165,19 @@ body {
     --card-foreground: 222.2 84% 4.9%;
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
-    --primary: 204 74% 45%; /* Sky Blue #78B0D4 */
+    --primary: 204 74% 45%; 
     --primary-foreground: 210 40% 98%;
     --secondary: 210 40% 96.1%;
     --secondary-foreground: 222.2 47.4% 11.2%;
     --muted: 210 40% 96.1%;
     --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 174 67% 63%; /* Soft Teal #73D0C1 */
+    --accent: 174 67% 63%; 
     --accent-foreground: 222.2 47.4% 11.2%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
-    --ring: 204 74% 45%; /* Sky Blue for ring */
+    --ring: 204 74% 45%; 
     --radius: 0.75rem;
 
     --chart-1: 204 70% 50%;
@@ -136,47 +186,44 @@ body {
     --chart-4: 24 80% 55%;
     --chart-5: 160 70% 45%;
 
-    /* Sidebar specific theme variables - can be adjusted for glass theme */
-    --sidebar-background: hsl(210, 30%, 12%); /* Darker shade for sidebar */
+    --sidebar-background: hsl(210, 30%, 12%); 
     --sidebar-foreground: hsl(210, 20%, 85%);
     --sidebar-primary: hsl(var(--primary));
     --sidebar-primary-foreground: hsl(var(--primary-foreground));
-    --sidebar-accent: hsl(var(--primary) / 0.1); /* Subtle accent */
+    --sidebar-accent: hsl(var(--primary) / 0.1); 
     --sidebar-accent-foreground: hsl(var(--primary));
     --sidebar-border: hsl(210, 30%, 20%);
     --sidebar-ring: hsl(var(--ring));
     
-    /* Dropdown Content Styling Variables for Glass Theme */
-    --dropdown-background: var(--glass-surface-active); /* Using a more opaque glass surface */
+    /* Glass Theme Dropdown Content Styling Variables */
+    --dropdown-background: var(--glass-surface-active); 
     --dropdown-border: var(--glass-border-hover);
     --dropdown-text: var(--glass-text-primary);
     --dropdown-separator: var(--glass-border);
 
-    /* Define header height variable */
     --header-height-value: 64px;
   }
 
   .dark {
-    /* Dark theme overrides if needed, for now, focusing on glass theme */
     --background: 222.2 84% 4.9%;
     --foreground: 210 40% 98%;
     --card: 222.2 84% 4.9%;
     --card-foreground: 210 40% 98%;
     --popover: 222.2 84% 4.9%;
     --popover-foreground: 210 40% 98%;
-    --primary: 204 70% 60%; /* Brighter Sky Blue for dark */
+    --primary: 204 70% 60%; 
     --primary-foreground: 222.2 47.4% 11.2%;
     --secondary: 217.2 32.6% 17.5%;
     --secondary-foreground: 210 40% 98%;
     --muted: 217.2 32.6% 17.5%;
     --muted-foreground: 215 20.2% 65.1%;
-    --accent: 174 60% 70%; /* Brighter Soft Teal for dark */
+    --accent: 174 60% 70%; 
     --accent-foreground: 210 40% 98%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 210 40% 98%;
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
-    --ring: 204 70% 60%; /* Brighter Sky Blue for ring in dark */
+    --ring: 204 70% 60%; 
 
     --chart-1: hsl(204 70% 60%);
     --chart-2: hsl(174 60% 60%);
@@ -189,6 +236,9 @@ body {
     --sidebar-accent: hsl(var(--primary) / 0.15);
     --sidebar-accent-foreground: hsl(var(--primary));
     --sidebar-border: hsl(220, 25%, 15%);
+
+    /* Ensure glass dropdown variables are also defined/overridden for dark if necessary */
+    /* (Likely they correctly inherit from the light theme's glass variable definitions) */
   }
 }
 
@@ -231,19 +281,19 @@ body {
   --glass-text-primary: #fffbe8;
   --glass-text-secondary: #e6e6d6;
   --glass-text-muted: #c3c4c6;
-  --glass-text-accent: #fffbe8;
+  --glass-text-accent: #fffbe8; /* was #ffffff */
   
   /* Accent Colors */
   --glass-accent-blue: #358ed4;
-  --glass-accent-purple: #FFD12B; /* This is currently Yellow based on your previous themes */
-  --glass-accent-light-purple: #FFDA4F; /* Lighter Yellow */
+  --glass-accent-purple: #FFD12B; 
+  --glass-accent-light-purple: #FFDA4F; 
   --glass-accent-glow-blue: rgba(53, 142, 212, 0.3);
-  --glass-accent-glow-purple: rgba(255, 209, 43, 0.3); /* Glow for Yellow */
+  --glass-accent-glow-purple: rgba(255, 209, 43, 0.3); 
   
   /* Shadow Colors */
   --glass-shadow-base: rgba(0, 0, 0, 0.3);
   --glass-shadow-intense: rgba(0, 0, 0, 0.5);
-  --glass-shadow-glow: rgba(255, 209, 43, 0.2); /* Glow for Yellow */
+  --glass-shadow-glow: rgba(255, 209, 43, 0.2); 
   
   /* Shadow System */
   --glass-shadow-sm: 0 2px 8px var(--glass-shadow-base);
@@ -256,10 +306,10 @@ body {
 
 /* Glassomorphic Utility Classes */
 .glass-board-container {
-  @apply flex gap-6 p-0 overflow-x-auto; /* p-6 removed, p-0 or controlled by children */
+  @apply flex gap-6 p-0 overflow-x-auto; 
   background: var(--glass-bg-gradient);
   position: relative;
-  min-height: 100vh; /* Changed from fixed height calc */
+  min-height: 100vh; 
 }
 
 .glass-board-container::before {
@@ -367,7 +417,7 @@ body {
 }
 
 .glass-card-description {
-  color: #b8b8c8; /* Was var(--glass-text-muted) but this specific color was in an image */
+  color: var(--glass-text-muted); 
   font-size: 0.75rem;
   margin-top: 0.25rem;
 }
@@ -377,20 +427,19 @@ body {
   color: var(--glass-text-secondary);
 }
 
-/* Priority Indicators */
 .glass-card.priority-high {
-  border-left: 3px solid #FFD12B; /* Yellow */
+  border-left: 3px solid #FFD12B; 
   box-shadow: var(--glass-shadow-md), -3px 0 12px rgba(255, 209, 43, 0.3);
 }
 
 .glass-card.priority-urgent {
-  border-left: 3px solid #ef4444; /* Red */
+  border-left: 3px solid #ef4444; 
   box-shadow: var(--glass-shadow-md), -3px 0 12px rgba(239, 68, 68, 0.3);
 }
 
 .glass-card.selected {
-  border-color: var(--glass-accent-purple); /* Yellow */
-  box-shadow: 0 0 0 2px var(--glass-accent-glow-purple), var(--glass-shadow-glow-effect); /* Yellow glow */
+  border-color: var(--glass-accent-purple); 
+  box-shadow: 0 0 0 2px var(--glass-accent-glow-purple), var(--glass-shadow-glow-effect); 
 }
 
 .glass-button {
@@ -416,11 +465,10 @@ body {
 }
 
 .glass-switch[data-state="checked"] {
-  background: var(--glass-accent-purple) !important; /* Yellow */
-  box-shadow: 0 0 12px var(--glass-accent-glow-purple); /* Yellow glow */
+  background: var(--glass-accent-purple) !important; 
+  box-shadow: 0 0 12px var(--glass-accent-glow-purple); 
 }
 
-/* Glass Scrollbar */
 .glass-scrollbar::-webkit-scrollbar {
   width: 8px;
 }
@@ -437,37 +485,33 @@ body {
 }
 
 .glass-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: var(--glass-accent-purple); /* Yellow */
-  box-shadow: 0 0 8px var(--glass-accent-glow-purple); /* Yellow glow */
+  background: var(--glass-accent-purple); 
+  box-shadow: 0 0 8px var(--glass-accent-glow-purple); 
 }
 
-/* Empty state styling */
 .glass-empty-state {
   @apply flex items-center justify-center h-full text-sm italic;
   color: var(--glass-text-muted);
   text-shadow: 0 1px 2px rgba(0,0,0,0.3);
 }
 
-/* Drag and drop enhancements */
 .glass-drag-handle {
   color: var(--glass-text-muted);
   transition: all 0.3s ease-in-out;
 }
 
 .glass-drag-handle:hover {
-  color: var(--glass-accent-purple); /* Yellow */
-  filter: drop-shadow(0 0 4px var(--glass-accent-glow-purple)); /* Yellow glow */
+  color: var(--glass-accent-purple); 
+  filter: drop-shadow(0 0 4px var(--glass-accent-glow-purple)); 
 }
 
-/* Focus states for accessibility */
 .glass-card:focus-visible,
 .glass-button:focus-visible {
-  outline: 2px solid var(--glass-accent-purple); /* Yellow */
+  outline: 2px solid var(--glass-accent-purple); 
   outline-offset: 2px;
-  box-shadow: 0 0 0 4px var(--glass-accent-glow-purple); /* Yellow glow */
+  box-shadow: 0 0 0 4px var(--glass-accent-glow-purple); 
 }
 
-/* Reduced motion support */
 @media (prefers-reduced-motion: reduce) {
   .glass-card,
   .glass-column,
@@ -481,9 +525,7 @@ body {
   }
 }
 
-/* Additional glassomorphic enhancements */
 .glass-board-container {
-  /* Add subtle animated background */
   background-attachment: fixed;
 }
 
@@ -495,9 +537,9 @@ body {
   right: 0;
   bottom: 0;
   background:
-    radial-gradient(circle at 10% 20%, rgba(255, 209, 43, 0.05) 0%, transparent 20%), /* Yellow hint */
-    radial-gradient(circle at 90% 80%, rgba(53, 142, 212, 0.05) 0%, transparent 20%), /* Blue hint */
-    radial-gradient(circle at 40% 40%, rgba(255, 209, 43, 0.03) 0%, transparent 30%); /* Yellow hint */
+    radial-gradient(circle at 10% 20%, rgba(255, 209, 43, 0.05) 0%, transparent 20%), 
+    radial-gradient(circle at 90% 80%, rgba(53, 142, 212, 0.05) 0%, transparent 20%), 
+    radial-gradient(circle at 40% 40%, rgba(255, 209, 43, 0.03) 0%, transparent 30%); 
   animation: glass-float 6s ease-in-out infinite;
   pointer-events: none;
   z-index: 0;
@@ -508,7 +550,6 @@ body {
   z-index: 1;
 }
 
-/* Enhanced tooltip styling */
 .glass-tooltip {
   background: var(--glass-surface-active) !important;
   backdrop-filter: blur(12px) !important;
@@ -517,7 +558,6 @@ body {
   box-shadow: var(--glass-shadow-lg) !important;
 }
 
-/* Enhanced switch styling */
 .glass-switch[data-state="checked"] > span {
   background: var(--glass-text-primary) !important;
 }
@@ -527,42 +567,36 @@ body {
   transition: all 0.3s ease-in-out !important;
 }
 
-/* Drag preview styling */
 .glass-card[draggable="true"]:active {
   opacity: 0.8;
   transform: rotate(2deg) scale(1.05);
   z-index: 1000;
 }
 
-/* Drop zone highlighting */
 .glass-column[data-drag-over="true"] {
   background: var(--glass-surface-hover);
-  border-color: var(--glass-accent-purple); /* Yellow */
-  box-shadow: 0 0 0 2px var(--glass-accent-glow-purple), var(--glass-shadow-glow-effect); /* Yellow glow */
+  border-color: var(--glass-accent-purple); 
+  box-shadow: 0 0 0 2px var(--glass-accent-glow-purple), var(--glass-shadow-glow-effect); 
 }
 
-/* Loading state for cards */
 
-/* Enhanced focus states */
 .glass-card:focus-visible {
   outline: none;
-  border-color: var(--glass-accent-purple); /* Yellow */
-  box-shadow: 0 0 0 3px var(--glass-accent-glow-purple), var(--glass-shadow-glow-effect); /* Yellow glow */
+  border-color: var(--glass-accent-purple); 
+  box-shadow: 0 0 0 3px var(--glass-accent-glow-purple), var(--glass-shadow-glow-effect); 
 }
 
 .glass-button:focus-visible {
   outline: none;
-  border-color: var(--glass-accent-purple); /* Yellow */
-  box-shadow: 0 0 0 2px var(--glass-accent-glow-purple), var(--glass-shadow-sm); /* Yellow glow */
+  border-color: var(--glass-accent-purple); 
+  box-shadow: 0 0 0 2px var(--glass-accent-glow-purple), var(--glass-shadow-sm); 
 }
 
-/* Subtle text glow for better readability */
 .glass-card-title,
 .glass-column-title {
   text-shadow: 0 1px 3px rgba(0,0,0,0.5);
 }
 
-/* Enhanced priority indicators with glow */
 .glass-card.priority-high::after {
   content: '';
   position: absolute;
@@ -570,8 +604,8 @@ body {
   left: 0;
   width: 4px;
   height: 100%;
-  background: linear-gradient(180deg, #FFD12B, #FFC107); /* Yellow gradient */
-  box-shadow: 0 0 8px rgba(255, 209, 43, 0.5); /* Yellow glow */
+  background: linear-gradient(180deg, #FFD12B, #FFC107); 
+  box-shadow: 0 0 8px rgba(255, 209, 43, 0.5); 
   border-radius: 16px 0 0 16px;
 }
 
@@ -582,24 +616,39 @@ body {
   left: 0;
   width: 4px;
   height: 100%;
-  background: linear-gradient(180deg, #ef4444, #dc2626); /* Red gradient */
-  box-shadow: 0 0 8px rgba(239, 68, 68, 0.5); /* Red glow */
+  background: linear-gradient(180deg, #ef4444, #dc2626); 
+  box-shadow: 0 0 8px rgba(239, 68, 68, 0.5); 
   border-radius: 16px 0 0 16px;
 }
 
-/* Smooth transitions for all interactive elements */
 * {
   transition-property: background-color, border-color, color, fill, stroke, opacity, box-shadow, transform, filter, backdrop-filter;
   transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
   transition-duration: 150ms;
 }
 
-/* Override for glass elements to use custom timing */
 .glass-card,
 .glass-column,
 .glass-button {
   transition-duration: 300ms;
   transition-timing-function: ease-in-out;
+}
+
+/* Ensure DropdownMenuContent in EnhancedHeader has glass theme */
+.enhanced-header-filters {
+  background: var(--dropdown-background) !important;
+  backdrop-filter: blur(16px) !important;
+  border: 1px solid var(--dropdown-border) !important;
+  color: var(--dropdown-text) !important;
+}
+.enhanced-header-filters .DropdownMenuLabel, /* Target ShadCN internal naming if needed */
+.enhanced-header-filters .DropdownMenuSeparator { /* Target ShadCN internal naming */
+  color: var(--dropdown-text) !important;
+  border-color: var(--dropdown-separator) !important; /* For separator */
+}
+/* Ensure labels within the filter dropdown are also correctly colored */
+.enhanced-header-filters .Label { /* If you are using <Label> from ShadCN for filter titles */
+  color: var(--glass-text-primary) !important;
 }
 
 
