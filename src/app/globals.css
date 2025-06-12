@@ -229,7 +229,7 @@ body {
 
     /* New Dark Glass Theme Variables - HSL values for base color */
     --glass-surface-hsl-values: 215 50% 12%; /* Dark blue base: #0f1b2d */
-    --glass-surface: hsla(var(--glass-surface-hsl-values), 0.45); /* Translucent */
+    --glass-surface: hsla(var(--glass-surface-hsl-values), 0.65); /* Translucent */
     --glass-border : hsla(215, 20%, 80%, 0.14); /* Light, translucent border for dark glass */
     --glass-text   : #f8fafc; /* White text (slate-50) */
 

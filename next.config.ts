@@ -1,7 +1,7 @@
-import type {NextConfig} from 'next';
+import type { NextConfig } from 'next'
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  // ── existing options ─────────────────────────────
   typescript: {
     ignoreBuildErrors: true,
   },
@@ -18,6 +18,15 @@ const nextConfig: NextConfig = {
       },
     ],
   },
-};
 
-export default nextConfig;
+  // ── NEW: allow Firebase Studio / Cloud Workstations preview URLs ──
+  experimental: {
+    allowedDevOrigins: [
+      'https://*.cloudworkstations.dev', // wildcard is easiest
+      // If wildcards don’t work in your env, paste the full origin:
+      // 'https://9003-firebase-studio-XXXX.cluster-YYYY.cloudworkstations.dev'
+    ],
+  },
+}
+
+export default nextConfig
