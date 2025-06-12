@@ -8,12 +8,14 @@ import { z } from 'zod';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
+  DialogPortal,
+  DialogOverlay,
   DialogContent,
   DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog';
+} from '@/components/ui/dialog'; // Adjusted imports
 import {
   Form,
   FormControl,
@@ -26,6 +28,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import type { Pump, StageId } from '@/types';
 import { POWDER_COATERS, DEFAULT_POWDER_COAT_COLORS } from '@/lib/constants';
 import { Input } from '../ui/input';
+import { cn } from '@/lib/utils';
 
 const missingInfoSchema = z.object({
   powderCoater: z.string().min(1, "Powder coater is required."),
@@ -77,77 +80,82 @@ export function MissingInfoModal({ isOpen, onClose, pump, targetStageId, onSave 
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-[425px]">
-        <DialogHeader>
-          <DialogTitle>Missing Information</DialogTitle>
-          <DialogDescription>
-            Please provide the powder coater and color for pump {pump.serialNumber} before moving to 'Powder Coat'.
-          </DialogDescription>
-        </DialogHeader>
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 py-4">
-            <FormField
-              control={form.control}
-              name="powderCoater"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Powder Coater</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select a powder coater" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {POWDER_COATERS.map(coater => (
-                        <SelectItem key={coater} value={coater}>{coater}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="powderCoatColor"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Powder Coat Color</FormLabel>
-                   <Select onValueChange={field.onChange} defaultValue={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select or type a color" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {DEFAULT_POWDER_COAT_COLORS.map(color => (
-                        <SelectItem key={color} value={color}>{color}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                   {/* Optionally, allow custom color input */}
-                  <Input 
-                    placeholder="Or type custom color (e.g. RAL code)" 
-                    onChange={(e) => field.onChange(e.target.value)} 
-                    value={field.value}
-                    className="mt-2"
-                  />
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <DialogFooter>
-              <Button type="button" variant="outline" onClick={onClose} disabled={isSubmitting}>
-                Cancel
-              </Button>
-              <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting ? 'Saving...' : 'Save and Continue'}
-              </Button>
-            </DialogFooter>
-          </form>
-        </Form>
-      </DialogContent>
+      <DialogPortal>
+        <DialogOverlay />
+        <DialogContent className={cn(
+          "sm:max-w-[425px]"
+          // "glass-dialog-theme" class is now applied by default in DialogContent component
+          )}>
+          <DialogHeader>
+            <DialogTitle>Missing Information</DialogTitle>
+            <DialogDescription>
+              Please provide the powder coater and color for pump {pump.serialNumber} before moving to 'Powder Coat'.
+            </DialogDescription>
+          </DialogHeader>
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 py-4">
+              <FormField
+                control={form.control}
+                name="powderCoater"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Powder Coater</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select a powder coater" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {POWDER_COATERS.map(coater => (
+                          <SelectItem key={coater} value={coater}>{coater}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="powderCoatColor"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Powder Coat Color</FormLabel>
+                     <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select or type a color" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {DEFAULT_POWDER_COAT_COLORS.map(color => (
+                          <SelectItem key={color} value={color}>{color}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <Input 
+                      placeholder="Or type custom color (e.g. RAL code)" 
+                      onChange={(e) => field.onChange(e.target.value)} 
+                      value={field.value}
+                      className="mt-2"
+                    />
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <DialogFooter>
+                <Button type="button" variant="outline" onClick={onClose} disabled={isSubmitting}>
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={isSubmitting}>
+                  {isSubmitting ? 'Saving...' : 'Save and Continue'}
+                </Button>
+              </DialogFooter>
+            </form>
+          </Form>
+        </DialogContent>
+      </DialogPortal>
     </Dialog>
   );
 }

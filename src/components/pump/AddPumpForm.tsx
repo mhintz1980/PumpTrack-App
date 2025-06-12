@@ -8,12 +8,14 @@ import { z } from 'zod';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
+  DialogPortal,
+  DialogOverlay,
   DialogContent,
   DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog';
+} from '@/components/ui/dialog'; // Adjusted imports
 import {
   Form,
   FormControl,
@@ -27,6 +29,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Combobox } from '@/components/ui/combobox';
 import type { Pump, PriorityLevel } from '@/types';
 import { PUMP_MODELS, CUSTOMER_NAMES, PRIORITY_LEVELS } from '@/lib/constants';
+import { cn } from '@/lib/utils';
 
 const pumpFormSchemaBase = z.object({
   model: z.string().min(1, "Model is required"),
@@ -129,12 +132,10 @@ export function AddPumpForm({ isOpen, onClose, onAddPump }: AddPumpFormProps) {
         customer: data.customer,
         poNumber: data.poNumber,
         serialNumber: pumpSerialNumber,
-        currentStage: 'open-jobs', // Default stage
+        currentStage: 'open-jobs', 
         notes: data.notes || undefined,
         priority: data.priority || 'normal',
-        estimatedBuildTimeDays: 1.5, // Default estimated build time
-        // actualDurationDays is not set at creation
-        // powderCoater and powderCoatColor are not set at creation from this form
+        estimatedBuildTimeDays: 1.5, 
       };
       newPumpsToCreate.push(pumpData);
     }
@@ -150,152 +151,158 @@ export function AddPumpForm({ isOpen, onClose, onAddPump }: AddPumpFormProps) {
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => { if (!open) handleClose(); }}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>Add New Pump(s)</DialogTitle>
-          <DialogDescription>
-            Enter details for the new pump(s). They will be added to 'Open Jobs'.
-          </DialogDescription>
-        </DialogHeader>
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 py-2 max-h-[70vh] overflow-y-auto pr-2">
-            <FormField
-              control={form.control}
-              name="model"
-              render={({ field }) => (
-                <FormItem className="flex flex-col">
-                  <FormLabel>Pump Model</FormLabel>
-                  <Combobox
-                    options={pumpModelOptions}
-                    value={field.value}
-                    onChange={field.onChange}
-                    placeholder="Select a model"
-                    searchPlaceholder="Search models..."
-                    emptyText="No model found."
-                    disabled={isSubmitting}
-                  />
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-             <FormField
-              control={form.control}
-              name="customer"
-              render={({ field }) => (
-                <FormItem className="flex flex-col">
-                  <FormLabel>Customer Name</FormLabel>
-                  <Combobox
-                    options={customerOptions}
-                    value={field.value}
-                    onChange={field.onChange}
-                    placeholder="Select a customer"
-                    searchPlaceholder="Search customers..."
-                    emptyText="No customer found."
-                    disabled={isSubmitting}
-                  />
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="poNumber"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>PO Number</FormLabel>
-                  <FormControl>
-                    <Input placeholder="e.g., PO-67890" {...field} disabled={isSubmitting} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="quantity"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Quantity</FormLabel>
-                  <FormControl>
-                    <Input type="number" min="1" {...field}
-                           onChange={e => field.onChange(parseInt(e.target.value, 10) || 1)}
-                           disabled={isSubmitting} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="serialNumber"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>{quantity > 1 ? "Starting Serial Number (Optional)" : "Serial Number"}</FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder={
-                        quantity > 1
-                          ? "MSP-JN-XXXX (e.g., MSP-JN-1001)"
-                          : "MSP-JN-XXXX (e.g., MSP-JN-1234)"
-                      }
-                      {...field}
-                      value={field.value || ''}
+      <DialogPortal>
+        <DialogOverlay />
+        <DialogContent className={cn(
+          "sm:max-w-md"
+          // "glass-dialog-theme" class is now applied by default in DialogContent component
+          )}>
+          <DialogHeader>
+            <DialogTitle>Add New Pump(s)</DialogTitle>
+            <DialogDescription>
+              Enter details for the new pump(s). They will be added to 'Open Jobs'.
+            </DialogDescription>
+          </DialogHeader>
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 py-2 max-h-[70vh] overflow-y-auto pr-2">
+              <FormField
+                control={form.control}
+                name="model"
+                render={({ field }) => (
+                  <FormItem className="flex flex-col">
+                    <FormLabel>Pump Model</FormLabel>
+                    <Combobox
+                      options={pumpModelOptions}
+                      value={field.value}
+                      onChange={field.onChange}
+                      placeholder="Select a model"
+                      searchPlaceholder="Search models..."
+                      emptyText="No model found."
                       disabled={isSubmitting}
                     />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="priority"
-              render={({ field }) => (
-                <FormItem className="flex flex-col">
-                  <FormLabel>Priority</FormLabel>
-                  <Combobox
-                    options={priorityOptions}
-                    value={field.value}
-                    onChange={field.onChange}
-                    placeholder="Select priority"
-                    searchPlaceholder="Search priorities..."
-                    emptyText="No priority found."
-                    disabled={isSubmitting}
-                  />
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="notes"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Notes</FormLabel>
-                  <FormControl>
-                    <Textarea
-                      placeholder="Add any relevant notes for this pump..."
-                      className="resize-none"
-                      {...field}
-                      value={field.value || ''}
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+               <FormField
+                control={form.control}
+                name="customer"
+                render={({ field }) => (
+                  <FormItem className="flex flex-col">
+                    <FormLabel>Customer Name</FormLabel>
+                    <Combobox
+                      options={customerOptions}
+                      value={field.value}
+                      onChange={field.onChange}
+                      placeholder="Select a customer"
+                      searchPlaceholder="Search customers..."
+                      emptyText="No customer found."
                       disabled={isSubmitting}
                     />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <DialogFooter className="pt-2">
-              <Button type="button" variant="outline" onClick={handleClose} disabled={isSubmitting}>
-                Cancel
-              </Button>
-              <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting ? (quantity > 1 ? 'Adding Pumps...' : 'Adding Pump...') : (quantity > 1 ? `Add ${quantity} Pumps` : 'Add Pump')}
-              </Button>
-            </DialogFooter>
-          </form>
-        </Form>
-      </DialogContent>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="poNumber"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>PO Number</FormLabel>
+                    <FormControl>
+                      <Input placeholder="e.g., PO-67890" {...field} disabled={isSubmitting} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="quantity"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Quantity</FormLabel>
+                    <FormControl>
+                      <Input type="number" min="1" {...field}
+                             onChange={e => field.onChange(parseInt(e.target.value, 10) || 1)}
+                             disabled={isSubmitting} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="serialNumber"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{quantity > 1 ? "Starting Serial Number (Optional)" : "Serial Number"}</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder={
+                          quantity > 1
+                            ? "MSP-JN-XXXX (e.g., MSP-JN-1001)"
+                            : "MSP-JN-XXXX (e.g., MSP-JN-1234)"
+                        }
+                        {...field}
+                        value={field.value || ''}
+                        disabled={isSubmitting}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="priority"
+                render={({ field }) => (
+                  <FormItem className="flex flex-col">
+                    <FormLabel>Priority</FormLabel>
+                    <Combobox
+                      options={priorityOptions}
+                      value={field.value}
+                      onChange={field.onChange}
+                      placeholder="Select priority"
+                      searchPlaceholder="Search priorities..."
+                      emptyText="No priority found."
+                      disabled={isSubmitting}
+                    />
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="notes"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Notes</FormLabel>
+                    <FormControl>
+                      <Textarea
+                        placeholder="Add any relevant notes for this pump..."
+                        className="resize-none"
+                        {...field}
+                        value={field.value || ''}
+                        disabled={isSubmitting}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <DialogFooter className="pt-2">
+                <Button type="button" variant="outline" onClick={handleClose} disabled={isSubmitting}>
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={isSubmitting}>
+                  {isSubmitting ? (quantity > 1 ? 'Adding Pumps...' : 'Adding Pump...') : (quantity > 1 ? `Add ${quantity} Pumps` : 'Add Pump')}
+                </Button>
+              </DialogFooter>
+            </form>
+          </Form>
+        </DialogContent>
+      </DialogPortal>
     </Dialog>
   );
 }
