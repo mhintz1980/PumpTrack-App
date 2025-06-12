@@ -23,10 +23,10 @@
   .radix-popper-content-wrapper .SelectContent [role="option"]:focus,
   .radix-popper-content-wrapper .SelectContent [data-highlighted] { /* data-highlighted for keyboard nav */
     background-color: var(--glass-surface-hover) !important; /* Existing light glass hover, consider changing if popover is dark */
-    color: var(--glass-accent-purple) !important; /* Use accent for focused/highlighted item text */
+    color: var(--glass-accent-blue) !important; /* Use accent for focused/highlighted item text */
   }
   .radix-popper-content-wrapper .SelectContent [aria-selected="true"] .lucide-check {
-      color: var(--glass-accent-purple) !important;
+      color: var(--glass-accent-blue) !important;
   }
    .radix-popper-content-wrapper .SelectContent .ScrollAreaScrollbar > .ScrollAreaThumb {
     background-color: var(--glass-border) !important; /* Scrollbar thumb color based on new var */
@@ -99,7 +99,7 @@
     opacity: 0.7;
   }
    .glass-dialog-theme button[role="combobox"]:hover {
-    background-color: hsl(var(--glass-surface-hsl-values), 0.6) !important; /* Example: slightly more opaque */
+    background-color: hsla(var(--glass-surface-hsl-values), 0.75) !important; /* Example: slightly more opaque */
     border-color: var(--glass-accent-blue) !important;
   }
 
@@ -131,7 +131,7 @@
     @apply bg-glass-surface text-glass-text border-glass-border;
   }
   .glass-dialog-theme .dialog-footer-button-outline:hover {
-    background-color: hsl(var(--glass-surface-hsl-values), 0.6) !important;
+    background-color: hsla(var(--glass-surface-hsl-values), 0.75) !important;
     border-color: var(--glass-accent-blue) !important;
   }
   .glass-dialog-theme .save-button-override {
@@ -238,7 +238,7 @@ body {
     --dropdown-border: var(--glass-border);
     --dropdown-text: var(--glass-text);
     /* For highlighted items inside the now dark glass popover */
-    --glass-surface-hover: hsla(var(--glass-surface-hsl-values), 0.6); /* Darker surface, slightly more opaque for hover */
+    --glass-surface-hover: hsla(var(--glass-surface-hsl-values), 0.75); /* Darker surface, slightly more opaque for hover */
 
 
     --header-height-value: 64px;
@@ -662,38 +662,39 @@ body {
   transition-timing-function: ease-in-out;
 }
 
-/* DropdownMenuContent in EnhancedHeader (light glass theme) */
+/* DropdownMenuContent in EnhancedHeader (now dark glass theme) */
 .enhanced-header-filters {
-  background: var(--glass-surface-active-old) !important; 
+  background: var(--glass-surface) !important; 
   backdrop-filter: blur(16px) !important;
-  border: 1px solid var(--glass-border-old) !important; 
-  color: var(--glass-text-primary) !important; 
+  border: 1px solid var(--glass-border) !important; 
+  color: var(--glass-text) !important; 
 }
 .enhanced-header-filters .DropdownMenuLabel {
-  color: var(--glass-text-primary) !important;
+  color: var(--glass-text) !important;
 }
 .enhanced-header-filters .DropdownMenuSeparator {
-  border-color: rgba(255,255,255,0.1) !important; 
+  border-color: var(--glass-border) !important; 
+  opacity: 0.5; /* Make separator slightly more subtle */
 }
 .enhanced-header-filters .Label { /* Target ShadCN Label within this context */
-  color: var(--glass-text-primary) !important;
+  color: var(--glass-text) !important;
 }
 .enhanced-header-filters [role="option"]:focus,
 .enhanced-header-filters [data-highlighted] {
-  background-color: var(--glass-surface-hover-old) !important; 
-  color: var(--glass-accent-purple) !important;
+  background-color: var(--glass-surface-hover) !important; 
+  color: var(--glass-accent-blue) !important; /* Light blue for text on dark hover */
 }
 .enhanced-header-filters [aria-selected="true"] .lucide-check {
-    color: var(--glass-accent-purple) !important;
+    color: var(--glass-accent-blue) !important; /* Light blue for checkmark */
 }
 .enhanced-header-filters .CommandInput {
-  background-color: var(--glass-surface-subtle) !important; 
-  border-color: var(--glass-border-hover) !important; 
-  color: var(--glass-text-primary) !important;
+  background-color: var(--glass-surface) !important; 
+  border-color: var(--glass-border) !important; 
+  color: var(--glass-text) !important;
 }
 .enhanced-header-filters .CommandInput::placeholder {
-  color: var(--glass-text-muted) !important;
-  opacity: 0.8;
+  color: var(--glass-text) !important;
+  opacity: 0.6;
 }
 
 
@@ -740,3 +741,4 @@ body {
      opacity: 0.6 !important;
   }
 }
+
