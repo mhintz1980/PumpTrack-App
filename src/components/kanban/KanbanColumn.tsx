@@ -14,6 +14,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { groupPumpsByModel } from "@/lib/utils";
 
 interface KanbanColumnProps {
   stage: Stage;
@@ -50,15 +51,7 @@ export function KanbanColumn({
 }: KanbanColumnProps) {
   const Icon = stage.icon;
 
-  const groupedPumpsByModel = React.useMemo(() => {
-    return pumps.reduce((acc, pump) => {
-      if (!acc[pump.model]) {
-        acc[pump.model] = [];
-      }
-      acc[pump.model].push(pump);
-      return acc;
-    }, {} as Record<string, Pump[]>);
-  }, [pumps]);
+  const groupedPumpsByModel = React.useMemo(() => groupPumpsByModel(pumps), [pumps]);
 
   const switchId = `view-mode-toggle-${stage.id}`;
 

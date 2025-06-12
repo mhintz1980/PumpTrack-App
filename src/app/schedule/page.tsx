@@ -16,9 +16,14 @@ import type { Pump, PriorityLevel, Filters, ViewMode } from '@/types';
 import { PUMP_MODELS, CUSTOMER_NAMES, PRIORITY_LEVELS, POWDER_COATERS } from '@/lib/constants';
 import { useToast } from '@/hooks/use-toast';
 import { SchedulePumpCard } from '@/components/schedule/SchedulePumpCard';
-import { PumpDetailsModal } from '@/components/pump/PumpDetailsModal';
+import dynamic from 'next/dynamic';
 import { EnhancedHeader } from '@/components/layout/EnhancedHeader';
-import { AddPumpForm } from '@/components/pump/AddPumpForm';
+const PumpDetailsModal = dynamic(() =>
+  import('@/components/pump/PumpDetailsModal').then(m => m.PumpDetailsModal)
+);
+const AddPumpForm = dynamic(() =>
+  import('@/components/pump/AddPumpForm').then(m => m.AddPumpForm)
+);
 import { GroupedKanbanCard } from '@/components/kanban/GroupedKanbanCard';
 import * as pumpService from '@/services/pumpService';
 

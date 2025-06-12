@@ -30,6 +30,7 @@ import type { Pump, StageId, PriorityLevel } from '@/types';
 import { STAGES, POWDER_COATERS, PUMP_MODELS, DEFAULT_POWDER_COAT_COLORS, CUSTOMER_NAMES, PRIORITY_LEVELS } from '@/lib/constants';
 import { AiActions } from '@/components/AiActions';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { cn } from '@/lib/utils';
 
 const pumpDetailsSchema = z.object({
   model: z.string().min(1, "Model is required"),
@@ -108,11 +109,14 @@ export function PumpDetailsModal({ isOpen, onClose, pump, onUpdatePump }: PumpDe
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => {if (!open) onClose()}}>
-      <DialogContent className="sm:max-w-2xl max-h-[90vh] flex flex-col p-0">
-        <DialogHeader className="p-6 pb-4 border-b">
+      <DialogContent className={cn(
+        "sm:max-w-2xl max-h-[90vh] flex flex-col p-0 glass-dialog-theme"
+        // Removed direct style application, will be handled by glass-dialog-theme class
+      )}>
+        <DialogHeader className="p-6 pb-4 border-b border-[var(--glass-border)]"> {/* Use glass border for header separator */}
           <DialogTitle>Pump Details: {pump.serialNumber || pump.model || 'N/A'}</DialogTitle>
-          <DialogDescription>
-            Currently in stage: <span className="font-semibold text-primary">{currentStageDetails?.title || pump.currentStage}</span>.
+          <DialogDescription> {/* This will be styled by .glass-dialog-theme [class*="text-muted-foreground"] */}
+            Currently in stage: <span className="font-semibold text-[var(--glass-accent-blue)]">{currentStageDetails?.title || pump.currentStage}</span>.
             View or edit pump information below.
           </DialogDescription>
         </DialogHeader>
@@ -135,6 +139,7 @@ export function PumpDetailsModal({ isOpen, onClose, pump, onUpdatePump }: PumpDe
                         searchPlaceholder="Search models..."
                         emptyText="No model found."
                         disabled={isSubmitting}
+                        // className for trigger button will be targeted by CSS in globals.css
                       />
                       <FormMessage />
                     </FormItem>
@@ -295,13 +300,13 @@ export function PumpDetailsModal({ isOpen, onClose, pump, onUpdatePump }: PumpDe
             </form>
           </Form>
         </ScrollArea>
-        <DialogFooter className="p-6 pt-4 border-t">
+        <DialogFooter className="p-6 pt-4 border-t border-[var(--glass-border)]"> {/* Use glass border for footer separator */}
           <DialogClose asChild>
-            <Button type="button" variant="outline" onClick={onClose} disabled={isSubmitting}>
+            <Button type="button" variant="outline" onClick={onClose} disabled={isSubmitting} className="dialog-footer-button-outline">
               Close
             </Button>
           </DialogClose>
-          <Button type="submit" form="pumpDetailsForm" disabled={isSubmitting}>
+          <Button type="submit" form="pumpDetailsForm" disabled={isSubmitting} className="save-button-override">
             {isSubmitting ? 'Saving...' : 'Save Changes'}
           </Button>
         </DialogFooter>

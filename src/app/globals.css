@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -18,7 +19,84 @@
     background: var(--glass-surface);
     border: 1px solid var(--glass-border);
   }
+
+  /* Styles for Glass Themed Dialog */
+  .glass-dialog-theme {
+    background: var(--glass-surface-active) !important;
+    color: var(--glass-text-primary) !important;
+    border: 1px solid var(--glass-border) !important;
+    backdrop-filter: blur(16px);
+    box-shadow: var(--glass-shadow-xl) !important; /* Ensure shadow var is defined or use a fallback */
+  }
+
+  /* Override default muted foreground for descriptions inside glass dialog */
+  .glass-dialog-theme [class*="text-muted-foreground"] {
+    color: var(--glass-text-muted) !important;
+  }
+  .glass-dialog-theme label { /* Ensure form labels are also using the primary glass text color */
+     color: var(--glass-text-primary) !important;
+  }
+  
+  .glass-dialog-theme input[type="text"],
+  .glass-dialog-theme input[type="number"],
+  .glass-dialog-theme input[type="password"],
+  .glass-dialog-theme textarea {
+    background-color: var(--glass-surface-subtle) !important;
+    border-color: var(--glass-border-hover) !important;
+    color: var(--glass-text-primary) !important;
+  }
+  .glass-dialog-theme input[type="text"]::placeholder,
+  .glass-dialog-theme input[type="number"]::placeholder,
+  .glass-dialog-theme input[type="password"]::placeholder,
+  .glass-dialog-theme textarea::placeholder {
+    color: var(--glass-text-muted) !important;
+  }
+  .glass-dialog-theme input:focus-visible,
+  .glass-dialog-theme textarea:focus-visible {
+    border-color: var(--glass-accent-blue) !important; /* Use blue accent for focus */
+    box-shadow: 0 0 0 1px var(--glass-accent-blue) !important;
+  }
+
+  /* Combobox trigger styling within glass dialog */
+  .glass-dialog-theme button[role="combobox"] {
+    background-color: var(--glass-surface-subtle) !important;
+    border-color: var(--glass-border-hover) !important;
+    color: var(--glass-text-primary) !important;
+  }
+  .glass-dialog-theme button[role="combobox"]:hover {
+    background-color: var(--glass-surface) !important;
+    border-color: var(--glass-border) !important;
+  }
+  .glass-dialog-theme button[role="combobox"] > span { 
+     color: var(--glass-text-primary) !important;
+  }
+  .glass-dialog-theme button[role="combobox"][class*="text-muted-foreground"] > span {
+     color: var(--glass-text-muted) !important;
+  }
+  .glass-dialog-theme button[role="combobox"] svg { 
+    color: var(--glass-text-muted) !important;
+  }
+
+  /* Dialog Footer Buttons */
+  .glass-dialog-theme .dialog-footer-button-outline {
+    background: var(--glass-surface) !important;
+    border: 1px solid var(--glass-border) !important;
+    color: var(--glass-text-primary) !important;
+  }
+  .glass-dialog-theme .dialog-footer-button-outline:hover {
+    background: var(--glass-surface-hover) !important;
+    border-color: var(--glass-border-hover) !important;
+  }
+  .glass-dialog-theme .save-button-override {
+    background-color: var(--glass-accent-blue) !important; /* Blue accent */
+    color: var(--glass-text-primary) !important; /* Light text for contrast */
+    border: 1px solid transparent !important;
+  }
+  .glass-dialog-theme .save-button-override:hover {
+    background-color: var(--glass-bg-secondary) !important; /* Darker blue on hover */
+  }
 }
+
 body {
   font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
 }
@@ -28,6 +106,86 @@ body {
   }
   body {
     @apply bg-background text-foreground;
+  }
+
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+    --primary: 204 74% 45%; /* Sky Blue #78B0D4 */
+    --primary-foreground: 210 40% 98%;
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    --accent: 174 67% 63%; /* Soft Teal #73D0C1 */
+    --accent-foreground: 222.2 47.4% 11.2%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 204 74% 45%; /* Sky Blue for ring */
+    --radius: 0.75rem;
+
+    --chart-1: 204 70% 50%;
+    --chart-2: 174 60% 50%;
+    --chart-3: 240 60% 65%;
+    --chart-4: 24 80% 55%;
+    --chart-5: 160 70% 45%;
+
+    /* Sidebar specific theme variables - can be adjusted for glass theme */
+    --sidebar-background: hsl(210, 30%, 12%); /* Darker shade for sidebar */
+    --sidebar-foreground: hsl(210, 20%, 85%);
+    --sidebar-primary: hsl(var(--primary));
+    --sidebar-primary-foreground: hsl(var(--primary-foreground));
+    --sidebar-accent: hsl(var(--primary) / 0.1); /* Subtle accent */
+    --sidebar-accent-foreground: hsl(var(--primary));
+    --sidebar-border: hsl(210, 30%, 20%);
+    --sidebar-ring: hsl(var(--ring));
+    
+    /* Dropdown Content Styling Variables for Glass Theme */
+    --dropdown-background: var(--glass-surface-active); /* Using a more opaque glass surface */
+    --dropdown-border: var(--glass-border-hover);
+    --dropdown-text: var(--glass-text-primary);
+    --dropdown-separator: var(--glass-border);
+  }
+
+  .dark {
+    /* Dark theme overrides if needed, for now, focusing on glass theme */
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 204 70% 60%; /* Brighter Sky Blue for dark */
+    --primary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+    --accent: 174 60% 70%; /* Brighter Soft Teal for dark */
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 204 70% 60%; /* Brighter Sky Blue for ring in dark */
+
+    --chart-1: hsl(204 70% 60%);
+    --chart-2: hsl(174 60% 60%);
+    --chart-3: hsl(240 50% 75%);
+    --chart-4: hsl(24 70% 65%);
+    --chart-5: hsl(160 60% 55%);
+
+    --sidebar-background: hsl(220, 25%, 10%);
+    --sidebar-foreground: hsl(210, 25%, 90%);
+    --sidebar-accent: hsl(var(--primary) / 0.15);
+    --sidebar-accent-foreground: hsl(var(--primary));
+    --sidebar-border: hsl(220, 25%, 15%);
   }
 }
 
@@ -74,15 +232,15 @@ body {
   
   /* Accent Colors */
   --glass-accent-blue: #358ed4;
-  --glass-accent-purple: #FFD12B;
-  --glass-accent-light-purple: #FFD12B;
+  --glass-accent-purple: #FFD12B; /* This is currently Yellow based on your previous themes */
+  --glass-accent-light-purple: #FFDA4F; /* Lighter Yellow */
   --glass-accent-glow-blue: rgba(53, 142, 212, 0.3);
-  --glass-accent-glow-purple: rgba(255, 209, 43, 0.3);
+  --glass-accent-glow-purple: rgba(255, 209, 43, 0.3); /* Glow for Yellow */
   
   /* Shadow Colors */
   --glass-shadow-base: rgba(0, 0, 0, 0.3);
   --glass-shadow-intense: rgba(0, 0, 0, 0.5);
-  --glass-shadow-glow: rgba(255, 209, 43, 0.2);
+  --glass-shadow-glow: rgba(255, 209, 43, 0.2); /* Glow for Yellow */
   
   /* Shadow System */
   --glass-shadow-sm: 0 2px 8px var(--glass-shadow-base);
@@ -206,7 +364,7 @@ body {
 }
 
 .glass-card-description {
-  color: #b8b8c8;
+  color: #b8b8c8; /* Was var(--glass-text-muted) but this specific color was in an image */
   font-size: 0.75rem;
   margin-top: 0.25rem;
 }
@@ -218,18 +376,18 @@ body {
 
 /* Priority Indicators */
 .glass-card.priority-high {
-  border-left: 3px solid #FFD12B;
+  border-left: 3px solid #FFD12B; /* Yellow */
   box-shadow: var(--glass-shadow-md), -3px 0 12px rgba(255, 209, 43, 0.3);
 }
 
 .glass-card.priority-urgent {
-  border-left: 3px solid #ef4444;
+  border-left: 3px solid #ef4444; /* Red */
   box-shadow: var(--glass-shadow-md), -3px 0 12px rgba(239, 68, 68, 0.3);
 }
 
 .glass-card.selected {
-  border-color: var(--glass-accent-purple);
-  box-shadow: 0 0 0 2px var(--glass-accent-glow-purple), var(--glass-shadow-glow-effect);
+  border-color: var(--glass-accent-purple); /* Yellow */
+  box-shadow: 0 0 0 2px var(--glass-accent-glow-purple), var(--glass-shadow-glow-effect); /* Yellow glow */
 }
 
 .glass-button {
@@ -255,8 +413,8 @@ body {
 }
 
 .glass-switch[data-state="checked"] {
-  background: var(--glass-accent-purple) !important;
-  box-shadow: 0 0 12px var(--glass-accent-glow-purple);
+  background: var(--glass-accent-purple) !important; /* Yellow */
+  box-shadow: 0 0 12px var(--glass-accent-glow-purple); /* Yellow glow */
 }
 
 /* Glass Scrollbar */
@@ -276,8 +434,8 @@ body {
 }
 
 .glass-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: var(--glass-accent-purple);
-  box-shadow: 0 0 8px var(--glass-accent-glow-purple);
+  background: var(--glass-accent-purple); /* Yellow */
+  box-shadow: 0 0 8px var(--glass-accent-glow-purple); /* Yellow glow */
 }
 
 /* Empty state styling */
@@ -294,16 +452,16 @@ body {
 }
 
 .glass-drag-handle:hover {
-  color: var(--glass-accent-purple);
-  filter: drop-shadow(0 0 4px var(--glass-accent-glow-purple));
+  color: var(--glass-accent-purple); /* Yellow */
+  filter: drop-shadow(0 0 4px var(--glass-accent-glow-purple)); /* Yellow glow */
 }
 
 /* Focus states for accessibility */
 .glass-card:focus-visible,
 .glass-button:focus-visible {
-  outline: 2px solid var(--glass-accent-purple);
+  outline: 2px solid var(--glass-accent-purple); /* Yellow */
   outline-offset: 2px;
-  box-shadow: 0 0 0 4px var(--glass-accent-glow-purple);
+  box-shadow: 0 0 0 4px var(--glass-accent-glow-purple); /* Yellow glow */
 }
 
 /* Reduced motion support */
@@ -334,9 +492,9 @@ body {
   right: 0;
   bottom: 0;
   background:
-    radial-gradient(circle at 10% 20%, rgba(255, 209, 43, 0.05) 0%, transparent 20%),
-    radial-gradient(circle at 90% 80%, rgba(53, 142, 212, 0.05) 0%, transparent 20%),
-    radial-gradient(circle at 40% 40%, rgba(255, 209, 43, 0.03) 0%, transparent 30%);
+    radial-gradient(circle at 10% 20%, rgba(255, 209, 43, 0.05) 0%, transparent 20%), /* Yellow hint */
+    radial-gradient(circle at 90% 80%, rgba(53, 142, 212, 0.05) 0%, transparent 20%), /* Blue hint */
+    radial-gradient(circle at 40% 40%, rgba(255, 209, 43, 0.03) 0%, transparent 30%); /* Yellow hint */
   animation: glass-float 6s ease-in-out infinite;
   pointer-events: none;
   z-index: 0;
@@ -376,27 +534,23 @@ body {
 /* Drop zone highlighting */
 .glass-column[data-drag-over="true"] {
   background: var(--glass-surface-hover);
-  border-color: var(--glass-accent-purple);
-  box-shadow: 0 0 0 2px var(--glass-accent-glow-purple), var(--glass-shadow-glow-effect);
+  border-color: var(--glass-accent-purple); /* Yellow */
+  box-shadow: 0 0 0 2px var(--glass-accent-glow-purple), var(--glass-shadow-glow-effect); /* Yellow glow */
 }
 
 /* Loading state for cards */
-.glass-card-loading {
-  background: var(--glass-surface-subtle);
-  animation: glass-glow 1.5s ease-in-out infinite alternate;
-}
 
 /* Enhanced focus states */
 .glass-card:focus-visible {
   outline: none;
-  border-color: var(--glass-accent-purple);
-  box-shadow: 0 0 0 3px var(--glass-accent-glow-purple), var(--glass-shadow-glow-effect);
+  border-color: var(--glass-accent-purple); /* Yellow */
+  box-shadow: 0 0 0 3px var(--glass-accent-glow-purple), var(--glass-shadow-glow-effect); /* Yellow glow */
 }
 
 .glass-button:focus-visible {
   outline: none;
-  border-color: var(--glass-accent-purple);
-  box-shadow: 0 0 0 2px var(--glass-accent-glow-purple), var(--glass-shadow-sm);
+  border-color: var(--glass-accent-purple); /* Yellow */
+  box-shadow: 0 0 0 2px var(--glass-accent-glow-purple), var(--glass-shadow-sm); /* Yellow glow */
 }
 
 /* Subtle text glow for better readability */
@@ -413,8 +567,8 @@ body {
   left: 0;
   width: 4px;
   height: 100%;
-  background: linear-gradient(180deg, #FFD12B, #FFC107);
-  box-shadow: 0 0 8px rgba(255, 209, 43, 0.5);
+  background: linear-gradient(180deg, #FFD12B, #FFC107); /* Yellow gradient */
+  box-shadow: 0 0 8px rgba(255, 209, 43, 0.5); /* Yellow glow */
   border-radius: 16px 0 0 16px;
 }
 
@@ -425,8 +579,8 @@ body {
   left: 0;
   width: 4px;
   height: 100%;
-  background: linear-gradient(180deg, #ef4444, #dc2626);
-  box-shadow: 0 0 8px rgba(239, 68, 68, 0.5);
+  background: linear-gradient(180deg, #ef4444, #dc2626); /* Red gradient */
+  box-shadow: 0 0 8px rgba(239, 68, 68, 0.5); /* Red glow */
   border-radius: 16px 0 0 16px;
 }
 
