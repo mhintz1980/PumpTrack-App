@@ -110,7 +110,8 @@ export function PumpDetailsModal({ isOpen, onClose, pump, onUpdatePump }: PumpDe
   return (
     <Dialog open={isOpen} onOpenChange={(open) => {if (!open) onClose()}}>
       <DialogContent className={cn(
-        "sm:max-w-2xl max-h-[90vh] flex flex-col p-0 glass-dialog-theme"
+        "sm:max-w-2xl max-h-[90vh] flex flex-col p-0",
+        "glass-dialog-theme" // Apply the master class for glass styling
       )}>
         <DialogHeader className="p-6 pb-4 border-b border-[var(--glass-border)]">
           <DialogTitle>Pump Details: {pump.serialNumber || pump.model || 'N/A'}</DialogTitle>
@@ -137,7 +138,7 @@ export function PumpDetailsModal({ isOpen, onClose, pump, onUpdatePump }: PumpDe
                         searchPlaceholder="Search models..."
                         emptyText="No model found."
                         disabled={isSubmitting}
-                        className="w-full min-w-0"
+                        className="w-full min-w-0" // Ensure width is controlled by grid
                       />
                       <FormMessage />
                     </FormItem>

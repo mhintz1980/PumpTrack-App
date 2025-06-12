@@ -40,7 +40,7 @@ export function GroupedPumpDetailsModal({
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className={cn(
         "sm:max-w-2xl max-h-[90vh] flex flex-col p-0",
-        "glass-dialog-theme"
+        "glass-dialog-theme" // Apply the master class for glass styling
       )}>
         <DialogHeader className="p-6 pb-4 border-b border-[var(--glass-border)]">
           <DialogTitle>Details for Model: {modelName}</DialogTitle>
@@ -49,7 +49,7 @@ export function GroupedPumpDetailsModal({
           </DialogDescription>
         </DialogHeader>
         <ScrollArea className="flex-grow pr-6 -mr-6 my-4">
-          <div className="space-y-3 pl-6"> {/* Added pl-6 to match DialogHeader padding */}
+          <div className="space-y-3 pl-6"> 
             {pumpsInGroup.map((pump) => (
               <KanbanCard
                 key={pump.id}
@@ -57,6 +57,7 @@ export function GroupedPumpDetailsModal({
                 onDragStart={() => {}} 
                 isDraggable={false}
                 onOpenDetailsModal={() => onOpenIndividualPumpDetails(pump)}
+                // KanbanCard will be styled by .glass-dialog-theme .glass-card in globals.css
               />
             ))}
           </div>
@@ -72,4 +73,3 @@ export function GroupedPumpDetailsModal({
     </Dialog>
   );
 }
-
