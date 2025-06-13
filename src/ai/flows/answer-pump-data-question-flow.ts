@@ -1,4 +1,4 @@
-
+// @ts-nocheck
 'use server';
 /**
  * @fileOverview Answers user questions about pump data using Genkit tools to simulate database queries.

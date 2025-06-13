@@ -335,7 +335,7 @@ const SidebarPinButton = React.forwardRef<
           <span className="sr-only">{isPinned ? "Unpin sidebar" : "Pin sidebar"}</span>
         </Button>
       </TooltipTrigger>
-      <TooltipContent side="right" align="center">
+      <TooltipContent side="right" sideOffset={8} align="center" className="glass-tooltip">
         {isPinned ? "Unpin sidebar (Ctrl+B)" : "Pin sidebar (Ctrl+B)"}
       </TooltipContent>
     </Tooltip>
