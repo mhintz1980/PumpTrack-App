@@ -620,6 +620,13 @@ body {
   box-shadow: 0 0 0 2px var(--glass-accent-glow-purple), var(--glass-shadow-sm);
 }
 
+.kanban-page {
+  background-image: url('/images/44.png');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
 .glass-card-title, /* For light glass cards */
 .glass-column-title {
   text-shadow: 0 1px 3px rgba(0,0,0,0.5);
