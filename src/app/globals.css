@@ -179,6 +179,22 @@
   }
 }
 
+@layer components {
+  /* Plug-and-play glassmorphic sidebar with yellow accent */
+  .glass-sidebar {
+    @apply bg-glass-surface text-glass-text border border-glass-border backdrop-blur-md backdrop-saturate-150;
+    border-left: 4px solid var(--glass-accent-purple); /* yellow accent */
+    box-shadow: 0 4px 32px var(--glass-shadow-base), 0 0 16px var(--glass-accent-glow-purple);
+    transition: box-shadow 0.3s, border-color 0.3s;
+    /* Responsive radius for floating/inset variants */
+    border-radius: 20px 0 0 20px;
+  }
+  .glass-sidebar:focus-within, .glass-sidebar:hover {
+    box-shadow: 0 8px 40px var(--glass-shadow-intense), 0 0 24px var(--glass-accent-glow-purple);
+    border-left-color: var(--glass-accent-light-purple);
+  }
+}
+
 body {
   font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
 }
