@@ -188,6 +188,10 @@ body {
   }
   body {
     @apply bg-background text-foreground;
+    background-image: var(--universal-background-image);
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
   }
 
   :root {
@@ -226,6 +230,9 @@ body {
     --sidebar-accent-foreground: hsl(var(--primary));
     --sidebar-border: hsl(210, 30%, 20%);
     --sidebar-ring: hsl(var(--ring));
+
+    /* Universal background image variable */
+    --universal-background-image: url('/images/44.png');
 
     /* New Dark Glass Theme Variables - HSL values for base color */
     --glass-surface-hsl-values: 215 50% 12%; /* Dark blue base: #0f1b2d */
@@ -276,15 +283,16 @@ body {
     --sidebar-accent: hsl(var(--primary) / 0.15);
     --sidebar-accent-foreground: hsl(var(--primary));
     --sidebar-border: hsl(220, 25%, 15%);
+
+    /* Universal background image for dark mode (can be customized) */
+    --universal-background-image: url('/images/44.png');
   }
 }
 
 /* Blue-Yellow Glassomorphic Design System - MAIN KANBAN PAGE THEME */
 :root {
   /* Background Colors */
-  --glass-bg-primary: #246caa; 
-  --glass-bg-secondary: #16406c;
-  --glass-bg-gradient: linear-gradient(135deg, #246caa 0%, #358ed4 50%, #16406c 100%);
+  /* Removed obsolete glass-bg-primary, glass-bg-secondary, and glass-bg-gradient as backgrounds are now transparent for global image */
 
   /* Glass Surface Colors - Columns (Light glass theme) */
   --glass-surface-old: rgba(255, 255, 255, 0.1);  /* For Kanban columns etc. */
@@ -330,7 +338,7 @@ body {
 /* Glassomorphic Utility Classes for Kanban Page (Light Glass Theme) */
 .glass-board-container {
   @apply flex gap-6 p-0 overflow-x-auto;
-  background: var(--glass-bg-gradient); 
+  background: transparent;
   position: relative;
   min-height: 100vh;
 }
@@ -350,9 +358,9 @@ body {
 
 .glass-column {
   @apply flex-shrink-0 w-[18.75rem] h-full flex flex-col;
-  background: var(--glass-surface-old); 
+  background: transparent;
   backdrop-filter: blur(12px);
-  border: 1px solid var(--glass-border-old); 
+  border: 1px solid var(--glass-border-old);
   border-radius: 20px;
   box-shadow: var(--glass-shadow-lg);
   transition: all 0.3s ease-in-out;

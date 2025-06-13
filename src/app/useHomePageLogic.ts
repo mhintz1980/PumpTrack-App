@@ -320,8 +320,9 @@ export function useHomePageLogic() {
     handleOpenPumpDetailsModal,
     handlePumpCardClick,
     handleOpenGroupDetailsModal,
-    handleToggleColumnViewMode,
-    handleToggleExplodeGroup,
+    // Fix: provide the correct prop name for KanbanBoard
+    onToggleColumnViewMode: handleToggleColumnViewMode,
+    onToggleExplodeGroup: handleToggleExplodeGroup,
     allPumpModels,
     allCustomerNames,
     allPriorities,

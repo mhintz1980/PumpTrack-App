@@ -72,18 +72,21 @@ const SidebarProvider = React.forwardRef<
     const isMobile = useIsMobile()
     const [openMobile, setOpenMobile] = React.useState(false)
 
-    const [_isPinned, _setIsPinned] = React.useState(() => {
+    // Always use defaultPinned for SSR/initial render to avoid hydration mismatch
+    const [_isPinned, _setIsPinned] = React.useState(defaultPinned);
+
+    // On client, update _isPinned from cookie after mount
+    React.useEffect(() => {
       if (typeof window !== "undefined") {
         const cookieValue = document.cookie
           .split("; ")
           .find((row) => row.startsWith(`${SIDEBAR_PINNED_COOKIE_NAME}=`))
-          ?.split("=")[1]
-        if (cookieValue) {
-          return cookieValue === "true"
+          ?.split("=")[1];
+        if (cookieValue !== undefined) {
+          _setIsPinned(cookieValue === "true");
         }
       }
-      return defaultPinned
-    })
+    }, []);
 
     const isPinned = pinnedProp ?? _isPinned
     const setIsPinned = React.useCallback(
@@ -381,7 +384,7 @@ const SidebarInset = React.forwardRef<
     <main
       ref={ref}
       className={cn(
-        "relative flex min-h-svh flex-1 flex-col bg-background",
+        "relative flex min-h-svh flex-1 flex-col bg-glass-surface",
         "peer-data-[variant=inset]:min-h-[calc(100svh-theme(spacing.4))] md:peer-data-[variant=inset]:m-2 md:peer-data-[state=collapsed]:peer-data-[variant=inset]:ml-2 md:peer-data-[variant=inset]:ml-0 md:peer-data-[variant=inset]:rounded-xl md:peer-data-[variant=inset]:shadow",
         className
       )}
@@ -400,7 +403,7 @@ const SidebarInput = React.forwardRef<
       ref={ref}
       data-sidebar="input"
       className={cn(
-        "h-8 w-full bg-background shadow-none focus-visible:ring-2 focus-visible:ring-sidebar-ring",
+        "h-8 w-full bg-transparent shadow-none focus-visible:ring-2 focus-visible:ring-sidebar-ring",
         className
       )}
       {...props}
