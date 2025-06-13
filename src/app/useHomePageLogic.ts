@@ -23,7 +23,7 @@ export function useHomePageLogic() {
   const [selectedGroupForDetails, setSelectedGroupForDetails] = useState<{ model: string; pumps: Pump[] } | null>(null);
   const [isGroupDetailsModalOpen, setIsGroupDetailsModalOpen] = useState(false);
 
-  const [explodedGroups, setExplodedGroups] = useState<Record<StageId, Set<string>>>({});
+  const [explodedGroups, setExplodedGroups] = useState<Record<StageId, Set<string>>>({} as Record<StageId, Set<string>>);
   const [columnViewModes, setColumnViewModes] = useState<Record<StageId, ViewMode>>(() =>
     STAGES.reduce((acc, stage) => ({ ...acc, [stage.id]: 'default' }), {} as Record<StageId, ViewMode>)
   );

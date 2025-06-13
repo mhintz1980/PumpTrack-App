@@ -89,7 +89,7 @@ export function KanbanColumn({
                   </Label>
                 </div>
               </TooltipTrigger>
-              <TooltipContent side="bottom" className="text-xs py-1 px-2 glass-button">
+              <TooltipContent side="bottom" sideOffset={8} className="text-xs py-1 px-2 glass-tooltip">
                 <p>Toggle Grouped View</p>
               </TooltipContent>
             </Tooltip>
