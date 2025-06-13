@@ -15,6 +15,7 @@ All notable changes to this project will be documented in this file.
 ### Fixed
 
 - Filter dropdown comboboxes now use glassmorphic styling
+- Schedule page containers now use glassmorphic backgrounds
 
 ---
 
