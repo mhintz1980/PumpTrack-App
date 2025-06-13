@@ -1,11 +1,10 @@
-
 "use client";
 
-import React from 'react';
-import { SelectContent, SelectItem } from '@/components/ui/select';
-import { Label } from '@/components/ui/label';
-import { Combobox } from '@/components/ui/combobox';
-import type { Filters } from '@/types';
+import React from "react";
+import { SelectContent, SelectItem } from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
+import { Combobox } from "@/components/ui/combobox";
+import type { Filters } from "@/types";
 
 interface PumpFilterControlsProps {
   filters: Filters;
@@ -18,7 +17,7 @@ interface PumpFilterControlsProps {
   availablePriorities: { label: string; value: string }[];
 }
 
-export function PumpFilterControls({ 
+export function PumpFilterControls({
   filters,
   onFiltersChange,
   availablePumpModels,
@@ -28,102 +27,155 @@ export function PumpFilterControls({
   availablePONumbers,
   availablePriorities,
 }: PumpFilterControlsProps) {
-
-  const handleComboboxChange = (name: keyof Filters, value: string | string[]) => {
-    const newValues = Array.isArray(value) ? value : (value ? [value] : []);
-    onFiltersChange({ 
-      ...filters, 
-      [name]: newValues.length === 0 ? undefined : newValues 
+  const handleComboboxChange = (
+    name: keyof Filters,
+    value: string | string[],
+  ) => {
+    const newValues = Array.isArray(value) ? value : value ? [value] : [];
+    onFiltersChange({
+      ...filters,
+      [name]: newValues.length === 0 ? undefined : newValues,
     });
   };
 
-  const customerOptions = availableCustomers.map(c => ({ label: c, value: c }));
-  const modelOptions = availablePumpModels.map(m => ({ label: m, value: m }));
-  const powderCoaterOptions = availablePowderCoaters.map(pc => ({ label: pc, value: pc }));
-  const serialNumberOptions = availableSerialNumbers.map(sn => ({ label: sn, value: sn}));
-  const poNumberOptions = availablePONumbers.map(po => ({ label: po, value: po }));
+  const customerOptions = availableCustomers.map((c) => ({
+    label: c,
+    value: c,
+  }));
+  const modelOptions = availablePumpModels.map((m) => ({ label: m, value: m }));
+  const powderCoaterOptions = availablePowderCoaters.map((pc) => ({
+    label: pc,
+    value: pc,
+  }));
+  const serialNumberOptions = availableSerialNumbers.map((sn) => ({
+    label: sn,
+    value: sn,
+  }));
+  const poNumberOptions = availablePONumbers.map((po) => ({
+    label: po,
+    value: po,
+  }));
 
   return (
     <div className="p-6 bg-glass-surface text-glass-text border border-glass-border backdrop-blur-md backdrop-saturate-150 rounded-lg space-y-4">
       <div>
-        <Label htmlFor="serialNumberFilter" className="text-xs text-glass-text-primary">Serial Number</Label>
+        <Label
+          htmlFor="serialNumberFilter"
+          className="text-xs text-glass-text-primary"
+        >
+          Serial Number
+        </Label>
         <Combobox
           options={serialNumberOptions}
           value={filters.serialNumber || []}
-          onChange={(value) => handleComboboxChange('serialNumber', value as string[])}
+          onChange={(value) =>
+            handleComboboxChange("serialNumber", value as string[])
+          }
           placeholder="All Serial Numbers"
           searchPlaceholder="Search serial numbers..."
           emptyText="No serial number found."
-          className="w-full min-w-0"
+          className="w-full min-w-0 filters-combobox"
           multiple={true}
         />
       </div>
       <div>
-        <Label htmlFor="customerFilter" className="text-xs text-glass-text-primary">Customer</Label>
+        <Label
+          htmlFor="customerFilter"
+          className="text-xs text-glass-text-primary"
+        >
+          Customer
+        </Label>
         <Combobox
           options={customerOptions}
           value={filters.customer || []}
-          onChange={(value) => handleComboboxChange('customer', value as string[])}
+          onChange={(value) =>
+            handleComboboxChange("customer", value as string[])
+          }
           placeholder="All Customers"
           searchPlaceholder="Search customers..."
           emptyText="No customer found."
-          className="w-full min-w-0"
+          className="w-full min-w-0 filters-combobox"
           multiple={true}
         />
       </div>
       <div>
-        <Label htmlFor="poNumberFilter" className="text-xs text-glass-text-primary">PO Number</Label>
+        <Label
+          htmlFor="poNumberFilter"
+          className="text-xs text-glass-text-primary"
+        >
+          PO Number
+        </Label>
         <Combobox
           options={poNumberOptions}
           value={filters.poNumber || []}
-          onChange={(value) => handleComboboxChange('poNumber', value as string[])}
+          onChange={(value) =>
+            handleComboboxChange("poNumber", value as string[])
+          }
           placeholder="All PO Numbers"
           searchPlaceholder="Search PO numbers..."
           emptyText="No PO number found."
-          className="w-full min-w-0"
+          className="w-full min-w-0 filters-combobox"
           multiple={true}
         />
       </div>
       <div>
-        <Label htmlFor="modelFilter" className="text-xs text-glass-text-primary">Model</Label>
+        <Label
+          htmlFor="modelFilter"
+          className="text-xs text-glass-text-primary"
+        >
+          Model
+        </Label>
         <Combobox
           options={modelOptions}
           value={filters.model || []}
-          onChange={(value) => handleComboboxChange('model', value as string[])}
+          onChange={(value) => handleComboboxChange("model", value as string[])}
           placeholder="All Models"
           searchPlaceholder="Search models..."
           emptyText="No model found."
-          className="w-full min-w-0"
+          className="w-full min-w-0 filters-combobox"
           multiple={true}
         />
       </div>
       <div>
-        <Label htmlFor="powderCoaterFilter" className="text-xs text-glass-text-primary">Powder Coater</Label>
+        <Label
+          htmlFor="powderCoaterFilter"
+          className="text-xs text-glass-text-primary"
+        >
+          Powder Coater
+        </Label>
         <Combobox
           options={powderCoaterOptions}
           value={filters.powderCoater || []}
-          onChange={(value) => handleComboboxChange('powderCoater', value as string[])}
+          onChange={(value) =>
+            handleComboboxChange("powderCoater", value as string[])
+          }
           placeholder="All Coaters"
           searchPlaceholder="Search coaters..."
           emptyText="No coater found."
-          className="w-full min-w-0"
+          className="w-full min-w-0 filters-combobox"
           multiple={true}
         />
       </div>
       <div>
-        <Label htmlFor="priorityFilter" className="text-xs text-glass-text-primary">Priority</Label>
+        <Label
+          htmlFor="priorityFilter"
+          className="text-xs text-glass-text-primary"
+        >
+          Priority
+        </Label>
         <Combobox
           options={availablePriorities}
           value={filters.priority || []}
-          onChange={(value) => handleComboboxChange('priority', value as string[])}
+          onChange={(value) =>
+            handleComboboxChange("priority", value as string[])
+          }
           placeholder="All Priorities"
           searchPlaceholder="Search priorities..."
           emptyText="No priority found."
-          className="w-full min-w-0"
+          className="w-full min-w-0 filters-combobox"
           multiple={true}
         />
       </div>
     </div>
   );
 }
-

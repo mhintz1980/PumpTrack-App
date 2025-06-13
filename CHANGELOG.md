@@ -5,13 +5,16 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 ### Added
+
 - Initial project structure and documentation stubs.
 
 ### Changed
+
 - N/A
 
 ### Fixed
-- N/A
+
+- Filter dropdown comboboxes now use glassmorphic styling
 
 ---
 
