@@ -1,31 +1,57 @@
-
 "use client";
 
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { Calendar as CalendarIcon, Package, Clock, Users, FileText, GripVertical, XCircle, RotateCcw, PlusCircle, Layers } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
-import { Switch } from '@/components/ui/switch';
-import { Label } from '@/components/ui/label';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { cn } from '@/lib/utils';
-import type { Pump, PriorityLevel, Filters, ViewMode } from '@/types';
-import { PUMP_MODELS, CUSTOMER_NAMES, PRIORITY_LEVELS, POWDER_COATERS } from '@/lib/constants';
-import { useToast } from '@/hooks/use-toast';
-import { SchedulePumpCard } from '@/components/schedule/SchedulePumpCard';
-import dynamic from 'next/dynamic';
-import { EnhancedHeader } from '@/components/layout/EnhancedHeader';
+import React, { useState, useEffect, useMemo, useCallback } from "react";
+import {
+  Calendar as CalendarIcon,
+  Package,
+  Clock,
+  Users,
+  FileText,
+  GripVertical,
+  XCircle,
+  RotateCcw,
+  PlusCircle,
+  Layers,
+} from "lucide-react";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { cn } from "@/lib/utils";
+import type { Pump, PriorityLevel, Filters, ViewMode } from "@/types";
+import {
+  PUMP_MODELS,
+  CUSTOMER_NAMES,
+  PRIORITY_LEVELS,
+  POWDER_COATERS,
+} from "@/lib/constants";
+import { useToast } from "@/hooks/use-toast";
+import { SchedulePumpCard } from "@/components/schedule/SchedulePumpCard";
+import dynamic from "next/dynamic";
+import { EnhancedHeader } from "@/components/layout/EnhancedHeader";
 const PumpDetailsModal = dynamic(() =>
-  import('@/components/pump/PumpDetailsModal').then(m => m.PumpDetailsModal)
+  import("@/components/pump/PumpDetailsModal").then((m) => m.PumpDetailsModal),
 );
 const AddPumpForm = dynamic(() =>
-  import('@/components/pump/AddPumpForm').then(m => m.AddPumpForm)
+  import("@/components/pump/AddPumpForm").then((m) => m.AddPumpForm),
 );
-import { GroupedKanbanCard } from '@/components/kanban/GroupedKanbanCard';
-import * as pumpService from '@/services/pumpService';
+import { GroupedKanbanCard } from "@/components/kanban/GroupedKanbanCard";
+import * as pumpService from "@/services/pumpService";
 
 interface PlannablePump extends Pump {
   daysPerUnit: number;
@@ -42,22 +68,24 @@ interface ScheduleTimelineEntry extends ScheduledPump {
   duration: number;
 }
 
-type DraggedItemType = 'plannable-single' | 'plannable-batch' | 'scheduled';
+type DraggedItemType = "plannable-single" | "plannable-batch" | "scheduled";
 
 interface DraggedPlannableSingle {
-  type: 'plannable-single';
+  type: "plannable-single";
   item: PlannablePump;
 }
 interface DraggedPlannableBatch {
-  type: 'plannable-batch';
+  type: "plannable-batch";
   items: PlannablePump[];
 }
 interface DraggedScheduled {
-  type: 'scheduled';
+  type: "scheduled";
   item: ScheduledPump;
 }
-type DraggedItemData = DraggedPlannableSingle | DraggedPlannableBatch | DraggedScheduled;
-
+type DraggedItemData =
+  | DraggedPlannableSingle
+  | DraggedPlannableBatch
+  | DraggedScheduled;
 
 export default function SchedulePage() {
   const { toast } = useToast();
@@ -66,21 +94,32 @@ export default function SchedulePage() {
   const [scheduledItems, setScheduledItems] = useState<ScheduledPump[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  const [globalSearchTerm, setGlobalSearchTerm] = useState('');
+  const [globalSearchTerm, setGlobalSearchTerm] = useState("");
   const [filters, setFilters] = useState<Filters>({});
 
   const [isAddPumpModalOpen, setIsAddPumpModalOpen] = useState(false);
 
-  const [draggedItemData, setDraggedItemData] = useState<DraggedItemData | null>(null);
-  const [selectedPlannableItemIds, setSelectedPlannableItemIds] = useState<string[]>([]);
+  const [draggedItemData, setDraggedItemData] =
+    useState<DraggedItemData | null>(null);
+  const [selectedPlannableItemIds, setSelectedPlannableItemIds] = useState<
+    string[]
+  >([]);
 
-  const [selectedPumpForDetails, setSelectedPumpForDetails] = useState<Pump | null>(null);
+  const [selectedPumpForDetails, setSelectedPumpForDetails] =
+    useState<Pump | null>(null);
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
 
-  const [plannableItemsViewMode, setPlannableItemsViewMode] = useState<ViewMode>('default');
-  const [explodedPlannableModels, setExplodedPlannableModels] = useState<Set<string>>(new Set());
+  const [plannableItemsViewMode, setPlannableItemsViewMode] =
+    useState<ViewMode>("default");
+  const [explodedPlannableModels, setExplodedPlannableModels] = useState<
+    Set<string>
+  >(new Set());
 
-  const [clientRenderInfo, setClientRenderInfo] = useState<{ todayString: string; currentMonth: number; todayEpoch: number; } | null>(null);
+  const [clientRenderInfo, setClientRenderInfo] = useState<{
+    todayString: string;
+    currentMonth: number;
+    todayEpoch: number;
+  } | null>(null);
 
   useEffect(() => {
     const now = new Date();
@@ -91,7 +130,6 @@ export default function SchedulePage() {
     });
   }, []);
 
-
   useEffect(() => {
     const fetchPumps = async () => {
       setIsLoading(true);
@@ -100,7 +138,11 @@ export default function SchedulePage() {
         setInitialPumps(fetchedPumps);
       } catch (error) {
         console.error("Failed to fetch pumps for schedule:", error);
-        toast({ variant: "destructive", title: "Error", description: "Could not load pump data for scheduling." });
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Could not load pump data for scheduling.",
+        });
       } finally {
         setIsLoading(false);
       }
@@ -108,50 +150,67 @@ export default function SchedulePage() {
     fetchPumps();
   }, [toast]);
 
-
   useEffect(() => {
-    const scheduledPumpOriginalIds = new Set(scheduledItems.map(si => si.id));
-    const availableForPlanning = initialPumps.filter(p =>
-        p.currentStage !== 'shipped' &&
-        !scheduledPumpOriginalIds.has(p.id)
+    const scheduledPumpOriginalIds = new Set(scheduledItems.map((si) => si.id));
+    const availableForPlanning = initialPumps.filter(
+      (p) =>
+        p.currentStage !== "shipped" && !scheduledPumpOriginalIds.has(p.id),
     );
-    const augmentedPumps: PlannablePump[] = availableForPlanning.map(p => ({
+    const augmentedPumps: PlannablePump[] = availableForPlanning.map((p) => ({
       ...p,
-      daysPerUnit: p.estimatedBuildTimeDays !== undefined ? p.estimatedBuildTimeDays : 1.5
+      daysPerUnit:
+        p.estimatedBuildTimeDays !== undefined ? p.estimatedBuildTimeDays : 1.5,
     }));
     setPlannableItems(augmentedPumps);
   }, [initialPumps, scheduledItems]);
-
 
   const filteredPlannableItems = useMemo(() => {
     let tempItems = [...plannableItems];
 
     if (globalSearchTerm) {
       const lowerSearchTerm = globalSearchTerm.toLowerCase();
-      tempItems = tempItems.filter(item =>
-        Object.values(item).some(val =>
-          String(val).toLowerCase().includes(lowerSearchTerm)
-        )
+      tempItems = tempItems.filter((item) =>
+        Object.values(item).some((val) =>
+          String(val).toLowerCase().includes(lowerSearchTerm),
+        ),
       );
     }
 
     if (filters.serialNumber && filters.serialNumber.length > 0) {
-      tempItems = tempItems.filter(p => p.serialNumber && filters.serialNumber!.some(sn => p.serialNumber!.toLowerCase().includes(sn.toLowerCase())));
+      tempItems = tempItems.filter(
+        (p) =>
+          p.serialNumber &&
+          filters.serialNumber!.some((sn) =>
+            p.serialNumber!.toLowerCase().includes(sn.toLowerCase()),
+          ),
+      );
     }
     if (filters.customer && filters.customer.length > 0) {
-      tempItems = tempItems.filter(p => filters.customer!.includes(p.customer));
+      tempItems = tempItems.filter((p) =>
+        filters.customer!.includes(p.customer),
+      );
     }
     if (filters.poNumber && filters.poNumber.length > 0) {
-      tempItems = tempItems.filter(p => p.poNumber && filters.poNumber!.some(po => p.poNumber.toLowerCase().includes(po.toLowerCase())));
+      tempItems = tempItems.filter(
+        (p) =>
+          p.poNumber &&
+          filters.poNumber!.some((po) =>
+            p.poNumber.toLowerCase().includes(po.toLowerCase()),
+          ),
+      );
     }
     if (filters.model && filters.model.length > 0) {
-      tempItems = tempItems.filter(p => filters.model!.includes(p.model));
+      tempItems = tempItems.filter((p) => filters.model!.includes(p.model));
     }
     if (filters.powderCoater && filters.powderCoater.length > 0) {
-      tempItems = tempItems.filter(p => p.powderCoater && filters.powderCoater!.includes(p.powderCoater));
+      tempItems = tempItems.filter(
+        (p) => p.powderCoater && filters.powderCoater!.includes(p.powderCoater),
+      );
     }
     if (filters.priority && filters.priority.length > 0) {
-      tempItems = tempItems.filter(p => filters.priority!.includes(p.priority || 'normal'));
+      tempItems = tempItems.filter((p) =>
+        filters.priority!.includes(p.priority || "normal"),
+      );
     }
 
     return tempItems;
@@ -162,11 +221,14 @@ export default function SchedulePage() {
     // For SSR and initial client render, calendarDays might be based on server's 'new Date()'
     // or client's 'new Date()' respectively. This is generally fine for establishing the grid.
     // The dynamic "today" and "current month" styling is handled by clientRenderInfo state.
-    const todayForGrid = clientRenderInfo ? new Date(clientRenderInfo.todayEpoch) : new Date();
+    const todayForGrid = clientRenderInfo
+      ? new Date(clientRenderInfo.todayEpoch)
+      : new Date();
 
     const startDate = new Date(todayForGrid);
     startDate.setDate(todayForGrid.getDate() - todayForGrid.getDay()); // Start week on Sunday
-    for (let i = 0; i < 42; i++) { // 6 weeks
+    for (let i = 0; i < 42; i++) {
+      // 6 weeks
       const date = new Date(startDate);
       date.setDate(startDate.getDate() + i);
       days.push(date);
@@ -176,17 +238,19 @@ export default function SchedulePage() {
 
   const scheduleTimeline = useMemo(() => {
     const timeline: ScheduleTimelineEntry[] = [];
-    scheduledItems.sort((a, b) => a.scheduledOnDayIndex - b.scheduledOnDayIndex).forEach(item => {
-      const startDay = item.scheduledOnDayIndex;
-      const duration = item.daysPerUnit;
+    scheduledItems
+      .sort((a, b) => a.scheduledOnDayIndex - b.scheduledOnDayIndex)
+      .forEach((item) => {
+        const startDay = item.scheduledOnDayIndex;
+        const duration = item.daysPerUnit;
 
-      timeline.push({
-        ...item,
-        startDay: startDay,
-        endDay: startDay + duration - 1,
-        duration,
+        timeline.push({
+          ...item,
+          startDay: startDay,
+          endDay: startDay + duration - 1,
+          duration,
+        });
       });
-    });
     return timeline.sort((a, b) => a.startDay - b.startDay);
   }, [scheduledItems]);
 
@@ -194,265 +258,407 @@ export default function SchedulePage() {
     return scheduledItems.reduce((sum, item) => sum + item.daysPerUnit, 0);
   }, [scheduledItems]);
 
-  const handlePlannableItemClick = useCallback((item: PlannablePump, event: React.MouseEvent) => {
-    setSelectedPlannableItemIds(prevSelectedIds => {
-      if (event.ctrlKey || event.metaKey) {
-        return prevSelectedIds.includes(item.id)
-          ? prevSelectedIds.filter(id => id !== item.id)
-          : [...prevSelectedIds, item.id];
+  const handlePlannableItemClick = useCallback(
+    (item: PlannablePump, event: React.MouseEvent) => {
+      setSelectedPlannableItemIds((prevSelectedIds) => {
+        if (event.ctrlKey || event.metaKey) {
+          return prevSelectedIds.includes(item.id)
+            ? prevSelectedIds.filter((id) => id !== item.id)
+            : [...prevSelectedIds, item.id];
+        }
+        return prevSelectedIds.includes(item.id) && prevSelectedIds.length === 1
+          ? []
+          : [item.id];
+      });
+    },
+    [],
+  );
+
+  const handleDragStartPlannableItem = useCallback(
+    (e: React.DragEvent, item: PlannablePump) => {
+      e.dataTransfer.setData("text/plain", item.id);
+      e.dataTransfer.effectAllowed = "move";
+
+      const targetElement = e.currentTarget as HTMLElement;
+      if (targetElement) {
+        targetElement.style.opacity = "0.5";
+        const onDragEndHandler = () => {
+          targetElement.style.opacity = "1";
+          targetElement.removeEventListener("dragend", onDragEndHandler);
+        };
+        targetElement.addEventListener("dragend", onDragEndHandler);
       }
-      return prevSelectedIds.includes(item.id) && prevSelectedIds.length === 1 ? [] : [item.id];
-    });
-  }, []);
 
+      setTimeout(() => {
+        if (
+          selectedPlannableItemIds.includes(item.id) &&
+          selectedPlannableItemIds.length > 1
+        ) {
+          const batchItems = plannableItems.filter((p) =>
+            selectedPlannableItemIds.includes(p.id),
+          );
+          setDraggedItemData({ type: "plannable-batch", items: batchItems });
+        } else {
+          setDraggedItemData({ type: "plannable-single", item });
+          setSelectedPlannableItemIds([item.id]);
+        }
+      }, 0);
+    },
+    [selectedPlannableItemIds, plannableItems],
+  );
 
-  const handleDragStartPlannableItem = useCallback((e: React.DragEvent, item: PlannablePump) => {
-    e.dataTransfer.setData('text/plain', item.id); 
-    e.dataTransfer.effectAllowed = 'move';
+  const handleDragStartScheduledItem = useCallback(
+    (e: React.DragEvent, item: ScheduledPump) => {
+      e.dataTransfer.setData(
+        "application/pumptrack-instance-id",
+        item.instanceId,
+      );
+      e.dataTransfer.setData("text/plain", item.instanceId);
+      e.dataTransfer.effectAllowed = "move";
 
-    const targetElement = e.currentTarget as HTMLElement;
-    if (targetElement) {
-      targetElement.style.opacity = '0.5';
-      const onDragEndHandler = () => {
-        targetElement.style.opacity = '1';
-        targetElement.removeEventListener('dragend', onDragEndHandler);
-      };
-      targetElement.addEventListener('dragend', onDragEndHandler);
-    }
-
-    setTimeout(() => {
-      if (selectedPlannableItemIds.includes(item.id) && selectedPlannableItemIds.length > 1) {
-        const batchItems = plannableItems.filter(p => selectedPlannableItemIds.includes(p.id));
-        setDraggedItemData({ type: 'plannable-batch', items: batchItems });
-      } else {
-        setDraggedItemData({ type: 'plannable-single', item });
-        setSelectedPlannableItemIds([item.id]); 
+      const targetElement = e.currentTarget as HTMLElement;
+      if (targetElement) {
+        targetElement.style.opacity = "0.5";
+        const onDragEndHandler = () => {
+          targetElement.style.opacity = "1";
+          targetElement.removeEventListener("dragend", onDragEndHandler);
+        };
+        targetElement.addEventListener("dragend", onDragEndHandler);
       }
-    }, 0);
-  }, [selectedPlannableItemIds, plannableItems]);
-
-
-  const handleDragStartScheduledItem = useCallback((e: React.DragEvent, item: ScheduledPump) => {
-    e.dataTransfer.setData('application/pumptrack-instance-id', item.instanceId);
-    e.dataTransfer.setData('text/plain', item.instanceId); 
-    e.dataTransfer.effectAllowed = 'move';
-
-    const targetElement = e.currentTarget as HTMLElement;
-    if (targetElement) {
-      targetElement.style.opacity = '0.5';
-       const onDragEndHandler = () => {
-        targetElement.style.opacity = '1';
-        targetElement.removeEventListener('dragend', onDragEndHandler);
-      };
-      targetElement.addEventListener('dragend', onDragEndHandler);
-    }
-    setTimeout(() => {
-      setDraggedItemData({ type: 'scheduled', item });
-    },0);
-  }, []);
+      setTimeout(() => {
+        setDraggedItemData({ type: "scheduled", item });
+      }, 0);
+    },
+    [],
+  );
 
   const handleDragEnd = useCallback((e: React.DragEvent) => {
-    setDraggedItemData(null); 
+    setDraggedItemData(null);
   }, []);
-
 
   const handleDragOver = useCallback((e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
-    e.dataTransfer.dropEffect = 'move';
+    e.dataTransfer.dropEffect = "move";
   }, []);
 
-  const handleDropOnCalendar = useCallback((e: React.DragEvent<HTMLDivElement>, targetDayIndex: number) => {
-    e.preventDefault();
-    const currentDraggedItem = draggedItemData; 
-    
-    if (!currentDraggedItem) {
-      const idFromDataTransfer = e.dataTransfer.getData('text/plain');
-      const itemToScheduleFromPlannable = plannableItems.find(p => p.id === idFromDataTransfer);
-      if (idFromDataTransfer && itemToScheduleFromPlannable) {
-         setScheduledItems(prev => {
-            const filteredPrev = prev.filter(si => si.id !== itemToScheduleFromPlannable.id);
-            return [...filteredPrev, {
-              ...itemToScheduleFromPlannable,
-              scheduledOnDayIndex: targetDayIndex,
-              instanceId: crypto.randomUUID(),
-            }].sort((a,b) => a.scheduledOnDayIndex - b.scheduledOnDayIndex);
+  const handleDropOnCalendar = useCallback(
+    (e: React.DragEvent<HTMLDivElement>, targetDayIndex: number) => {
+      e.preventDefault();
+      const currentDraggedItem = draggedItemData;
+
+      if (!currentDraggedItem) {
+        const idFromDataTransfer = e.dataTransfer.getData("text/plain");
+        const itemToScheduleFromPlannable = plannableItems.find(
+          (p) => p.id === idFromDataTransfer,
+        );
+        if (idFromDataTransfer && itemToScheduleFromPlannable) {
+          setScheduledItems((prev) => {
+            const filteredPrev = prev.filter(
+              (si) => si.id !== itemToScheduleFromPlannable.id,
+            );
+            return [
+              ...filteredPrev,
+              {
+                ...itemToScheduleFromPlannable,
+                scheduledOnDayIndex: targetDayIndex,
+                instanceId: crypto.randomUUID(),
+              },
+            ].sort((a, b) => a.scheduledOnDayIndex - b.scheduledOnDayIndex);
           });
-          toast({ title: "Pump Scheduled (Fallback)", description: `${itemToScheduleFromPlannable.serialNumber || itemToScheduleFromPlannable.model} added to schedule.` });
+          toast({
+            title: "Pump Scheduled (Fallback)",
+            description: `${itemToScheduleFromPlannable.serialNumber || itemToScheduleFromPlannable.model} added to schedule.`,
+          });
           setSelectedPlannableItemIds([]);
-          setDraggedItemData(null); 
+          setDraggedItemData(null);
           return;
-      } else {
-          const scheduledItemInstanceId = e.dataTransfer.getData('application/pumptrack-instance-id');
-          const itemToMoveFromScheduled = scheduledItems.find(si => si.instanceId === scheduledItemInstanceId);
+        } else {
+          const scheduledItemInstanceId = e.dataTransfer.getData(
+            "application/pumptrack-instance-id",
+          );
+          const itemToMoveFromScheduled = scheduledItems.find(
+            (si) => si.instanceId === scheduledItemInstanceId,
+          );
           if (scheduledItemInstanceId && itemToMoveFromScheduled) {
-             setScheduledItems(prev => prev.map(si =>
-                si.instanceId === itemToMoveFromScheduled.instanceId
-                ? { ...si, scheduledOnDayIndex: targetDayIndex }
-                : si
-            ).sort((a,b) => a.scheduledOnDayIndex - b.scheduledOnDayIndex));
-            toast({ title: "Schedule Updated (Fallback)", description: `Rescheduled ${itemToMoveFromScheduled.serialNumber || itemToMoveFromScheduled.model}.` });
-            setDraggedItemData(null); 
+            setScheduledItems((prev) =>
+              prev
+                .map((si) =>
+                  si.instanceId === itemToMoveFromScheduled.instanceId
+                    ? { ...si, scheduledOnDayIndex: targetDayIndex }
+                    : si,
+                )
+                .sort((a, b) => a.scheduledOnDayIndex - b.scheduledOnDayIndex),
+            );
+            toast({
+              title: "Schedule Updated (Fallback)",
+              description: `Rescheduled ${itemToMoveFromScheduled.serialNumber || itemToMoveFromScheduled.model}.`,
+            });
+            setDraggedItemData(null);
             return;
           }
+        }
+        setDraggedItemData(null);
+        return;
       }
-      setDraggedItemData(null); 
-      return;
-    }
 
+      if (currentDraggedItem.type === "plannable-single") {
+        const itemToSchedule = currentDraggedItem.item;
+        setScheduledItems((prev) => {
+          const filteredPrev = prev.filter((si) => si.id !== itemToSchedule.id);
+          return [
+            ...filteredPrev,
+            {
+              ...itemToSchedule,
+              scheduledOnDayIndex: targetDayIndex,
+              instanceId: crypto.randomUUID(),
+            },
+          ].sort((a, b) => a.scheduledOnDayIndex - b.scheduledOnDayIndex);
+        });
+        toast({
+          title: "Pump Scheduled",
+          description: `${itemToSchedule.serialNumber || itemToSchedule.model} added to schedule.`,
+        });
+      } else if (currentDraggedItem.type === "plannable-batch") {
+        const itemsToSchedule = currentDraggedItem.items;
+        const newScheduledInstances: ScheduledPump[] = itemsToSchedule.map(
+          (item) => ({
+            ...item,
+            scheduledOnDayIndex: targetDayIndex,
+            instanceId: crypto.randomUUID(),
+          }),
+        );
 
-    if (currentDraggedItem.type === 'plannable-single') {
-      const itemToSchedule = currentDraggedItem.item;
-      setScheduledItems(prev => {
-        const filteredPrev = prev.filter(si => si.id !== itemToSchedule.id);
-        return [...filteredPrev, {
-          ...itemToSchedule,
-          scheduledOnDayIndex: targetDayIndex,
-          instanceId: crypto.randomUUID(),
-        }].sort((a,b) => a.scheduledOnDayIndex - b.scheduledOnDayIndex);
-      });
-      toast({ title: "Pump Scheduled", description: `${itemToSchedule.serialNumber || itemToSchedule.model} added to schedule.` });
-    } else if (currentDraggedItem.type === 'plannable-batch') {
-      const itemsToSchedule = currentDraggedItem.items;
-      const newScheduledInstances: ScheduledPump[] = itemsToSchedule.map(item => ({
-        ...item,
-        scheduledOnDayIndex: targetDayIndex,
-        instanceId: crypto.randomUUID(),
-      }));
-
-      setScheduledItems(prev => {
-        const newScheduledOriginalIds = new Set(newScheduledInstances.map(item => item.id));
-        const filteredPrev = prev.filter(si => !newScheduledOriginalIds.has(si.id));
-        return [...filteredPrev, ...newScheduledInstances]
-          .sort((a,b) => a.scheduledOnDayIndex - b.scheduledOnDayIndex);
-      });
-      toast({ title: "Pumps Scheduled", description: `${itemsToSchedule.length} pumps added to schedule.` });
-    } else if (currentDraggedItem.type === 'scheduled') {
-      const itemToMove = currentDraggedItem.item;
-      setScheduledItems(prev => prev.map(si =>
-        si.instanceId === itemToMove.instanceId
-          ? { ...si, scheduledOnDayIndex: targetDayIndex }
-          : si
-      ).sort((a,b) => a.scheduledOnDayIndex - b.scheduledOnDayIndex));
-      toast({ title: "Schedule Updated", description: `Rescheduled ${itemToMove.serialNumber || itemToMove.model}.` });
-    }
-
-    setSelectedPlannableItemIds([]);
-    setDraggedItemData(null); 
-  }, [draggedItemData, toast, plannableItems, scheduledItems]);
-
-
-  const handleDropOnPlannableList = useCallback((e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    const currentDraggedItem = draggedItemData;
-    if (!currentDraggedItem) {
-      const instanceIdFromDataTransfer = e.dataTransfer.getData('application/pumptrack-instance-id') || e.dataTransfer.getData('text/plain');
-      const itemToRemoveFromSchedule = scheduledItems.find(si => si.instanceId === instanceIdFromDataTransfer);
-      if (itemToRemoveFromSchedule) {
-        setScheduledItems(prev => prev.filter(item => item.instanceId !== itemToRemoveFromSchedule.instanceId));
-        toast({ title: "Pump Unscheduled (Fallback)", description: `${itemToRemoveFromSchedule.serialNumber || itemToRemoveFromSchedule.model} removed from schedule.` });
+        setScheduledItems((prev) => {
+          const newScheduledOriginalIds = new Set(
+            newScheduledInstances.map((item) => item.id),
+          );
+          const filteredPrev = prev.filter(
+            (si) => !newScheduledOriginalIds.has(si.id),
+          );
+          return [...filteredPrev, ...newScheduledInstances].sort(
+            (a, b) => a.scheduledOnDayIndex - b.scheduledOnDayIndex,
+          );
+        });
+        toast({
+          title: "Pumps Scheduled",
+          description: `${itemsToSchedule.length} pumps added to schedule.`,
+        });
+      } else if (currentDraggedItem.type === "scheduled") {
+        const itemToMove = currentDraggedItem.item;
+        setScheduledItems((prev) =>
+          prev
+            .map((si) =>
+              si.instanceId === itemToMove.instanceId
+                ? { ...si, scheduledOnDayIndex: targetDayIndex }
+                : si,
+            )
+            .sort((a, b) => a.scheduledOnDayIndex - b.scheduledOnDayIndex),
+        );
+        toast({
+          title: "Schedule Updated",
+          description: `Rescheduled ${itemToMove.serialNumber || itemToMove.model}.`,
+        });
       }
+
+      setSelectedPlannableItemIds([]);
       setDraggedItemData(null);
-      return;
-    }
+    },
+    [draggedItemData, toast, plannableItems, scheduledItems],
+  );
 
+  const handleDropOnPlannableList = useCallback(
+    (e: React.DragEvent<HTMLDivElement>) => {
+      e.preventDefault();
+      const currentDraggedItem = draggedItemData;
+      if (!currentDraggedItem) {
+        const instanceIdFromDataTransfer =
+          e.dataTransfer.getData("application/pumptrack-instance-id") ||
+          e.dataTransfer.getData("text/plain");
+        const itemToRemoveFromSchedule = scheduledItems.find(
+          (si) => si.instanceId === instanceIdFromDataTransfer,
+        );
+        if (itemToRemoveFromSchedule) {
+          setScheduledItems((prev) =>
+            prev.filter(
+              (item) => item.instanceId !== itemToRemoveFromSchedule.instanceId,
+            ),
+          );
+          toast({
+            title: "Pump Unscheduled (Fallback)",
+            description: `${itemToRemoveFromSchedule.serialNumber || itemToRemoveFromSchedule.model} removed from schedule.`,
+          });
+        }
+        setDraggedItemData(null);
+        return;
+      }
 
-    if (currentDraggedItem.type !== 'scheduled') {
-      setDraggedItemData(null); 
-      return;
-    }
+      if (currentDraggedItem.type !== "scheduled") {
+        setDraggedItemData(null);
+        return;
+      }
 
-    const itemToRemoveFromSchedule = currentDraggedItem.item;
-    setScheduledItems(prev => prev.filter(item => item.instanceId !== itemToRemoveFromSchedule.instanceId));
-    toast({ title: "Pump Unscheduled", description: `${itemToRemoveFromSchedule.serialNumber || itemToRemoveFromSchedule.model} removed from schedule.` });
+      const itemToRemoveFromSchedule = currentDraggedItem.item;
+      setScheduledItems((prev) =>
+        prev.filter(
+          (item) => item.instanceId !== itemToRemoveFromSchedule.instanceId,
+        ),
+      );
+      toast({
+        title: "Pump Unscheduled",
+        description: `${itemToRemoveFromSchedule.serialNumber || itemToRemoveFromSchedule.model} removed from schedule.`,
+      });
 
-    setSelectedPlannableItemIds([]);
-    setDraggedItemData(null); 
-  }, [draggedItemData, toast, scheduledItems]);
+      setSelectedPlannableItemIds([]);
+      setDraggedItemData(null);
+    },
+    [draggedItemData, toast, scheduledItems],
+  );
 
-  const removeFromSchedule = useCallback((instanceIdToRemove: string) => {
-    const itemToRemove = scheduledItems.find(si => si.instanceId === instanceIdToRemove);
-    setScheduledItems(prev => prev.filter(item => item.instanceId !== instanceIdToRemove));
-    if (itemToRemove) {
-      toast({ title: "Pump Unscheduled", description: `${itemToRemove.serialNumber || itemToRemove.model} removed from schedule.` });
-    }
-    setSelectedPlannableItemIds([]);
-  }, [scheduledItems, toast]);
+  const removeFromSchedule = useCallback(
+    (instanceIdToRemove: string) => {
+      const itemToRemove = scheduledItems.find(
+        (si) => si.instanceId === instanceIdToRemove,
+      );
+      setScheduledItems((prev) =>
+        prev.filter((item) => item.instanceId !== instanceIdToRemove),
+      );
+      if (itemToRemove) {
+        toast({
+          title: "Pump Unscheduled",
+          description: `${itemToRemove.serialNumber || itemToRemove.model} removed from schedule.`,
+        });
+      }
+      setSelectedPlannableItemIds([]);
+    },
+    [scheduledItems, toast],
+  );
 
   const resetSchedule = useCallback(() => {
     setScheduledItems([]);
     setSelectedPlannableItemIds([]);
-    toast({ title: "Schedule Reset", description: "All pumps removed from schedule and returned to plannable list." });
+    toast({
+      title: "Schedule Reset",
+      description:
+        "All pumps removed from schedule and returned to plannable list.",
+    });
   }, [toast]);
-
 
   const handleOpenDetailsModal = useCallback((pump: Pump) => {
     setSelectedPumpForDetails(pump);
     setIsDetailsModalOpen(true);
   }, []);
-  
-  const handleOpenGroupDetailsModal = useCallback((model: string, pumpsInGroup: Pump[]) => {
-    if (pumpsInGroup.length > 0) {
-        const plannableEquivalent = plannableItems.find(pi => pi.id === pumpsInGroup[0].id);
-        if(plannableEquivalent) handleOpenDetailsModal(plannableEquivalent);
-    }
-  }, [plannableItems, handleOpenDetailsModal]);
 
+  const handleOpenGroupDetailsModal = useCallback(
+    (model: string, pumpsInGroup: Pump[]) => {
+      if (pumpsInGroup.length > 0) {
+        const plannableEquivalent = plannableItems.find(
+          (pi) => pi.id === pumpsInGroup[0].id,
+        );
+        if (plannableEquivalent) handleOpenDetailsModal(plannableEquivalent);
+      }
+    },
+    [plannableItems, handleOpenDetailsModal],
+  );
 
   const handleCloseDetailsModal = useCallback(() => {
     setIsDetailsModalOpen(false);
     setSelectedPumpForDetails(null);
   }, []);
 
-  const handleUpdatePump = useCallback(async (updatedPump: Pump) => {
-    const originalPump = initialPumps.find(p => p.id === updatedPump.id);
-    if (!originalPump) {
-        toast({ variant: "destructive", title: "Update Error", description: "Original pump not found in initial list."});
+  const handleUpdatePump = useCallback(
+    async (updatedPump: Pump) => {
+      const originalPump = initialPumps.find((p) => p.id === updatedPump.id);
+      if (!originalPump) {
+        toast({
+          variant: "destructive",
+          title: "Update Error",
+          description: "Original pump not found in initial list.",
+        });
         return;
-    }
-    try {
-        const savedPump = await pumpService.updatePumpWithActivityLog(updatedPump.id, updatedPump, originalPump);
-        setInitialPumps(prev => prev.map(p => p.id === savedPump.id ? savedPump : p));
-
-        setScheduledItems(prevScheduled => prevScheduled.map(sp =>
-            sp.id === savedPump.id ? {
-              ...sp,
-              ...savedPump,
-              daysPerUnit: savedPump.estimatedBuildTimeDays !== undefined ? savedPump.estimatedBuildTimeDays : 1.5
-            } : sp
-        ));
-        toast({ title: "Pump Updated", description: `${savedPump.serialNumber || savedPump.model} has been updated.` });
-    } catch (error) {
-        console.error("Error updating pump on schedule page:", error);
-        toast({ variant: "destructive", title: "Update Failed", description: "Could not save pump details."});
-    }
-  }, [toast, initialPumps]);
-
-  const handleAddPumps = useCallback(async (newPumpsData: Array<Omit<Pump, 'id' | 'createdAt' | 'updatedAt'>>) => {
-    setIsLoading(true);
-    try {
-      const addedPumpsPromises = newPumpsData.map(pumpData => pumpService.addPumpWithActivityLog(pumpData));
-      const successfullyAddedPumps = await Promise.all(addedPumpsPromises);
-
-      setInitialPumps(prev => [...successfullyAddedPumps, ...prev]);
-
-      if (successfullyAddedPumps.length === 1) {
-        toast({ title: "Pump Added", description: `${successfullyAddedPumps[0].serialNumber || 'New Pump'} added to schedule planning.` });
-      } else if (successfullyAddedPumps.length > 1) {
-        toast({ title: `${successfullyAddedPumps.length} Pumps Added`, description: `Batch added to schedule planning.` });
       }
-    } catch (error) {
-      console.error("Error adding pumps:", error);
-      toast({ variant: "destructive", title: "Add Failed", description: "Could not add new pump(s)." });
-    } finally {
-      setIsLoading(false);
-      setIsAddPumpModalOpen(false);
-    }
-  }, [toast]);
+      try {
+        const savedPump = await pumpService.updatePumpWithActivityLog(
+          updatedPump.id,
+          updatedPump,
+          originalPump,
+        );
+        setInitialPumps((prev) =>
+          prev.map((p) => (p.id === savedPump.id ? savedPump : p)),
+        );
+
+        setScheduledItems((prevScheduled) =>
+          prevScheduled.map((sp) =>
+            sp.id === savedPump.id
+              ? {
+                  ...sp,
+                  ...savedPump,
+                  daysPerUnit:
+                    savedPump.estimatedBuildTimeDays !== undefined
+                      ? savedPump.estimatedBuildTimeDays
+                      : 1.5,
+                }
+              : sp,
+          ),
+        );
+        toast({
+          title: "Pump Updated",
+          description: `${savedPump.serialNumber || savedPump.model} has been updated.`,
+        });
+      } catch (error) {
+        console.error("Error updating pump on schedule page:", error);
+        toast({
+          variant: "destructive",
+          title: "Update Failed",
+          description: "Could not save pump details.",
+        });
+      }
+    },
+    [toast, initialPumps],
+  );
+
+  const handleAddPumps = useCallback(
+    async (
+      newPumpsData: Array<Omit<Pump, "id" | "createdAt" | "updatedAt">>,
+    ) => {
+      setIsLoading(true);
+      try {
+        const addedPumpsPromises = newPumpsData.map((pumpData) =>
+          pumpService.addPumpWithActivityLog(pumpData),
+        );
+        const successfullyAddedPumps = await Promise.all(addedPumpsPromises);
+
+        setInitialPumps((prev) => [...successfullyAddedPumps, ...prev]);
+
+        if (successfullyAddedPumps.length === 1) {
+          toast({
+            title: "Pump Added",
+            description: `${successfullyAddedPumps[0].serialNumber || "New Pump"} added to schedule planning.`,
+          });
+        } else if (successfullyAddedPumps.length > 1) {
+          toast({
+            title: `${successfullyAddedPumps.length} Pumps Added`,
+            description: `Batch added to schedule planning.`,
+          });
+        }
+      } catch (error) {
+        console.error("Error adding pumps:", error);
+        toast({
+          variant: "destructive",
+          title: "Add Failed",
+          description: "Could not add new pump(s).",
+        });
+      } finally {
+        setIsLoading(false);
+        setIsAddPumpModalOpen(false);
+      }
+    },
+    [toast],
+  );
 
   const handleTogglePlannableItemsViewMode = useCallback(() => {
-    setPlannableItemsViewMode(prevMode => {
-      const newMode = prevMode === 'default' ? 'condensed' : 'default';
-      if (newMode === 'default') {
+    setPlannableItemsViewMode((prevMode) => {
+      const newMode = prevMode === "default" ? "condensed" : "default";
+      if (newMode === "default") {
         setExplodedPlannableModels(new Set());
       }
       return newMode;
@@ -460,7 +666,7 @@ export default function SchedulePage() {
   }, []);
 
   const handleToggleExplodePlannableModel = useCallback((model: string) => {
-    setExplodedPlannableModels(prev => {
+    setExplodedPlannableModels((prev) => {
       const newExploded = new Set(prev);
       if (newExploded.has(model)) {
         newExploded.delete(model);
@@ -472,89 +678,128 @@ export default function SchedulePage() {
   }, []);
 
   const groupedPlannableItemsByModel = useMemo(() => {
-    return filteredPlannableItems.reduce((acc, pump) => {
-      if (!acc[pump.model]) {
-        acc[pump.model] = [];
-      }
-      acc[pump.model].push(pump);
-      return acc;
-    }, {} as Record<string, PlannablePump[]>);
+    return filteredPlannableItems.reduce(
+      (acc, pump) => {
+        if (!acc[pump.model]) {
+          acc[pump.model] = [];
+        }
+        acc[pump.model].push(pump);
+        return acc;
+      },
+      {} as Record<string, PlannablePump[]>,
+    );
   }, [filteredPlannableItems]);
 
+  const modelColors = PUMP_MODELS.reduce(
+    (acc, model, index) => {
+      const colorClasses = [
+        "bg-sky-500/80 border-sky-600",
+        "bg-emerald-500/80 border-emerald-600",
+        "bg-amber-500/80 border-amber-600",
+        "bg-rose-500/80 border-rose-600",
+        "bg-indigo-500/80 border-indigo-600",
+        "bg-pink-500/80 border-pink-600",
+        "bg-teal-500/80 border-teal-600",
+        "bg-cyan-500/80 border-cyan-600",
+        "bg-lime-500/80 border-lime-600",
+      ];
+      acc[model] = colorClasses[index % colorClasses.length];
+      return acc;
+    },
+    {} as Record<string, string>,
+  );
 
-  const modelColors = PUMP_MODELS.reduce((acc, model, index) => {
-    const colorClasses = [
-      'bg-sky-500/80 border-sky-600', 'bg-emerald-500/80 border-emerald-600',
-      'bg-amber-500/80 border-amber-600', 'bg-rose-500/80 border-rose-600',
-      'bg-indigo-500/80 border-indigo-600', 'bg-pink-500/80 border-pink-600',
-      'bg-teal-500/80 border-teal-600', 'bg-cyan-500/80 border-cyan-600',
-      'bg-lime-500/80 border-lime-600',
-    ];
-    acc[model] = colorClasses[index % colorClasses.length];
-    return acc;
-  }, {} as Record<string, string>);
-
-  const getColorForModelOnCalendar = (model: string) => modelColors[model] || 'bg-muted/70 border-muted-foreground';
+  const getColorForModelOnCalendar = (model: string) =>
+    modelColors[model] || "bg-muted/70 border-muted-foreground";
 
   const allPumpModels = PUMP_MODELS;
   const allCustomerNames = CUSTOMER_NAMES;
   const allPriorities = PRIORITY_LEVELS;
-  const powderCoatersInPumps = initialPumps.map(p => p.powderCoater).filter((pc): pc is string => typeof pc === 'string' && pc.length > 0);
-  const allPowderCoaters = Array.from(new Set(powderCoatersInPumps.concat(POWDER_COATERS))).sort();
-  const allSerialNumbers = Array.from(new Set(initialPumps.map(p => p.serialNumber).filter((sn): sn is string => !!sn))).sort();
-  const allPONumbers = Array.from(new Set(initialPumps.map(p => p.poNumber).filter(Boolean as unknown as (value: string | undefined) => value is string))).sort();
+  const powderCoatersInPumps = initialPumps
+    .map((p) => p.powderCoater)
+    .filter((pc): pc is string => typeof pc === "string" && pc.length > 0);
+  const allPowderCoaters = Array.from(
+    new Set(powderCoatersInPumps.concat(POWDER_COATERS)),
+  ).sort();
+  const allSerialNumbers = Array.from(
+    new Set(
+      initialPumps
+        .map((p) => p.serialNumber)
+        .filter((sn): sn is string => !!sn),
+    ),
+  ).sort();
+  const allPONumbers = Array.from(
+    new Set(
+      initialPumps
+        .map((p) => p.poNumber)
+        .filter(
+          Boolean as unknown as (value: string | undefined) => value is string,
+        ),
+    ),
+  ).sort();
   const totalPlannablePumps = filteredPlannableItems.length;
 
-
   const PlannablePumpsTable = () => (
-    <Card>
+    <Card className="bg-glass-surface text-glass-text border border-glass-border backdrop-blur-md backdrop-saturate-150 shadow-glass-lg">
       <CardHeader>
         <div className="flex flex-col gap-y-2">
-            <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-              <CardTitle>Pumps to Schedule</CardTitle>
-              <Button onClick={() => setIsAddPumpModalOpen(true)} size="sm" className="shrink-0">
-                <PlusCircle className="mr-2 h-4 w-4" /> Add Pump(s)
-              </Button>
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <div className="flex items-center space-x-1">
-                      <Switch
-                        id="plannable-view-mode-toggle"
-                        checked={plannableItemsViewMode === 'condensed'}
-                        onCheckedChange={handleTogglePlannableItemsViewMode}
-                        className="h-4 w-7 data-[state=checked]:bg-primary data-[state=unchecked]:bg-input [&>span]:h-3 [&>span]:w-3 [&>span]:data-[state=checked]:translate-x-3 [&>span]:data-[state=unchecked]:translate-x-0.5"
-                        aria-label="Toggle grouped view for plannable pumps"
-                      />
-                      <Label htmlFor="plannable-view-mode-toggle" className="text-xs cursor-pointer select-none">
-                        Group
-                      </Label>
-                    </div>
-                  </TooltipTrigger>
-                  <TooltipContent side="bottom" className="text-xs py-1 px-2">
-                    <p>Toggle Grouped View</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            </div>
-            <CardDescription className="text-sm text-muted-foreground text-left">
-              Drag pumps from this list to the calendar. Use Ctrl/Meta+Click to select multiple.
-            </CardDescription>
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+            <CardTitle>Pumps to Schedule</CardTitle>
+            <Button
+              onClick={() => setIsAddPumpModalOpen(true)}
+              size="sm"
+              className="shrink-0"
+            >
+              <PlusCircle className="mr-2 h-4 w-4" /> Add Pump(s)
+            </Button>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div className="flex items-center space-x-1">
+                    <Switch
+                      id="plannable-view-mode-toggle"
+                      checked={plannableItemsViewMode === "condensed"}
+                      onCheckedChange={handleTogglePlannableItemsViewMode}
+                      className="h-4 w-7 data-[state=checked]:bg-primary data-[state=unchecked]:bg-input [&>span]:h-3 [&>span]:w-3 [&>span]:data-[state=checked]:translate-x-3 [&>span]:data-[state=unchecked]:translate-x-0.5"
+                      aria-label="Toggle grouped view for plannable pumps"
+                    />
+                    <Label
+                      htmlFor="plannable-view-mode-toggle"
+                      className="text-xs cursor-pointer select-none"
+                    >
+                      Group
+                    </Label>
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent side="bottom" className="text-xs py-1 px-2">
+                  <p>Toggle Grouped View</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           </div>
+          <CardDescription className="text-sm text-muted-foreground text-left">
+            Drag pumps from this list to the calendar. Use Ctrl/Meta+Click to
+            select multiple.
+          </CardDescription>
+        </div>
       </CardHeader>
       <CardContent>
         <ScrollArea
-          className="h-[400px] border rounded-md p-2"
+          className="h-[400px] border rounded-md p-2 glass-scrollbar"
           onDrop={handleDropOnPlannableList}
           onDragOver={handleDragOver}
         >
           {isLoading ? (
-             <p className="text-center p-4 text-muted-foreground">Loading plannable pumps...</p>
+            <p className="text-center p-4 text-muted-foreground">
+              Loading plannable pumps...
+            </p>
           ) : filteredPlannableItems.length === 0 ? (
-            <p className="text-center p-4 text-muted-foreground">No plannable items match filters or all are scheduled.</p>
-          ) : plannableItemsViewMode === 'default' ? (
+            <p className="text-center p-4 text-muted-foreground">
+              No plannable items match filters or all are scheduled.
+            </p>
+          ) : plannableItemsViewMode === "default" ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 p-1">
-              {filteredPlannableItems.map(item => (
+              {filteredPlannableItems.map((item) => (
                 <SchedulePumpCard
                   key={item.id}
                   pump={item}
@@ -566,94 +811,148 @@ export default function SchedulePage() {
                 />
               ))}
             </div>
-          ) : ( 
+          ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 p-1">
-              {Object.entries(groupedPlannableItemsByModel).map(([model, pumpsInGroup]) => {
-                if (pumpsInGroup.length === 0) return null;
+              {Object.entries(groupedPlannableItemsByModel).map(
+                ([model, pumpsInGroup]) => {
+                  if (pumpsInGroup.length === 0) return null;
 
-                if (explodedPlannableModels.has(model)) {
-                  return (
-                    <div key={model} className="space-y-2 py-2 rounded-md border border-dashed border-primary/30 bg-primary/5 p-2 col-span-full">
-                       <Button
+                  if (explodedPlannableModels.has(model)) {
+                    return (
+                      <div
+                        key={model}
+                        className="space-y-2 py-2 rounded-md border border-dashed border-primary/30 bg-primary/5 p-2 col-span-full"
+                      >
+                        <Button
                           variant="link"
                           size="sm"
-                          onClick={() => handleToggleExplodePlannableModel(model)}
+                          onClick={() =>
+                            handleToggleExplodePlannableModel(model)
+                          }
                           className="text-primary px-1 py-0 h-auto text-xs hover:underline mb-1"
                         >
                           {model} ({pumpsInGroup.length}) - Collapse
                         </Button>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 p-1">
-                        {pumpsInGroup.map(pump => (
-                          <SchedulePumpCard
-                            key={pump.id}
-                            pump={pump}
-                            isSelected={selectedPlannableItemIds.includes(pump.id)}
-                            onCardClick={handlePlannableItemClick}
-                            onDragStart={(e) => handleDragStartPlannableItem(e, pump)}
-                            onDragEnd={handleDragEnd}
-                            onOpenDetailsModal={() => handleOpenDetailsModal(pump)}
-                          />
-                        ))}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 p-1">
+                          {pumpsInGroup.map((pump) => (
+                            <SchedulePumpCard
+                              key={pump.id}
+                              pump={pump}
+                              isSelected={selectedPlannableItemIds.includes(
+                                pump.id,
+                              )}
+                              onCardClick={handlePlannableItemClick}
+                              onDragStart={(e) =>
+                                handleDragStartPlannableItem(e, pump)
+                              }
+                              onDragEnd={handleDragEnd}
+                              onOpenDetailsModal={() =>
+                                handleOpenDetailsModal(pump)
+                              }
+                            />
+                          ))}
+                        </div>
                       </div>
-                    </div>
-                  );
-                } else if (pumpsInGroup.length > 1) {
-                  return (
-                    <GroupedKanbanCard
-                      key={model}
-                      model={model}
-                      pumpsInGroup={pumpsInGroup}
-                      onDragStartCustomerGroup={(e, pumpsToDragFromGroupedCard: Pump[]) => {
-                        const plannablePumpsToDrag = pumpsToDragFromGroupedCard
-                          .map(p => filteredPlannableItems.find(item => item.id === p.id))
-                          .filter((p): p is PlannablePump => !!p);
+                    );
+                  } else if (pumpsInGroup.length > 1) {
+                    return (
+                      <GroupedKanbanCard
+                        key={model}
+                        model={model}
+                        pumpsInGroup={pumpsInGroup}
+                        onDragStartCustomerGroup={(
+                          e,
+                          pumpsToDragFromGroupedCard: Pump[],
+                        ) => {
+                          const plannablePumpsToDrag =
+                            pumpsToDragFromGroupedCard
+                              .map((p) =>
+                                filteredPlannableItems.find(
+                                  (item) => item.id === p.id,
+                                ),
+                              )
+                              .filter((p): p is PlannablePump => !!p);
 
-                        if (plannablePumpsToDrag.length > 0) {
-                          try {
-                            e.dataTransfer.setData('application/pumptrack-batch-drag', JSON.stringify(plannablePumpsToDrag.map(p => p.id)));
-                            e.dataTransfer.setData('text/plain', `Batch of ${plannablePumpsToDrag.length} ${model} pumps for ${plannablePumpsToDrag[0].customer}`);
-                            e.dataTransfer.effectAllowed = 'move';
-                          } catch (err) {
-                             console.error("Error setting dataTransfer for group drag:", err);
-                             return; 
+                          if (plannablePumpsToDrag.length > 0) {
+                            try {
+                              e.dataTransfer.setData(
+                                "application/pumptrack-batch-drag",
+                                JSON.stringify(
+                                  plannablePumpsToDrag.map((p) => p.id),
+                                ),
+                              );
+                              e.dataTransfer.setData(
+                                "text/plain",
+                                `Batch of ${plannablePumpsToDrag.length} ${model} pumps for ${plannablePumpsToDrag[0].customer}`,
+                              );
+                              e.dataTransfer.effectAllowed = "move";
+                            } catch (err) {
+                              console.error(
+                                "Error setting dataTransfer for group drag:",
+                                err,
+                              );
+                              return;
+                            }
+
+                            const targetElement =
+                              e.currentTarget as HTMLElement;
+                            if (targetElement) {
+                              targetElement.style.opacity = "0.5";
+                              const onGroupDragEndHandler = () => {
+                                targetElement.style.opacity = "1";
+                                targetElement.removeEventListener(
+                                  "dragend",
+                                  onGroupDragEndHandler,
+                                );
+                              };
+                              targetElement.addEventListener(
+                                "dragend",
+                                onGroupDragEndHandler,
+                              );
+                            }
+
+                            setTimeout(() => {
+                              setDraggedItemData({
+                                type: "plannable-batch",
+                                items: plannablePumpsToDrag,
+                              });
+                              setSelectedPlannableItemIds(
+                                plannablePumpsToDrag.map((i) => i.id),
+                              );
+                            }, 0);
                           }
-                          
-                          const targetElement = e.currentTarget as HTMLElement;
-                          if (targetElement) {
-                            targetElement.style.opacity = '0.5';
-                            const onGroupDragEndHandler = () => {
-                              targetElement.style.opacity = '1';
-                              targetElement.removeEventListener('dragend', onGroupDragEndHandler);
-                            };
-                            targetElement.addEventListener('dragend', onGroupDragEndHandler);
-                          }
-                          
-                          setTimeout(() => {
-                            setDraggedItemData({ type: 'plannable-batch', items: plannablePumpsToDrag });
-                            setSelectedPlannableItemIds(plannablePumpsToDrag.map(i => i.id));
-                          }, 0);
+                        }}
+                        onDragEnd={handleDragEnd}
+                        onOpenGroupDetailsModal={() =>
+                          handleOpenGroupDetailsModal(model, pumpsInGroup)
                         }
-                      }}
-                      onDragEnd={handleDragEnd} 
-                      onOpenGroupDetailsModal={() => handleOpenGroupDetailsModal(model, pumpsInGroup)}
-                      onToggleExplode={() => handleToggleExplodePlannableModel(model)}
-                    />
-                  );
-                } else { 
-                  const singlePump = pumpsInGroup[0];
-                  return (
-                       <SchedulePumpCard
+                        onToggleExplode={() =>
+                          handleToggleExplodePlannableModel(model)
+                        }
+                      />
+                    );
+                  } else {
+                    const singlePump = pumpsInGroup[0];
+                    return (
+                      <SchedulePumpCard
                         key={singlePump.id}
                         pump={singlePump}
-                        isSelected={selectedPlannableItemIds.includes(singlePump.id)}
+                        isSelected={selectedPlannableItemIds.includes(
+                          singlePump.id,
+                        )}
                         onCardClick={handlePlannableItemClick}
-                        onDragStart={(e) => handleDragStartPlannableItem(e, singlePump)}
+                        onDragStart={(e) =>
+                          handleDragStartPlannableItem(e, singlePump)
+                        }
                         onDragEnd={handleDragEnd}
-                        onOpenDetailsModal={() => handleOpenDetailsModal(singlePump)}
+                        onOpenDetailsModal={() =>
+                          handleOpenDetailsModal(singlePump)
+                        }
                       />
-                  );
-                }
-              })}
+                    );
+                  }
+                },
+              )}
             </div>
           )}
         </ScrollArea>
@@ -662,66 +961,104 @@ export default function SchedulePage() {
   );
 
   const CalendarView = () => (
-    <Card>
+    <Card className="bg-glass-surface text-glass-text border border-glass-border backdrop-blur-md backdrop-saturate-150 shadow-glass-lg">
       <CardHeader>
         <div className="flex justify-between items-center">
           <div>
             <CardTitle>Production Schedule</CardTitle>
-            <CardDescription>Total duration of scheduled items: {totalScheduledDaysDuration} days.</CardDescription>
+            <CardDescription>
+              Total duration of scheduled items: {totalScheduledDaysDuration}{" "}
+              days.
+            </CardDescription>
           </div>
-          <Button variant="outline" size="sm" onClick={resetSchedule} title="Clear all items from schedule">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={resetSchedule}
+            title="Clear all items from schedule"
+          >
             <RotateCcw className="mr-2 h-4 w-4" /> Reset Schedule
           </Button>
         </div>
       </CardHeader>
       <CardContent>
         <div className="grid grid-cols-7 gap-1 mb-2 text-center text-xs font-medium text-muted-foreground">
-          {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
-            <div key={day} className="p-1 rounded-sm bg-muted/50">{day}</div>
+          {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
+            <div key={day} className="p-1 rounded-sm bg-muted/50">
+              {day}
+            </div>
           ))}
         </div>
         <div className="grid grid-cols-7 gap-1 min-h-[300px]">
           {calendarDays.map((date, dayIndex) => {
             const itemsStartingThisDay = scheduleTimeline
-              .filter(item => item.startDay === dayIndex)
-              .sort((a,b) => (a.priority === 'urgent' ? -1 : b.priority === 'urgent' ? 1 : 0));
+              .filter((item) => item.startDay === dayIndex)
+              .sort((a, b) =>
+                a.priority === "urgent" ? -1 : b.priority === "urgent" ? 1 : 0,
+              );
 
-            const isTodayClient = clientRenderInfo && date.toDateString() === clientRenderInfo.todayString;
-            const isDifferentMonthClient = clientRenderInfo && date.getMonth() !== clientRenderInfo.currentMonth;
+            const isTodayClient =
+              clientRenderInfo &&
+              date.toDateString() === clientRenderInfo.todayString;
+            const isDifferentMonthClient =
+              clientRenderInfo &&
+              date.getMonth() !== clientRenderInfo.currentMonth;
 
             return (
               <div
                 key={date.toISOString()}
                 className={cn(
                   "border rounded-sm p-1 text-xs relative flex flex-col bg-background hover:bg-muted/30 transition-colors",
-                  isDifferentMonthClient && "bg-muted/20 text-muted-foreground/60",
-                  "min-h-[8rem]"
+                  isDifferentMonthClient &&
+                    "bg-muted/20 text-muted-foreground/60",
+                  "min-h-[8rem]",
                 )}
                 onDragOver={handleDragOver}
                 onDrop={(e) => handleDropOnCalendar(e, dayIndex)}
-                onDragEnter={(e) => { e.currentTarget.classList.add('bg-primary/10', 'border-primary'); }}
-                onDragLeave={(e) => { e.currentTarget.classList.remove('bg-primary/10', 'border-primary'); }}
+                onDragEnter={(e) => {
+                  e.currentTarget.classList.add(
+                    "bg-primary/10",
+                    "border-primary",
+                  );
+                }}
+                onDragLeave={(e) => {
+                  e.currentTarget.classList.remove(
+                    "bg-primary/10",
+                    "border-primary",
+                  );
+                }}
               >
-                <div className={cn("font-medium pb-0.5 text-right", isTodayClient && "text-primary font-bold")}>{date.getDate()}</div>
-                <ScrollArea className="flex-grow space-y-0.5 overflow-y-auto">
-                  {itemsStartingThisDay.map(item => (
-                     <div
-                        key={item.instanceId}
-                        draggable={true}
-                        onDragStart={(e) => handleDragStartScheduledItem(e, item)}
-                        onDragEnd={handleDragEnd} 
-                        title={`${item.model} - ${item.serialNumber || 'N/A'}\nCustomer: ${item.customer}\nPO: ${item.poNumber}\nSchedule Block: ${item.daysPerUnit} days`}
-                        className={cn(
-                          "text-[10px] p-1 rounded mb-0.5 cursor-grab active:cursor-grabbing text-primary-foreground leading-tight border select-none",
-                          getColorForModelOnCalendar(item.model),
-                          "overflow-hidden transition-transform hover:scale-105"
-                        )}
-                        style={{ minHeight: '1.4rem' }}
-                      >
-                        <p className="font-semibold truncate">{item.model}</p>
-                        <p className="truncate text-xs">{item.serialNumber || 'N/A'}</p>
-                        <p className="truncate text-[9px] opacity-80">{item.customer}</p>
-                      </div>
+                <div
+                  className={cn(
+                    "font-medium pb-0.5 text-right",
+                    isTodayClient && "text-primary font-bold",
+                  )}
+                >
+                  {date.getDate()}
+                </div>
+                <ScrollArea className="flex-grow space-y-0.5 overflow-y-auto glass-scrollbar">
+                  {itemsStartingThisDay.map((item) => (
+                    <div
+                      key={item.instanceId}
+                      draggable={true}
+                      onDragStart={(e) => handleDragStartScheduledItem(e, item)}
+                      onDragEnd={handleDragEnd}
+                      title={`${item.model} - ${item.serialNumber || "N/A"}\nCustomer: ${item.customer}\nPO: ${item.poNumber}\nSchedule Block: ${item.daysPerUnit} days`}
+                      className={cn(
+                        "text-[10px] p-1 rounded mb-0.5 cursor-grab active:cursor-grabbing text-primary-foreground leading-tight border select-none",
+                        getColorForModelOnCalendar(item.model),
+                        "overflow-hidden transition-transform hover:scale-105",
+                      )}
+                      style={{ minHeight: "1.4rem" }}
+                    >
+                      <p className="font-semibold truncate">{item.model}</p>
+                      <p className="truncate text-xs">
+                        {item.serialNumber || "N/A"}
+                      </p>
+                      <p className="truncate text-[9px] opacity-80">
+                        {item.customer}
+                      </p>
+                    </div>
                   ))}
                 </ScrollArea>
               </div>
@@ -730,22 +1067,45 @@ export default function SchedulePage() {
         </div>
         {scheduledItems.length > 0 && (
           <div className="mt-6">
-            <h4 className="font-medium mb-2 text-base">Currently Scheduled Items ({scheduledItems.length}):</h4>
-            <ScrollArea className="h-[200px] border rounded-md p-2 space-y-2">
-              {scheduledItems.sort((a,b) => a.scheduledOnDayIndex - b.scheduledOnDayIndex).map((item) => (
-                <Card key={item.instanceId} className="p-2 shadow-sm bg-card hover:shadow-md">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-xs font-semibold">{item.model} - {item.serialNumber || 'N/A'}</p>
-                      <p className="text-[10px] text-muted-foreground">Cust: {item.customer} | PO: {item.poNumber} | Schedule Block: {item.daysPerUnit} days</p>
-                      <p className="text-[10px] text-muted-foreground">Scheduled on: {calendarDays[item.scheduledOnDayIndex]?.toLocaleDateString() || 'N/A'}</p>
+            <h4 className="font-medium mb-2 text-base">
+              Currently Scheduled Items ({scheduledItems.length}):
+            </h4>
+            <ScrollArea className="h-[200px] border rounded-md p-2 space-y-2 glass-scrollbar">
+              {scheduledItems
+                .sort((a, b) => a.scheduledOnDayIndex - b.scheduledOnDayIndex)
+                .map((item) => (
+                  <Card
+                    key={item.instanceId}
+                    className="p-2 shadow-sm glass-card hover:shadow-md"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-xs font-semibold">
+                          {item.model} - {item.serialNumber || "N/A"}
+                        </p>
+                        <p className="text-[10px] text-muted-foreground">
+                          Cust: {item.customer} | PO: {item.poNumber} | Schedule
+                          Block: {item.daysPerUnit} days
+                        </p>
+                        <p className="text-[10px] text-muted-foreground">
+                          Scheduled on:{" "}
+                          {calendarDays[
+                            item.scheduledOnDayIndex
+                          ]?.toLocaleDateString() || "N/A"}
+                        </p>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-6 w-6 text-destructive hover:text-destructive/80"
+                        onClick={() => removeFromSchedule(item.instanceId)}
+                        aria-label="Remove from schedule"
+                      >
+                        <XCircle size={16} />
+                      </Button>
                     </div>
-                    <Button variant="ghost" size="icon" className="h-6 w-6 text-destructive hover:text-destructive/80" onClick={() => removeFromSchedule(item.instanceId)} aria-label="Remove from schedule">
-                      <XCircle size={16} />
-                    </Button>
-                  </div>
-                </Card>
-              ))}
+                  </Card>
+                ))}
             </ScrollArea>
           </div>
         )}
@@ -766,24 +1126,41 @@ export default function SchedulePage() {
         availableCustomers={allCustomerNames}
         availableSerialNumbers={allSerialNumbers}
         availablePONumbers={allPONumbers}
-        availablePriorities={allPriorities.map(p => ({label: p.label, value: p.value}))}
+        availablePriorities={allPriorities.map((p) => ({
+          label: p.label,
+          value: p.value,
+        }))}
       />
 
       <main className="flex-grow overflow-hidden p-4 md:p-6 bg-background text-foreground">
         <div className="mb-6">
           <div className="flex flex-wrap gap-x-4 gap-y-2 text-sm text-muted-foreground">
-            <div className="flex items-center gap-1"><Package size={16} /><span>Plannable Pumps: {totalPlannablePumps}</span></div>
-            <div className="flex items-center gap-1"><Clock size={16} /><span>Scheduled Duration: {totalScheduledDaysDuration} days</span></div>
+            <div className="flex items-center gap-1">
+              <Package size={16} />
+              <span>Plannable Pumps: {totalPlannablePumps}</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <Clock size={16} />
+              <span>Scheduled Duration: {totalScheduledDaysDuration} days</span>
+            </div>
           </div>
         </div>
         <div className="flex-grow overflow-auto space-y-6">
-            <section><PlannablePumpsTable /></section>
-            <Separator className="my-4" />
-            <section><CalendarView /></section>
+          <section>
+            <PlannablePumpsTable />
+          </section>
+          <Separator className="my-4" />
+          <section>
+            <CalendarView />
+          </section>
         </div>
       </main>
 
-      <AddPumpForm isOpen={isAddPumpModalOpen} onClose={() => setIsAddPumpModalOpen(false)} onAddPump={handleAddPumps} />
+      <AddPumpForm
+        isOpen={isAddPumpModalOpen}
+        onClose={() => setIsAddPumpModalOpen(false)}
+        onAddPump={handleAddPumps}
+      />
 
       <PumpDetailsModal
         isOpen={isDetailsModalOpen}
