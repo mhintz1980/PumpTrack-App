@@ -319,6 +319,8 @@ export function useHomePageLogic() {
     handleSaveMissingInfo,
     handleOpenPumpDetailsModal,
     handlePumpCardClick,
+    onMultiplePumpsMove: handleMultiplePumpsMove,
+    onPumpCardClick: handlePumpCardClick,
     onOpenGroupDetailsModal: handleOpenGroupDetailsModal,
     // Fix: provide the correct prop name for KanbanBoard
     onToggleColumnViewMode: handleToggleColumnViewMode,

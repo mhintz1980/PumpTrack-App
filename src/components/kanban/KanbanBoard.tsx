@@ -85,7 +85,7 @@ export function KanbanBoard({
   };
 
   return (
-    <div className="flex gap-6 px-6 overflow-x-auto h-full"> {/* Removed py-2 */}
+    <div className="glass-board-container px-6 overflow-x-auto h-full">
       {STAGES.map((stage) => (
         <KanbanColumn
           key={stage.id}

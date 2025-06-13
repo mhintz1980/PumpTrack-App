@@ -199,7 +199,7 @@ body {
     --foreground: 222.2 84% 4.9%;
     --card: 0 0% 100%;
     --card-foreground: 222.2 84% 4.9%;
-    --popover: 0 0% 100%;
+    --popover: hsl(0 0% 100% / 0.7);
     --popover-foreground: 222.2 84% 4.9%;
     --primary: 204 74% 45%;
     --primary-foreground: 210 40% 98%;
@@ -207,7 +207,7 @@ body {
     --secondary-foreground: 222.2 47.4% 11.2%;
     --muted: 210 40% 96.1%;
     --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 174 67% 63%;
+    --accent: 204 74% 45%;
     --accent-foreground: 222.2 47.4% 11.2%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
@@ -256,7 +256,7 @@ body {
     --foreground: 210 40% 98%;
     --card: 222.2 84% 4.9%;
     --card-foreground: 210 40% 98%;
-    --popover: 222.2 84% 4.9%;
+    --popover: hsl(222.2 84% 4.9% / 0.7);
     --popover-foreground: 210 40% 98%;
     --primary: 204 70% 60%;
     --primary-foreground: 222.2 47.4% 11.2%;
@@ -264,7 +264,7 @@ body {
     --secondary-foreground: 210 40% 98%;
     --muted: 217.2 32.6% 17.5%;
     --muted-foreground: 215 20.2% 65.1%;
-    --accent: 174 60% 70%;
+    --accent: 204 74% 45%;
     --accent-foreground: 210 40% 98%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 210 40% 98%;
@@ -338,9 +338,14 @@ body {
 /* Glassomorphic Utility Classes for Kanban Page (Light Glass Theme) */
 .glass-board-container {
   @apply flex gap-6 p-0 overflow-x-auto;
-  background: transparent;
+  background-image: var(--universal-background-image);
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
   position: relative;
   min-height: 100vh;
+  min-width: 100vw;
+  width: max-content;
 }
 
 .glass-board-container::before {

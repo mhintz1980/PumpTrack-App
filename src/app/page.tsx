@@ -51,13 +51,6 @@ export default function HomePage() {
   if (isLoading) {
     return (
       <div className="flex flex-col min-h-screen items-center justify-center bg-gray-100"
-        style={{
-          // Keep background style consistent with main view or use a simpler one for loading
-          backgroundImage: "url('/images/YOUR_IMAGE_FILENAME_HERE')",
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-          backgroundRepeat: 'no-repeat',
-        }}
         data-ai-hint="abstract background"
       >
         <Loader2 className="h-12 w-12 animate-spin text-primary" />
@@ -68,15 +61,8 @@ export default function HomePage() {
 
   return (
     <div
-      className="flex flex-col min-h-screen"
-      style={{
-        backgroundImage: "url('/images/YOUR_IMAGE_FILENAME_HERE')", // Replace with your actual image path
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-        backgroundRepeat: 'no-repeat',
-        // backgroundAttachment: 'fixed', // Optional: if you want the background to be fixed during scroll
-      }}
-      data-ai-hint="abstract background" // Update hint if image changes
+      className="kanban-page flex flex-col min-h-screen"
+      data-ai-hint="abstract background"
     >
       <EnhancedHeader
         title="PumpTrack Workflow"
