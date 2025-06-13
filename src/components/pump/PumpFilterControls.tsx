@@ -54,7 +54,7 @@ export function PumpFilterControls({
           placeholder="All Serial Numbers"
           searchPlaceholder="Search serial numbers..."
           emptyText="No serial number found."
-          className="mt-1 h-8 text-sm"
+          className="w-full min-w-0"
           multiple={true}
         />
       </div>
@@ -67,7 +67,7 @@ export function PumpFilterControls({
           placeholder="All Customers"
           searchPlaceholder="Search customers..."
           emptyText="No customer found."
-          className="mt-1 h-8 text-sm"
+          className="w-full min-w-0"
           multiple={true}
         />
       </div>
@@ -80,7 +80,7 @@ export function PumpFilterControls({
           placeholder="All PO Numbers"
           searchPlaceholder="Search PO numbers..."
           emptyText="No PO number found."
-          className="mt-1 h-8 text-sm"
+          className="w-full min-w-0"
           multiple={true}
         />
       </div>
@@ -93,7 +93,7 @@ export function PumpFilterControls({
           placeholder="All Models"
           searchPlaceholder="Search models..."
           emptyText="No model found."
-          className="mt-1 h-8 text-sm"
+          className="w-full min-w-0"
           multiple={true}
         />
       </div>
@@ -106,7 +106,7 @@ export function PumpFilterControls({
           placeholder="All Coaters"
           searchPlaceholder="Search coaters..."
           emptyText="No coater found."
-          className="mt-1 h-8 text-sm"
+          className="w-full min-w-0"
           multiple={true}
         />
       </div>
@@ -119,7 +119,7 @@ export function PumpFilterControls({
           placeholder="All Priorities"
           searchPlaceholder="Search priorities..."
           emptyText="No priority found."
-          className="mt-1 h-8 text-sm"
+          className="w-full min-w-0"
           multiple={true}
         />
       </div>
