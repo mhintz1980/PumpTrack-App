@@ -30,7 +30,7 @@ const SIDEBAR_KEYBOARD_SHORTCUT = "b"
 type SidebarContext = {
   state: "expanded" | "collapsed" // Visual state based on current visual width
   open: boolean // Represents if the sidebar is visually open (expanded text)
-  setOpen: (open: boolean) => void // Primarily for hover effects when not pinned
+  setOpen: (open: boolean) => void // Open/close sidebar on desktop
   isPinned: boolean
   setIsPinned: (pinned: boolean) => void
   openMobile: boolean
@@ -104,13 +104,12 @@ const SidebarProvider = React.forwardRef<
       [setPinnedProp, isPinned]
     )
 
-    // _openForHover reflects the hover-induced open state, only effective if not pinned
-    const [_openForHover, _setOpenForHover] = React.useState(false)
+    // Track desktop open state triggered by click
+    const [_openDesktop, _setOpenDesktop] = React.useState(false)
 
-    // `open` is the actual visual state: true if pinned or hovered (and not pinned)
-    const open = isMobile ? openMobile : isPinned || _openForHover;
-    // `setOpen` is now primarily for hover effect when not pinned
-    const setOpen = _setOpenForHover;
+    // `open` is the actual visual state: true if pinned or manually opened
+    const open = isMobile ? openMobile : isPinned || _openDesktop
+    const setOpen = _setOpenDesktop
 
 
     const togglePinnedState = React.useCallback(() => {
@@ -139,7 +138,7 @@ const SidebarProvider = React.forwardRef<
       () => ({
         state,
         open,
-        setOpen, // for hover
+        setOpen,
         isPinned,
         setIsPinned,
         isMobile,
@@ -182,7 +181,7 @@ const Sidebar = React.forwardRef<
   React.ComponentProps<"div"> & {
     side?: "left" | "right"
     variant?: "sidebar" | "floating" | "inset"
-    // collapsible prop is effectively always "icon" for desktop now due to hover/pin
+    // collapsible prop is effectively always "icon" for desktop now due to pin
   }
 >(
   (
@@ -195,19 +194,35 @@ const Sidebar = React.forwardRef<
     },
     ref
   ) => {
-    const { isMobile, state, openMobile, setOpenMobile, setOpen, isPinned } = useSidebar()
+    const { isMobile, state, openMobile, setOpenMobile, setOpen, isPinned, open } = useSidebar()
 
-    const handleMouseEnter = () => {
-      if (!isMobile && !isPinned) {
-        setOpen(true); // setOpen here refers to _setOpenForHover
-      }
-    };
+    const sidebarRef = React.useRef<HTMLDivElement>(null)
 
-    const handleMouseLeave = () => {
-      if (!isMobile && !isPinned) {
-        setOpen(false); // setOpen here refers to _setOpenForHover
+    React.useEffect(() => {
+      if (isMobile || isPinned) return
+      const handleKeyDown = (event: KeyboardEvent) => {
+        if (event.key === "Escape") {
+          setOpen(false)
+        }
       }
-    };
+      const handleClickOutside = (event: MouseEvent) => {
+        if (sidebarRef.current && !sidebarRef.current.contains(event.target as Node)) {
+          setOpen(false)
+        }
+      }
+      document.addEventListener("keydown", handleKeyDown)
+      document.addEventListener("mousedown", handleClickOutside)
+      return () => {
+        document.removeEventListener("keydown", handleKeyDown)
+        document.removeEventListener("mousedown", handleClickOutside)
+      }
+    }, [isMobile, isPinned, setOpen])
+
+    const handleSidebarClick = () => {
+      if (!isMobile && !isPinned && !open) {
+        setOpen(true)
+      }
+    }
 
 
     if (isMobile) {
@@ -235,14 +250,14 @@ const Sidebar = React.forwardRef<
       <div
         ref={ref}
         className="group peer hidden md:block text-sidebar-foreground"
-        data-state={state} // This will be "expanded" or "collapsed" based on `open` (pinned or hovered)
+        data-state={state} // This will be "expanded" or "collapsed" based on `open`
         data-collapsible={state === "collapsed" ? "icon" : ""} // Show "icon" when visually collapsed
         data-variant={variant}
         data-side={side}
-        onMouseEnter={handleMouseEnter}
-        onMouseLeave={handleMouseLeave}
+        onClick={handleSidebarClick}
       >
         <div
+          ref={sidebarRef}
           className={cn(
             "duration-200 fixed inset-y-0 z-10 hidden h-svh w-[--sidebar-width] transition-[left,right,width] ease-linear md:flex",
             side === "left" ? "left-0" : "right-0",
