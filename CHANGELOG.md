@@ -10,7 +10,7 @@ All notable changes to this project will be documented in this file.
 
 ### Changed
 
-- N/A
+- Sidebar now opens as an overlay without shifting page content
 
 ### Fixed
 
