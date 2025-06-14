@@ -1,21 +1,26 @@
-
 "use client";
 
-import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { GripVertical, Eye } from 'lucide-react';
+import React from "react";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { GripVertical, Eye } from "lucide-react";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { cn } from '@/lib/utils';
-import type { Pump } from '@/types';
+import { cn } from "@/lib/utils";
+import type { Pump } from "@/types";
 
 interface PlannablePump extends Pump {
-  daysPerUnit: number; 
+  daysPerUnit: number;
 }
 
 interface SchedulePumpCardProps {
@@ -35,7 +40,7 @@ export const SchedulePumpCard = React.memo(function SchedulePumpCard({
   onDragEnd,
   onOpenDetailsModal,
 }: SchedulePumpCardProps) {
-  const displaySerialNumber = pump.serialNumber || 'N/A';
+  const displaySerialNumber = pump.serialNumber || "N/A";
 
   const handleEyeClick = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -43,7 +48,7 @@ export const SchedulePumpCard = React.memo(function SchedulePumpCard({
   };
 
   const handleCardClick = (e: React.MouseEvent) => {
-    if ((e.target as HTMLElement).closest('[data-drag-handle]')) {
+    if ((e.target as HTMLElement).closest("[data-drag-handle]")) {
       e.preventDefault();
       e.stopPropagation();
       return;
@@ -58,7 +63,7 @@ export const SchedulePumpCard = React.memo(function SchedulePumpCard({
   const handleDragEndInternal = (e: React.DragEvent) => {
     const targetElement = e.currentTarget as HTMLElement;
     if (targetElement) {
-        targetElement.style.opacity = '1';
+      targetElement.style.opacity = "1";
     }
     if (onDragEnd) {
       onDragEnd(e);
@@ -67,12 +72,12 @@ export const SchedulePumpCard = React.memo(function SchedulePumpCard({
 
   const priorityClass = () => {
     switch (pump.priority) {
-      case 'high':
-        return 'border-orange-500';
-      case 'urgent':
-        return 'border-red-600';
+      case "high":
+        return "border-orange-500";
+      case "urgent":
+        return "border-red-600";
       default:
-        return '';
+        return "";
     }
   };
 
@@ -83,18 +88,18 @@ export const SchedulePumpCard = React.memo(function SchedulePumpCard({
       onDragEnd={handleDragEndInternal}
       onClick={handleCardClick}
       className={cn(
-        "mb-3 shadow-md hover:shadow-lg transition-shadow duration-150 ease-in-out bg-card group cursor-grab active:cursor-grabbing select-none w-[16.75rem]",
+        "glass-card group cursor-grab active:cursor-grabbing select-none w-[16.75rem]",
         priorityClass(),
-        isSelected && "ring-2 ring-primary ring-offset-1"
+        isSelected && "selected",
       )}
-      aria-label={`Pump Model: ${pump.model}, Customer: ${pump.customer}, S/N: ${displaySerialNumber}, Priority: ${pump.priority || 'normal'}`}
+      aria-label={`Pump Model: ${pump.model}, Customer: ${pump.customer}, S/N: ${displaySerialNumber}, Priority: ${pump.priority || "normal"}`}
     >
-      <CardHeader className="p-3 flex flex-row items-start justify-between space-y-0 pb-1">
+      <CardHeader className="glass-card-header">
         <div className="flex-grow pr-2">
-          <CardTitle className="text-sm font-semibold leading-none">
+          <CardTitle className="glass-card-title">
             {pump.model} - {pump.customer}
           </CardTitle>
-          <CardDescription className="text-xs text-muted-foreground mt-1">
+          <CardDescription className="glass-card-description">
             S/N: {displaySerialNumber}
           </CardDescription>
         </div>
@@ -105,14 +110,14 @@ export const SchedulePumpCard = React.memo(function SchedulePumpCard({
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-7 w-7 text-muted-foreground hover:text-primary opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity"
+                  className="glass-button h-7 w-7 opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity"
                   onClick={handleEyeClick}
                   aria-label="View pump details"
                 >
                   <Eye className="h-4 w-4" />
                 </Button>
               </TooltipTrigger>
-              <TooltipContent>
+              <TooltipContent className="glass-button">
                 <p>View pump details</p>
               </TooltipContent>
             </Tooltip>
@@ -121,31 +126,31 @@ export const SchedulePumpCard = React.memo(function SchedulePumpCard({
             <Tooltip>
               <TooltipTrigger asChild>
                 <div
-                  className="cursor-grab active:cursor-grabbing"
+                  className="cursor-grab glass-drag-handle"
                   aria-label="Drag pump"
                   data-drag-handle="true"
                 >
-                  <GripVertical className="h-5 w-5 text-muted-foreground" />
+                  <GripVertical className="h-5 w-5" />
                 </div>
               </TooltipTrigger>
-              <TooltipContent>
+              <TooltipContent className="glass-button">
                 <p>Drag pump</p>
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
         </div>
       </CardHeader>
-      <CardContent className="p-3 pt-0 text-xs text-muted-foreground space-y-0.5">
+      <CardContent className="glass-card-content">
         {pump.estimatedBuildTimeDays !== undefined && (
-          <p>
-            Build Time: {pump.estimatedBuildTimeDays} days
-          </p>
+          <p>Build Time: {pump.estimatedBuildTimeDays} days</p>
         )}
-         <p>
-          Actual Duration: {pump.actualDurationDays !== undefined ? `${pump.actualDurationDays} days` : 'N/A'}
+        <p>
+          Actual Duration:{" "}
+          {pump.actualDurationDays !== undefined
+            ? `${pump.actualDurationDays} days`
+            : "N/A"}
         </p>
       </CardContent>
     </Card>
   );
 });
-
