@@ -41,6 +41,8 @@ export const SchedulePumpCard = React.memo(function SchedulePumpCard({
   onOpenDetailsModal,
 }: SchedulePumpCardProps) {
   const displaySerialNumber = pump.serialNumber || "N/A";
+  const truncate = (text: string, limit: number) =>
+    text.length > limit ? text.slice(0, limit - 3) + "..." : text;
 
   const handleEyeClick = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -88,20 +90,23 @@ export const SchedulePumpCard = React.memo(function SchedulePumpCard({
       onDragEnd={handleDragEndInternal}
       onClick={handleCardClick}
       className={cn(
-        "glass-card group cursor-grab active:cursor-grabbing select-none w-full",
+        "glass-card group w-[16rem] cursor-grab active:cursor-grabbing select-none",
         priorityClass(),
         isSelected && "selected",
       )}
       aria-label={`Pump Model: ${pump.model}, Customer: ${pump.customer}, S/N: ${displaySerialNumber}, Priority: ${pump.priority || "normal"}`}
     >
       <CardHeader className="glass-card-header">
-        <div className="flex-grow pr-2">
+        <div className="flex-grow pr-2 space-y-0.5">
           <CardTitle className="glass-card-title">
-            {pump.model} - {pump.customer}
+            {truncate(pump.model, 13)}
           </CardTitle>
-          <CardDescription className="glass-card-description">
-            S/N: {displaySerialNumber}
-          </CardDescription>
+          <p className="glass-card-description">
+            {truncate(pump.customer, 13)}
+          </p>
+          <p className="glass-card-description">
+            {truncate(`S/N: ${displaySerialNumber}`, 13)}
+          </p>
         </div>
         <div className="flex items-center space-x-1">
           <TooltipProvider>
@@ -140,17 +145,7 @@ export const SchedulePumpCard = React.memo(function SchedulePumpCard({
           </TooltipProvider>
         </div>
       </CardHeader>
-      <CardContent className="glass-card-content">
-        {pump.estimatedBuildTimeDays !== undefined && (
-          <p>Build Time: {pump.estimatedBuildTimeDays} days</p>
-        )}
-        <p>
-          Actual Duration:{" "}
-          {pump.actualDurationDays !== undefined
-            ? `${pump.actualDurationDays} days`
-            : "N/A"}
-        </p>
-      </CardContent>
+      <CardContent className="glass-card-content" />
     </Card>
   );
 });

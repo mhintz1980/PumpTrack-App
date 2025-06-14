@@ -460,10 +460,10 @@ body {
   background: transparent;
 }
 
-.glass-card-title { 
+.glass-card-title {
   color: var(--glass-text-primary);
   font-weight: 600;
-  font-size: 0.875rem;
+  font-size: 1rem;
   line-height: 1.25;
   text-shadow: 0 1px 2px rgba(0,0,0,0.3);
 }
