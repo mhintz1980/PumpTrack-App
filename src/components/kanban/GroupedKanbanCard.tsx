@@ -74,7 +74,7 @@ export function GroupedKanbanCard({
                   <Layers className="h-4 w-4" style={{color: 'var(--glass-accent-blue)'}} />
                 </Button>
               </TooltipTrigger>
-              <TooltipContent className="glass-button">
+              <TooltipContent sideOffset={8} className="glass-tooltip">
                 <p>Show individual pumps</p>
               </TooltipContent>
             </Tooltip>
