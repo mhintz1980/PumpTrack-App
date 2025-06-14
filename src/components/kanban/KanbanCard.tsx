@@ -88,7 +88,7 @@ export const KanbanCard = React.memo(function KanbanCard({
                     <Eye className="h-4 w-4" />
                   </Button>
                 </TooltipTrigger>
-                <TooltipContent className="glass-button">
+                <TooltipContent sideOffset={8} className="glass-tooltip">
                   <p>View pump details</p>
                 </TooltipContent>
               </Tooltip>
@@ -102,7 +102,7 @@ export const KanbanCard = React.memo(function KanbanCard({
                     <GripVertical className="h-5 w-5" />
                   </div>
                 </TooltipTrigger>
-                <TooltipContent className="glass-button">
+                <TooltipContent sideOffset={8} className="glass-tooltip">
                   <p>Drag pump</p>
                 </TooltipContent>
               </Tooltip>
