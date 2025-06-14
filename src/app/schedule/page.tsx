@@ -5,6 +5,9 @@ import {
   Calendar as CalendarIcon,
   Package,
   Clock,
+  SearchIcon,
+  Settings2,
+  FilterX,
   Users,
   FileText,
   GripVertical,
@@ -21,6 +24,7 @@ import {
   CardDescription,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
@@ -32,6 +36,14 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { PumpFilterControls } from "@/components/pump/PumpFilterControls";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import type { Pump, PriorityLevel, Filters, ViewMode } from "@/types";
 import {
@@ -120,6 +132,7 @@ export default function SchedulePage() {
     currentMonth: number;
     todayEpoch: number;
   } | null>(null);
+  const [isFilterMenuOpen, setIsFilterMenuOpen] = useState(false);
 
   useEffect(() => {
     const now = new Date();
@@ -738,6 +751,14 @@ export default function SchedulePage() {
     ),
   ).sort();
   const totalPlannablePumps = filteredPlannableItems.length;
+  const totalScheduledPumps = scheduledItems.length;
+  const activeFilterCount = useMemo(
+    () =>
+      Object.values(filters).filter((value) =>
+        Array.isArray(value) ? value.length > 0 : value !== undefined && value !== ""
+      ).length,
+    [filters],
+  );
 
   const PlannablePumpsTable = () => (
     <Card className="bg-glass-surface text-glass-text border border-glass-border backdrop-blur-md backdrop-saturate-150 shadow-glass-lg">
@@ -1130,18 +1151,100 @@ export default function SchedulePage() {
           label: p.label,
           value: p.value,
         }))}
+        showControls={false}
+        rightContent={
+          <>
+            <div className="kpi-card text-center">
+              <p className="text-xs">Plannable</p>
+              <p className="font-semibold">{totalPlannablePumps}</p>
+            </div>
+            <div className="kpi-card text-center">
+              <p className="text-xs">Scheduled</p>
+              <p className="font-semibold">{totalScheduledPumps}</p>
+            </div>
+            <div className="kpi-card text-center">
+              <p className="text-xs">Duration</p>
+              <p className="font-semibold">{totalScheduledDaysDuration}d</p>
+            </div>
+            <Button
+              onClick={() => setIsAddPumpModalOpen(true)}
+              size="sm"
+              className="shrink-0"
+            >
+              <PlusCircle className="mr-2 h-4 w-4" /> Add Pump(s)
+            </Button>
+          </>
+        }
       />
 
       <main className="flex-grow overflow-hidden p-4 md:p-6 bg-glass-surface text-glass-text border border-glass-border backdrop-blur-md backdrop-saturate-150">
         <div className="mb-6">
-          <div className="flex flex-wrap gap-x-4 gap-y-2 text-sm text-muted-foreground">
-            <div className="flex items-center gap-1">
-              <Package size={16} />
-              <span>Plannable Pumps: {totalPlannablePumps}</span>
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="relative min-w-[150px] sm:min-w-[200px] max-w-[300px]">
+              <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                type="text"
+                placeholder="Search..."
+                value={globalSearchTerm}
+                onChange={(e) => setGlobalSearchTerm(e.target.value)}
+                className="pl-10 w-full h-9 text-sm bg-card/80 backdrop-blur-sm border-glass-border text-glass-text-primary placeholder:text-glass-text-muted focus:ring-glass-accent-purple"
+                aria-label="Search all fields"
+              />
             </div>
             <div className="flex items-center gap-1">
-              <Clock size={16} />
-              <span>Scheduled Duration: {totalScheduledDaysDuration} days</span>
+              <DropdownMenu open={isFilterMenuOpen} onOpenChange={setIsFilterMenuOpen}>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        aria-label={activeFilterCount > 0 ? `Filters (${activeFilterCount} Applied), open menu` : 'Open filters menu'}
+                        className="glass-button"
+                      >
+                        <Settings2 className="mr-1 sm:mr-2 h-4 w-4" />
+                        <span className="hidden sm:inline">Filters</span>
+                        {activeFilterCount > 0 && <span className="ml-1">({activeFilterCount})</span>}
+                      </Button>
+                    </DropdownMenuTrigger>
+                  </TooltipTrigger>
+                  <TooltipContent className="glass-tooltip">
+                    <p>Open filters menu</p>
+                  </TooltipContent>
+                </Tooltip>
+                <DropdownMenuContent className={cn('w-72 p-4', 'enhanced-header-filters')} align="start">
+                  <DropdownMenuLabel>Filter Pumps</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <PumpFilterControls
+                    filters={filters}
+                    onFiltersChange={setFilters}
+                    availablePumpModels={allPumpModels}
+                    availablePowderCoaters={allPowderCoaters}
+                    availableCustomers={allCustomerNames}
+                    availableSerialNumbers={allSerialNumbers}
+                    availablePONumbers={allPONumbers}
+                    availablePriorities={allPriorities.map((p) => ({ label: p.label, value: p.value }))}
+                  />
+                </DropdownMenuContent>
+              </DropdownMenu>
+              {activeFilterCount > 0 && (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => setFilters({})}
+                      className="h-9 w-9 glass-button"
+                      aria-label="Clear all filters"
+                    >
+                      <FilterX className="h-4 w-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent className="glass-tooltip">
+                    <p>Clear all filters</p>
+                  </TooltipContent>
+                </Tooltip>
+              )}
             </div>
           </div>
         </div>

@@ -36,6 +36,8 @@ interface EnhancedHeaderProps {
   availableSerialNumbers: string[];
   availablePONumbers: string[];
   availablePriorities: { label: string; value: string }[];
+  showControls?: boolean;
+  rightContent?: React.ReactNode;
 }
 
 export function EnhancedHeader({
@@ -50,6 +52,8 @@ export function EnhancedHeader({
   availableSerialNumbers,
   availablePONumbers,
   availablePriorities,
+  showControls = true,
+  rightContent,
 }: EnhancedHeaderProps) {
   const activeFilterCount = Object.values(filters).filter(
     (value) => Array.isArray(value) ? value.length > 0 : value !== undefined && value !== ''
@@ -63,16 +67,23 @@ export function EnhancedHeader({
 
   return (
     <TooltipProvider>
-      <div 
+      <div
         className="px-4 py-2 sticky top-0 z-20 bg-transparent flex items-center"
         style={{ height: 'var(--header-height-value)' }}
       >
-        <div className="container mx-auto flex flex-col lg:flex-row items-center justify-between gap-4">
+        <div className="container mx-auto flex items-center justify-between gap-4">
           <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
             {isMobile && <SidebarTrigger className="h-7 w-7" />}
-            
-            <h1 className="text-xl sm:text-2xl font-bold text-glass-text-primary whitespace-nowrap">{title}</h1>
-            
+            <h1 className="text-xl sm:text-2xl font-bold text-glass-text-primary whitespace-nowrap">
+              {title}
+            </h1>
+          </div>
+          {rightContent && <div className="flex items-center gap-2">{rightContent}</div>}
+        </div>
+      </div>
+      {showControls && (
+        <div className="px-4 py-2">
+          <div className="container mx-auto flex items-center gap-2 sm:gap-3 flex-wrap">
             <div className="relative min-w-[150px] sm:min-w-[200px] max-w-[300px]">
               <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
@@ -84,7 +95,6 @@ export function EnhancedHeader({
                 aria-label="Search all fields"
               />
             </div>
-
             <div className="flex items-center gap-1">
               <DropdownMenu open={isMenuOpen} onOpenChange={setIsMenuOpen}>
                 <Tooltip>
@@ -93,7 +103,7 @@ export function EnhancedHeader({
                       <Button
                         variant="outline"
                         size="sm"
-                        aria-label={activeFilterCount > 0 ? `Filters (${activeFilterCount} Applied), open menu` : "Open filters menu"}
+                        aria-label={activeFilterCount > 0 ? `Filters (${activeFilterCount} Applied), open menu` : 'Open filters menu'}
                         className="glass-button"
                       >
                         <Settings2 className="mr-1 sm:mr-2 h-4 w-4" />
@@ -106,16 +116,12 @@ export function EnhancedHeader({
                     <p>Open filters menu</p>
                   </TooltipContent>
                 </Tooltip>
-                <DropdownMenuContent 
-                    className={cn(
-                      "w-72 p-4",
-                      "enhanced-header-filters" // Apply class for specific styling
-                    )}
-                    align="start"
-                    // Removed inline styles as they are now handled by 'enhanced-header-filters' class
+                <DropdownMenuContent
+                  className={cn('w-72 p-4', 'enhanced-header-filters')}
+                  align="start"
                 >
                   <DropdownMenuLabel>Filter Pumps</DropdownMenuLabel>
-                  <DropdownMenuSeparator/>
+                  <DropdownMenuSeparator />
                   <PumpFilterControls
                     filters={filters}
                     onFiltersChange={onFiltersChange}
@@ -128,7 +134,6 @@ export function EnhancedHeader({
                   />
                 </DropdownMenuContent>
               </DropdownMenu>
-
               {activeFilterCount > 0 && (
                 <Tooltip>
                   <TooltipTrigger asChild>
@@ -149,9 +154,8 @@ export function EnhancedHeader({
               )}
             </div>
           </div>
-          
         </div>
-      </div>
+      )}
     </TooltipProvider>
   );
 }
