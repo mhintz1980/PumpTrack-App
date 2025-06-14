@@ -73,9 +73,9 @@ export const SchedulePumpCard = React.memo(function SchedulePumpCard({
   const priorityClass = () => {
     switch (pump.priority) {
       case "high":
-        return "border-orange-500";
+        return "priority-high";
       case "urgent":
-        return "border-red-600";
+        return "priority-urgent";
       default:
         return "";
     }
@@ -88,7 +88,7 @@ export const SchedulePumpCard = React.memo(function SchedulePumpCard({
       onDragEnd={handleDragEndInternal}
       onClick={handleCardClick}
       className={cn(
-        "glass-card group cursor-grab active:cursor-grabbing select-none w-[16.75rem]",
+        "glass-card group cursor-grab active:cursor-grabbing select-none w-full",
         priorityClass(),
         isSelected && "selected",
       )}
