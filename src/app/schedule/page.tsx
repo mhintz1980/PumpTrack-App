@@ -1132,7 +1132,7 @@ export default function SchedulePage() {
         }))}
       />
 
-      <main className="flex-grow overflow-hidden p-4 md:p-6 bg-background text-foreground">
+      <main className="flex-grow overflow-hidden p-4 md:p-6 bg-glass-surface text-glass-text border border-glass-border backdrop-blur-md backdrop-saturate-150">
         <div className="mb-6">
           <div className="flex flex-wrap gap-x-4 gap-y-2 text-sm text-muted-foreground">
             <div className="flex items-center gap-1">
