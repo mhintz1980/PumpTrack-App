@@ -59,7 +59,7 @@ Push only if all pass.
 
 ## 🛠️ Helpful Stubs & References
 
-- **Environment variables:** No environment variables are currently required by this codebase. See `.env.example` for details.
+- **Environment variables:** See `.env` for details and API
 - **Architecture:** See [`docs/architecture-notes.md`](docs/architecture-notes.md) for folder structure, DDD, and reserved directories.
 - **API Mocks:** See [`__mocks__/stripe.ts`](__mocks__/stripe.ts) for third-party API mocking patterns.
 - **Changelog:** See [`CHANGELOG.md`](CHANGELOG.md) and update with every user-facing or infrastructure change.
