@@ -1,18 +1,23 @@
-
 "use client";
 
-import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import type { Pump } from '@/types';
-import { GripVertical, Eye } from 'lucide-react';
+import React from "react";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import type { Pump } from "@/types";
+import { GripVertical, Eye } from "lucide-react";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { cn } from '@/lib/utils';
+import { cn } from "@/lib/utils";
 
 interface KanbanCardProps {
   pump: Pump;
@@ -31,7 +36,10 @@ export const KanbanCard = React.memo(function KanbanCard({
   isDraggable = true,
   isSelected = false,
 }: KanbanCardProps) {
-  const displaySerialNumber = pump.serialNumber || 'N/A';
+  const displaySerialNumber = pump.serialNumber || "N/A";
+
+  const truncate = (text: string, limit: number) =>
+    text.length > limit ? text.slice(0, limit - 3) + "..." : text;
 
   const handleEyeClick = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -42,12 +50,12 @@ export const KanbanCard = React.memo(function KanbanCard({
 
   const priorityClass = () => {
     switch (pump.priority) {
-      case 'high':
-        return 'border-orange-500';
-      case 'urgent':
-        return 'border-red-600';
+      case "high":
+        return "border-orange-500";
+      case "urgent":
+        return "border-red-600";
       default:
-        return '';
+        return "";
     }
   };
 
@@ -57,21 +65,24 @@ export const KanbanCard = React.memo(function KanbanCard({
       onDragStart={isDraggable ? (e) => onDragStart(e, pump.id) : undefined}
       onClick={onCardClick}
       className={cn(
-        "glass-card group",
-        pump.priority === 'high' && "priority-high",
-        pump.priority === 'urgent' && "priority-urgent",
-        isSelected && "selected"
+        "glass-card group w-[16rem]",
+        pump.priority === "high" && "priority-high",
+        pump.priority === "urgent" && "priority-urgent",
+        isSelected && "selected",
       )}
-      aria-label={`Pump Model: ${pump.model}, Customer: ${pump.customer}, S/N: ${displaySerialNumber}, Priority: ${pump.priority || 'normal'}`}
+      aria-label={`Pump Model: ${pump.model}, Customer: ${pump.customer}, S/N: ${displaySerialNumber}, Priority: ${pump.priority || "normal"}`}
     >
       <CardHeader className="glass-card-header">
-        <div className="flex-grow pr-2">
+        <div className="flex-grow pr-2 space-y-0.5">
           <CardTitle className="glass-card-title">
-            {pump.model} - {pump.customer}
+            {truncate(pump.model, 13)}
           </CardTitle>
-          <CardDescription className="glass-card-description">
-            S/N: {displaySerialNumber}
-          </CardDescription>
+          <p className="glass-card-description">
+            {truncate(pump.customer, 13)}
+          </p>
+          <p className="glass-card-description">
+            {truncate(`S/N: ${displaySerialNumber}`, 13)}
+          </p>
         </div>
         <div className="flex items-center space-x-1">
           {onOpenDetailsModal && (
@@ -98,7 +109,10 @@ export const KanbanCard = React.memo(function KanbanCard({
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <div className="cursor-grab glass-drag-handle" aria-label="Drag pump">
+                  <div
+                    className="cursor-grab glass-drag-handle"
+                    aria-label="Drag pump"
+                  >
                     <GripVertical className="h-5 w-5" />
                   </div>
                 </TooltipTrigger>
@@ -110,16 +124,7 @@ export const KanbanCard = React.memo(function KanbanCard({
           )}
         </div>
       </CardHeader>
-      <CardContent className="glass-card-content">
-        {pump.estimatedBuildTimeDays !== undefined && (
-          <p>
-            Build Time: {pump.estimatedBuildTimeDays} days
-          </p>
-        )}
-        <p>
-          Actual Duration: {pump.actualDurationDays !== undefined ? `${pump.actualDurationDays} days` : 'N/A'}
-        </p>
-      </CardContent>
+      <CardContent className="glass-card-content" />
     </Card>
   );
 });
