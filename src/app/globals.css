@@ -456,7 +456,7 @@ body {
 }
 
 .glass-card-header {
-  @apply p-4 flex flex-row items-start justify-between space-y-0 pb-2;
+  @apply pt-2 px-4 pb-2 flex flex-row items-start justify-between space-y-0;
   background: transparent;
 }
 
@@ -475,7 +475,7 @@ body {
 }
 
 .glass-card-content {
-  @apply p-4 pt-0 text-xs space-y-1;
+  @apply px-4 pb-2 pt-0 text-xs space-y-1;
   color: var(--glass-text-secondary);
 }
 .glass-card-content p { /* Ensure p tags within content also use this color */
