@@ -378,7 +378,7 @@ body {
 }
 
 .glass-column {
-  @apply flex-shrink-0 w-[18.75rem] h-full flex flex-col;
+  @apply flex-shrink-0 w-[15.5rem] h-full flex flex-col;
   background: transparent;
   backdrop-filter: blur(12px);
   border: 1px solid var(--glass-border-old);

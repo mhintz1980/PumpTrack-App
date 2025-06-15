@@ -63,7 +63,7 @@ export const KanbanCard = React.memo(function KanbanCard({
       onDragStart={isDraggable ? (e) => onDragStart(e, pump.id) : undefined}
       onClick={onCardClick}
       className={cn(
-        "glass-card group w-[16rem]",
+        "glass-card group w-[12.75rem]", // Adjusted width
         pump.priority === "high" && "priority-high",
         pump.priority === "urgent" && "priority-urgent",
         isSelected && "selected",

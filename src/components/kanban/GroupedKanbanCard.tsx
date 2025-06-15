@@ -52,7 +52,7 @@ export function GroupedKanbanCard({
 
   return (
     <Card
-      className="glass-card w-[16.75rem] group"
+      className="glass-card w-[13.5rem] group" // Adjusted width
       onDoubleClick={handleDoubleClick}
       aria-label={`Grouped pumps for model ${model}, total ${totalQuantity}. Double-click to see details.`}
     >
