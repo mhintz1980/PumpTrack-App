@@ -181,7 +181,6 @@ const Sidebar = React.forwardRef<
   React.ComponentProps<"div"> & {
     side?: "left" | "right"
     variant?: "sidebar" | "floating" | "inset"
-    // collapsible prop is effectively always "icon" for desktop now due to pin
   }
 >(
   (
@@ -250,8 +249,8 @@ const Sidebar = React.forwardRef<
       <div
         ref={ref}
         className="group peer hidden md:block text-sidebar-foreground"
-        data-state={state} // This will be "expanded" or "collapsed" based on `open`
-        data-collapsible={state === "collapsed" ? "icon" : ""} // Show "icon" when visually collapsed
+        data-state={state} 
+        data-collapsible={state === "collapsed" ? "icon" : ""} 
         data-variant={variant}
         data-side={side}
         onClick={handleSidebarClick}
@@ -281,14 +280,13 @@ const Sidebar = React.forwardRef<
 )
 Sidebar.displayName = "Sidebar"
 
-// SidebarTrigger is now primarily for mobile, triggered from EnhancedHeader
 const SidebarTrigger = React.forwardRef<
   React.ElementRef<typeof Button>,
   React.ComponentProps<typeof Button>
 >(({ className, onClick, ...props }, ref) => {
-  const { setOpenMobile, isMobile } = useSidebar(); // Use setOpenMobile
+  const { setOpenMobile, isMobile } = useSidebar(); 
 
-  if (!isMobile) return null; // Only render on mobile
+  if (!isMobile) return null; 
 
   return (
     <Button
@@ -319,7 +317,7 @@ const SidebarPinButton = React.forwardRef<
 >(({ className, ...props }, ref) => {
   const { isPinned, togglePinnedState, isMobile, open } = useSidebar();
 
-  if (isMobile) return null; // Pinning is a desktop feature
+  if (isMobile) return null; 
 
   return (
     <Tooltip>
@@ -330,8 +328,7 @@ const SidebarPinButton = React.forwardRef<
           size="icon"
           className={cn(
             "h-7 w-7 text-sidebar-foreground/70 hover:text-sidebar-foreground",
-            // Hide if sidebar is collapsed (icon-only) and not pinned, unless it's pinned
-            !open && !isPinned && "opacity-0 group-hover/sidebar-wrapper:opacity-100", // Show on hover of the whole sidebar wrapper if collapsed
+            !open && !isPinned && "opacity-0 group-hover/sidebar-wrapper:opacity-100", 
             className
           )}
           onClick={togglePinnedState}
@@ -354,7 +351,7 @@ const SidebarRail = React.forwardRef<
   HTMLButtonElement,
   React.ComponentProps<"button">
 >(({ className, ...props }, ref) => {
-  const { togglePinnedState, isMobile } = useSidebar() // Use togglePinnedState for rail click
+  const { togglePinnedState, isMobile } = useSidebar() 
 
   if (isMobile) return null;
 
@@ -364,16 +361,12 @@ const SidebarRail = React.forwardRef<
       data-sidebar="rail"
       aria-label="Toggle Sidebar Pin"
       tabIndex={-1}
-      onClick={togglePinnedState} // Rail now toggles pinned state
+      onClick={togglePinnedState} 
       title="Toggle Sidebar Pin"
       className={cn(
         "absolute inset-y-0 z-20 hidden w-4 -translate-x-1/2 transition-all ease-linear after:absolute after:inset-y-0 after:left-1/2 after:w-[2px] hover:after:bg-sidebar-border group-data-[side=left]:-right-4 group-data-[side=right]:left-0 sm:flex",
         "[[data-side=left]_&]:cursor-w-resize [[data-side=right]_&]:cursor-e-resize",
         "[[data-side=left][data-state=collapsed]_&]:cursor-e-resize [[data-side=right][data-state=collapsed]_&]:cursor-w-resize",
-        // "group-data-[collapsible=offcanvas]:translate-x-0 group-data-[collapsible=offcanvas]:after:left-full group-data-[collapsible=offcanvas]:hover:bg-sidebar",
-        // "[[data-side=left][data-collapsible=offcanvas]_&]:-right-2",
-        // "[[data-side=right][data-collapsible=offcanvas]_&]:-left-2",
-        // Removed offcanvas specific styles as it's mobile only now
         className
       )}
       {...props}
@@ -390,16 +383,17 @@ const SidebarInset = React.forwardRef<
     <main
       ref={ref}
       className={cn(
-        "relative flex min-h-svh flex-1 flex-col bg-glass-surface transition-[margin-left] duration-200 ease-linear",
-        // Margins for the default "sidebar" variant on desktop
+        "relative flex min-h-svh flex-1 flex-col bg-glass-surface",
+        // Dynamic margins for the default "sidebar" variant on desktop
         "md:peer-data-[variant=sidebar][data-state=collapsed]:ml-[var(--sidebar-width-icon)]",
         "md:peer-data-[variant=sidebar][data-state=expanded]:ml-[var(--sidebar-width)]",
-        
-        // Styling for the "inset" variant
-        "peer-data-[variant=inset]:min-h-[calc(100svh-theme(spacing.4))]", // Make inset content slightly smaller than viewport
-        "md:peer-data-[variant=inset]:m-2", // Apply margin around the inset sidebar content area
-        "md:peer-data-[variant=inset]:rounded-xl md:peer-data-[variant=inset]:shadow", // Apply rounding and shadow for inset
-        className
+        // Smooth transition for margin changes
+        "transition-[margin-left] duration-200 ease-linear",
+        // Specific styling for the "inset" variant
+        "peer-data-[variant=inset]:min-h-[calc(100svh-theme(spacing.4))]",
+        "md:peer-data-[variant=inset]:m-2",
+        "md:peer-data-[variant=inset]:rounded-xl md:peer-data-[variant=inset]:shadow",
+        className 
       )}
       {...props}
     />
@@ -481,7 +475,7 @@ const SidebarContent = React.forwardRef<
       data-sidebar="content"
       className={cn(
         "flex min-h-0 flex-1 flex-col gap-2 overflow-auto",
-         (!open && !isPinned) && "group-data-[collapsible=icon]:overflow-hidden", // original: group-data-[collapsible=icon]:overflow-hidden
+         (!open && !isPinned) && "group-data-[collapsible=icon]:overflow-hidden", 
         className
       )}
       {...props}
@@ -518,8 +512,7 @@ const SidebarGroupLabel = React.forwardRef<
       data-sidebar="group-label"
       className={cn(
         "duration-200 flex h-8 shrink-0 items-center rounded-md px-2 text-xs font-medium text-sidebar-foreground/70 outline-none ring-sidebar-ring transition-[margin,opacity] ease-linear focus-visible:ring-2 [&>svg]:size-4 [&>svg]:shrink-0",
-        // "group-data-[collapsible=icon]:-mt-8 group-data-[collapsible=icon]:opacity-0",
-        (!open && !isPinned) && "-mt-8 opacity-0", // Hide when collapsed and not pinned
+        (!open && !isPinned) && "-mt-8 opacity-0", 
         className
       )}
       {...props}
@@ -542,8 +535,7 @@ const SidebarGroupAction = React.forwardRef<
       className={cn(
         "absolute right-3 top-3.5 flex aspect-square w-5 items-center justify-center rounded-md p-0 text-sidebar-foreground outline-none ring-sidebar-ring transition-transform hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-2 [&>svg]:size-4 [&>svg]:shrink-0",
         "after:absolute after:-inset-2 after:md:hidden",
-        // "group-data-[collapsible=icon]:hidden",
-        (!open && !isPinned) && "hidden", // Hide when collapsed and not pinned
+        (!open && !isPinned) && "hidden", 
         className
       )}
       {...props}
@@ -593,7 +585,6 @@ SidebarMenuItem.displayName = "SidebarMenuItem"
 
 const sidebarMenuButtonVariants = cva(
   "peer/menu-button flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm outline-none ring-sidebar-ring transition-[width,height,padding] hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-2 active:bg-sidebar-accent active:text-sidebar-accent-foreground disabled:pointer-events-none disabled:opacity-50 group-has-[[data-sidebar=menu-action]]/menu-item:pr-8 aria-disabled:pointer-events-none aria-disabled:opacity-50 data-[active=true]:bg-sidebar-accent data-[active=true]:font-medium data-[active=true]:text-sidebar-accent-foreground data-[state=open]:hover:bg-sidebar-accent data-[state=open]:hover:text-sidebar-accent-foreground",
-  // group-data-[collapsible=icon]:!size-8 group-data-[collapsible=icon]:!p-2
   {
     variants: {
       variant: {
@@ -604,9 +595,9 @@ const sidebarMenuButtonVariants = cva(
       size: {
         default: "h-8 text-sm",
         sm: "h-7 text-xs",
-        lg: "h-12 text-sm", // group-data-[collapsible=icon]:!p-0
+        lg: "h-12 text-sm", 
       },
-      isCollapsedAndNotPinned: { // New variant for icon-only state
+      isCollapsedAndNotPinned: { 
         true: "!size-8 !p-2",
         false: ""
       }
@@ -671,7 +662,7 @@ const SidebarMenuButton = React.forwardRef<
         <TooltipContent
           side="right"
           align="center"
-          hidden={open || isMobile} // Hide tooltip if sidebar is expanded or on mobile
+          hidden={open || isMobile} 
           {...tooltip}
         />
       </Tooltip>
@@ -700,8 +691,7 @@ const SidebarMenuAction = React.forwardRef<
         "peer-data-[size=sm]/menu-button:top-1",
         "peer-data-[size=default]/menu-button:top-1.5",
         "peer-data-[size=lg]/menu-button:top-2.5",
-        // "group-data-[collapsible=icon]:hidden",
-        (!open && !isPinned) && "hidden", // Hide when collapsed and not pinned
+        (!open && !isPinned) && "hidden", 
         showOnHover &&
           "group-focus-within/menu-item:opacity-100 group-hover/menu-item:opacity-100 data-[state=open]:opacity-100 peer-data-[active=true]/menu-button:text-sidebar-accent-foreground md:opacity-0",
         className
@@ -727,8 +717,7 @@ const SidebarMenuBadge = React.forwardRef<
       "peer-data-[size=sm]/menu-button:top-1",
       "peer-data-[size=default]/menu-button:top-1.5",
       "peer-data-[size=lg]/menu-button:top-2.5",
-      // "group-data-[collapsible=icon]:hidden",
-      (!open && !isPinned) && "hidden", // Hide when collapsed and not pinned
+      (!open && !isPinned) && "hidden", 
       className
     )}
     {...props}
@@ -784,8 +773,7 @@ const SidebarMenuSub = React.forwardRef<
     data-sidebar="menu-sub"
     className={cn(
       "mx-3.5 flex min-w-0 translate-x-px flex-col gap-1 border-l border-sidebar-border px-2.5 py-0.5",
-      // "group-data-[collapsible=icon]:hidden",
-      (!open && !isPinned) && "hidden", // Hide when collapsed and not pinned
+      (!open && !isPinned) && "hidden", 
       className
     )}
     {...props}
@@ -821,8 +809,7 @@ const SidebarMenuSubButton = React.forwardRef<
         "data-[active=true]:bg-sidebar-accent data-[active=true]:text-sidebar-accent-foreground",
         size === "sm" && "text-xs",
         size === "md" && "text-sm",
-        // "group-data-[collapsible=icon]:hidden",
-        (!open && !isPinned) && "hidden", // Hide when collapsed and not pinned
+        (!open && !isPinned) && "hidden", 
         className
       )}
       {...props}
@@ -855,8 +842,6 @@ export {
   SidebarRail,
   SidebarSeparator,
   SidebarTrigger,
-  SidebarPinButton, // Export the new Pin button
+  SidebarPinButton, 
   useSidebar,
 }
-
-    
