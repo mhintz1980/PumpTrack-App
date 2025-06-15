@@ -655,15 +655,6 @@ export default function SchedulePage() {
     [toast],
   );
 
-  const handleTogglePlannableItemsViewMode = useCallback(() => {
-    setPlannableItemsViewMode((prevMode) => {
-      const newMode = prevMode === "default" ? "condensed" : "default";
-      if (newMode === "default") {
-        setExplodedPlannableModels(new Set());
-      }
-      return newMode;
-    });
-  }, []);
 
   const handleToggleExplodePlannableModel = useCallback((model: string) => {
     setExplodedPlannableModels((prev) => {
@@ -753,28 +744,6 @@ export default function SchedulePage() {
               <PlusCircle className="mr-2 h-4 w-4" /> Add Pump(s)
             </Button>
             <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <div className="flex items-center space-x-1">
-                    <Switch
-                      id="plannable-view-mode-toggle"
-                      checked={plannableItemsViewMode === "condensed"}
-                      onCheckedChange={handleTogglePlannableItemsViewMode}
-                      className="h-4 w-7 data-[state=checked]:bg-primary data-[state=unchecked]:bg-input [&>span]:h-3 [&>span]:w-3 [&>span]:data-[state=checked]:translate-x-3 [&>span]:data-[state=unchecked]:translate-x-0.5"
-                      aria-label="Toggle grouped view for plannable pumps"
-                    />
-                    <Label
-                      htmlFor="plannable-view-mode-toggle"
-                      className="text-xs cursor-pointer select-none"
-                    >
-                      Group
-                    </Label>
-                  </div>
-                </TooltipTrigger>
-                <TooltipContent side="bottom" className="text-xs py-1 px-2">
-                  <p>Toggle Grouped View</p>
-                </TooltipContent>
-              </Tooltip>
             </TooltipProvider>
           </div>
           <CardDescription className="text-sm text-muted-foreground text-left">
