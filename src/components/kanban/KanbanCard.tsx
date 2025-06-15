@@ -1,3 +1,4 @@
+
 "use client";
 
 import React from "react";
@@ -38,9 +39,6 @@ export const KanbanCard = React.memo(function KanbanCard({
 }: KanbanCardProps) {
   const displaySerialNumber = pump.serialNumber || "N/A";
 
-  const truncate = (text: string, limit: number) =>
-    text.length > limit ? text.slice(0, limit - 3) + "..." : text;
-
   const handleEyeClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (onOpenDetailsModal) {
@@ -75,13 +73,13 @@ export const KanbanCard = React.memo(function KanbanCard({
       <CardHeader className="glass-card-header">
         <div className="flex-grow pr-2 space-y-0.5">
           <CardTitle className="glass-card-title">
-            {truncate(pump.model, 13)}
+            {pump.model}
           </CardTitle>
           <p className="glass-card-description">
-            {truncate(pump.customer, 13)}
+            {pump.customer}
           </p>
           <p className="glass-card-description">
-            {truncate(`S/N: ${displaySerialNumber}`, 13)}
+            S/N: {displaySerialNumber}
           </p>
         </div>
         <div className="flex items-center space-x-1">
@@ -128,3 +126,4 @@ export const KanbanCard = React.memo(function KanbanCard({
     </Card>
   );
 });
+
