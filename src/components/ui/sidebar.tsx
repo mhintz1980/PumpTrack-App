@@ -390,8 +390,15 @@ const SidebarInset = React.forwardRef<
     <main
       ref={ref}
       className={cn(
-        "relative flex min-h-svh flex-1 flex-col bg-glass-surface",
-        "peer-data-[variant=inset]:min-h-[calc(100svh-theme(spacing.4))] md:peer-data-[variant=inset]:m-2 md:peer-data-[state=collapsed]:peer-data-[variant=inset]:ml-2 md:peer-data-[variant=inset]:ml-0 md:peer-data-[variant=inset]:rounded-xl md:peer-data-[variant=inset]:shadow",
+        "relative flex min-h-svh flex-1 flex-col bg-glass-surface transition-[margin-left] duration-200 ease-linear",
+        // Margins for the default "sidebar" variant on desktop
+        "md:peer-data-[variant=sidebar][data-state=collapsed]:ml-[var(--sidebar-width-icon)]",
+        "md:peer-data-[variant=sidebar][data-state=expanded]:ml-[var(--sidebar-width)]",
+        
+        // Styling for the "inset" variant
+        "peer-data-[variant=inset]:min-h-[calc(100svh-theme(spacing.4))]", // Make inset content slightly smaller than viewport
+        "md:peer-data-[variant=inset]:m-2", // Apply margin around the inset sidebar content area
+        "md:peer-data-[variant=inset]:rounded-xl md:peer-data-[variant=inset]:shadow", // Apply rounding and shadow for inset
         className
       )}
       {...props}

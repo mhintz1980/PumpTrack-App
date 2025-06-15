@@ -8,8 +8,6 @@ import { KanbanColumn } from './KanbanColumn';
 
 interface KanbanBoardProps {
   pumps: Pump[];
-  columnViewModes: Record<StageId, ViewMode>;
-  onToggleColumnViewMode: (stageId: StageId) => void;
   onPumpMove: (pumpId: string, newStageId: StageId) => void;
   onMultiplePumpsMove: (pumpIds: string[], newStageId: StageId) => void;
   onOpenPumpDetailsModal: (pump: Pump) => void;
@@ -17,13 +15,10 @@ interface KanbanBoardProps {
   selectedPumpIdsForDrag: string[];
   onPumpCardClick: (pump: Pump, event: React.MouseEvent<HTMLDivElement>) => void;
   explodedGroups: Record<StageId, Set<string>>;
-  onToggleExplodeGroup: (stageId: StageId, model: string) => void;
 }
 
 export function KanbanBoard({
   pumps,
-  columnViewModes,
-  onToggleColumnViewMode,
   onPumpMove,
   onMultiplePumpsMove,
   onOpenPumpDetailsModal,
@@ -31,7 +26,6 @@ export function KanbanBoard({
   selectedPumpIdsForDrag,
   onPumpCardClick,
   explodedGroups,
-  onToggleExplodeGroup,
 }: KanbanBoardProps) {
   const [draggedItemInfo, setDraggedItemInfo] = React.useState<{type: 'single'; id: string} | {type: 'group'; pumpIds: string[]} | null>(null);
 
@@ -91,12 +85,8 @@ export function KanbanBoard({
           key={stage.id}
           stage={stage}
           pumps={pumps.filter((p) => p.currentStage === stage.id)}
-          viewMode={columnViewModes[stage.id] || 'default'}
-          onToggleViewMode={() => onToggleColumnViewMode(stage.id)}
           onDragStartCard={handleDragStartSingle}
-          onDragStartGroupCard={handleDragStartGroup}
           onDragOver={handleDragOver}
-          onDrop={handleDrop}
           onOpenPumpDetailsModal={onOpenPumpDetailsModal}
           onOpenGroupDetailsModal={onOpenGroupDetailsModal}
           selectedPumpIdsForDrag={selectedPumpIdsForDrag}
