@@ -110,12 +110,6 @@ export default function SchedulePage() {
     useState<Pump | null>(null);
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
 
-  const [plannableItemsViewMode, setPlannableItemsViewMode] =
-    useState<ViewMode>("default");
-  const [explodedPlannableModels, setExplodedPlannableModels] = useState<
-    Set<string>
-  >(new Set());
-
   const [clientRenderInfo, setClientRenderInfo] = useState<{
     todayString: string;
     currentMonth: number;
@@ -656,32 +650,6 @@ export default function SchedulePage() {
     [toast],
   );
 
-
-  const handleToggleExplodePlannableModel = useCallback((model: string) => {
-    setExplodedPlannableModels((prev) => {
-      const newExploded = new Set(prev);
-      if (newExploded.has(model)) {
-        newExploded.delete(model);
-      } else {
-        newExploded.add(model);
-      }
-      return newExploded;
-    });
-  }, []);
-
-  const groupedPlannableItemsByModel = useMemo(() => {
-    return filteredPlannableItems.reduce(
-      (acc, pump) => {
-        if (!acc[pump.model]) {
-          acc[pump.model] = [];
-        }
-        acc[pump.model].push(pump);
-        return acc;
-      },
-      {} as Record<string, PlannablePump[]>,
-    );
-  }, [filteredPlannableItems]);
-
   const modelColors = PUMP_MODELS.reduce(
     (acc, model, index) => {
       const colorClasses = [
@@ -767,7 +735,7 @@ export default function SchedulePage() {
             <p className="text-center p-4 text-muted-foreground">
               No plannable items match filters or all are scheduled.
             </p>
-          ) : plannableItemsViewMode === "default" ? (
+          ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 p-1">
               {filteredPlannableItems.map((item) => (
                 <SchedulePumpCard
@@ -780,149 +748,6 @@ export default function SchedulePage() {
                   onOpenDetailsModal={() => handleOpenDetailsModal(item)}
                 />
               ))}
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 p-1">
-              {Object.entries(groupedPlannableItemsByModel).map(
-                ([model, pumpsInGroup]) => {
-                  if (pumpsInGroup.length === 0) return null;
-
-                  if (explodedPlannableModels.has(model)) {
-                    return (
-                      <div
-                        key={model}
-                        className="space-y-2 py-2 rounded-md border border-dashed border-primary/30 bg-primary/5 p-2 col-span-full"
-                      >
-                        <Button
-                          variant="link"
-                          size="sm"
-                          onClick={() =>
-                            handleToggleExplodePlannableModel(model)
-                          }
-                          className="text-primary px-1 py-0 h-auto text-xs hover:underline mb-1"
-                        >
-                          {model} ({pumpsInGroup.length}) - Collapse
-                        </Button>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 p-1">
-                          {pumpsInGroup.map((pump) => (
-                            <SchedulePumpCard
-                              key={pump.id}
-                              pump={pump}
-                              isSelected={selectedPlannableItemIds.includes(
-                                pump.id,
-                              )}
-                              onCardClick={handlePlannableItemClick}
-                              onDragStart={(e) =>
-                                handleDragStartPlannableItem(e, pump)
-                              }
-                              onDragEnd={handleDragEnd}
-                              onOpenDetailsModal={() =>
-                                handleOpenDetailsModal(pump)
-                              }
-                            />
-                          ))}
-                        </div>
-                      </div>
-                    );
-                  } else if (pumpsInGroup.length > 1) {
-                    return (
-                      <GroupedKanbanCard
-                        key={model}
-                        model={model}
-                        pumpsInGroup={pumpsInGroup}
-                        onDragStartCustomerGroup={(
-                          e,
-                          pumpsToDragFromGroupedCard: Pump[],
-                        ) => {
-                          const plannablePumpsToDrag =
-                            pumpsToDragFromGroupedCard
-                              .map((p) =>
-                                filteredPlannableItems.find(
-                                  (item) => item.id === p.id,
-                                ),
-                              )
-                              .filter((p): p is PlannablePump => !!p);
-
-                          if (plannablePumpsToDrag.length > 0) {
-                            try {
-                              e.dataTransfer.setData(
-                                "application/pumptrack-batch-drag",
-                                JSON.stringify(
-                                  plannablePumpsToDrag.map((p) => p.id),
-                                ),
-                              );
-                              e.dataTransfer.setData(
-                                "text/plain",
-                                `Batch of ${plannablePumpsToDrag.length} ${model} pumps for ${plannablePumpsToDrag[0].customer}`,
-                              );
-                              e.dataTransfer.effectAllowed = "move";
-                            } catch (err) {
-                              console.error(
-                                "Error setting dataTransfer for group drag:",
-                                err,
-                              );
-                              return;
-                            }
-
-                            const targetElement =
-                              e.currentTarget as HTMLElement;
-                            if (targetElement) {
-                              targetElement.style.opacity = "0.5";
-                              const onGroupDragEndHandler = () => {
-                                targetElement.style.opacity = "1";
-                                targetElement.removeEventListener(
-                                  "dragend",
-                                  onGroupDragEndHandler,
-                                );
-                              };
-                              targetElement.addEventListener(
-                                "dragend",
-                                onGroupDragEndHandler,
-                              );
-                            }
-
-                            setTimeout(() => {
-                              setDraggedItemData({
-                                type: "plannable-batch",
-                                items: plannablePumpsToDrag,
-                              });
-                              setSelectedPlannableItemIds(
-                                plannablePumpsToDrag.map((i) => i.id),
-                              );
-                            }, 0);
-                          }
-                        }}
-                        onDragEnd={handleDragEnd}
-                        onOpenGroupDetailsModal={() =>
-                          handleOpenGroupDetailsModal(model, pumpsInGroup)
-                        }
-                        onToggleExplode={() =>
-                          handleToggleExplodePlannableModel(model)
-                        }
-                      />
-                    );
-                  } else {
-                    const singlePump = pumpsInGroup[0];
-                    return (
-                      <SchedulePumpCard
-                        key={singlePump.id}
-                        pump={singlePump}
-                        isSelected={selectedPlannableItemIds.includes(
-                          singlePump.id,
-                        )}
-                        onCardClick={handlePlannableItemClick}
-                        onDragStart={(e) =>
-                          handleDragStartPlannableItem(e, singlePump)
-                        }
-                        onDragEnd={handleDragEnd}
-                        onOpenDetailsModal={() =>
-                          handleOpenDetailsModal(singlePump)
-                        }
-                      />
-                    );
-                  }
-                },
-              )}
             </div>
           )}
         </ScrollArea>

@@ -23,7 +23,6 @@ export function useHomePageLogic() {
   const [selectedGroupForDetails, setSelectedGroupForDetails] = useState<{ model: string; pumps: Pump[] } | null>(null);
   const [isGroupDetailsModalOpen, setIsGroupDetailsModalOpen] = useState(false);
 
-  const [explodedGroups, setExplodedGroups] = useState<Record<StageId, Set<string>>>({} as Record<StageId, Set<string>>);
   const [columnViewModes, setColumnViewModes] = useState<Record<StageId, ViewMode>>(() =>
     STAGES.reduce((acc, stage) => ({ ...acc, [stage.id]: 'default' }), {} as Record<StageId, ViewMode>)
   );
@@ -239,38 +238,12 @@ export function useHomePageLogic() {
   const handleToggleColumnViewMode = useCallback((stageId: StageId) => {
     setColumnViewModes(prevModes => {
       const newMode = prevModes[stageId] === 'default' ? 'condensed' : 'default';
-      const updatedModes = { ...prevModes, [stageId]: newMode };
-
-      if (newMode === 'default') {
-        setExplodedGroups(prevExploded => {
-          const currentExplodedForStage = prevExploded[stageId] || new Set();
-          if (currentExplodedForStage.size > 0) {
-            return {
-              ...prevExploded,
-              [stageId]: new Set<string>(),
-            };
-          }
-          return prevExploded;
-        });
-      }
-      return updatedModes;
+      return { ...prevModes, [stageId]: newMode };
     });
   }, []);
 
-  const handleToggleExplodeGroup = useCallback((stageId: StageId, model: string) => {
-    setExplodedGroups(prev => {
-      const newExplodedForStage = new Set(prev[stageId] || []);
-      if (newExplodedForStage.has(model)) {
-        newExplodedForStage.delete(model);
-      } else {
-        newExplodedForStage.add(model);
-      }
-      return {
-        ...prev,
-        [stageId]: newExplodedForStage,
-      };
-    });
-  }, []);
+  // Removed handleToggleExplodeGroup as the functionality is no longer used
+
 
   // Derived data
   const allPumpModels = PUMP_MODELS;
@@ -309,8 +282,6 @@ export function useHomePageLogic() {
     setSelectedGroupForDetails,
     isGroupDetailsModalOpen,
     setIsGroupDetailsModalOpen,
-    explodedGroups,
-    setExplodedGroups,
     columnViewModes,
     setColumnViewModes,
     handleUpdatePump,
@@ -322,9 +293,7 @@ export function useHomePageLogic() {
     onMultiplePumpsMove: handleMultiplePumpsMove,
     onPumpCardClick: handlePumpCardClick,
     onOpenGroupDetailsModal: handleOpenGroupDetailsModal,
-    // Fix: provide the correct prop name for KanbanBoard
     onToggleColumnViewMode: handleToggleColumnViewMode,
-    onToggleExplodeGroup: handleToggleExplodeGroup,
     allPumpModels,
     allCustomerNames,
     allPriorities,
