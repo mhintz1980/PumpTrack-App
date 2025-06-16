@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect, useMemo, useCallback } from "react";
@@ -712,8 +711,6 @@ export default function SchedulePage() {
             >
               <PlusCircle className="mr-2 h-4 w-4" /> Add Pump(s)
             </Button>
-            <TooltipProvider>
-            </TooltipProvider>
           </div>
           <CardDescription className="text-sm text-muted-foreground text-left">
             Drag pumps from this list to the calendar. Use Ctrl/Meta+Click to
@@ -967,5 +964,3 @@ export default function SchedulePage() {
   );
 }
 
-
-    
