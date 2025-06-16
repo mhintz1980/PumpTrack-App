@@ -103,7 +103,7 @@ export const SchedulePumpCard = React.memo(function SchedulePumpCard({
           <p className="glass-card-description">
             {pump.customer}
           </p>
-          <p className="glass-card-description">
+          <p className="glass-card-description text-[0.625rem]">
             S/N: {displaySerialNumber}
           </p>
         </div>
@@ -148,4 +148,3 @@ export const SchedulePumpCard = React.memo(function SchedulePumpCard({
     </Card>
   );
 });
-
