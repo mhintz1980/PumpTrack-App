@@ -792,3 +792,18 @@ body {
      opacity: 0.6 !important;
   }
 }
+
+@layer components {
+  /* Styles for the calendar day boxes on the scheduling page */
+  /* Replace '.scheduling-calendar-day-box' with your actual selector for the calendar day boxes */
+  .scheduling-calendar-day-box {
+    background: var(--glass-card-surface) !important; /* Force override for consistent transparency */
+    backdrop-filter: blur(8px);           /* Matches pump card blur effect */
+    border: 1px solid var(--glass-border-hover); /* Consistent border style with pump cards */
+    border-radius: 16px;                  /* Optional: Matches pump card corner rounding, adjust if desired */
+    color: var(--glass-text-primary);     /* Default text color, ensure readability */
+    /* Add padding if needed for content within the boxes, e.g., @apply p-2; */
+    /* If these styles don't override existing calendar styles (like the white fill),
+       you might need to use a more specific selector or add !important to these properties. */
+  }
+}

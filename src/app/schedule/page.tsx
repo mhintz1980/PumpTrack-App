@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect, useMemo, useCallback } from "react";
@@ -977,7 +978,7 @@ export default function SchedulePage() {
               <div
                 key={date.toISOString()}
                 className={cn(
-                  "border rounded-sm p-1 text-xs relative flex flex-col bg-background hover:bg-muted/30 transition-colors",
+                  "border rounded-sm p-1 text-xs relative flex flex-col bg-background/40 hover:bg-background/60 transition-colors",
                   isDifferentMonthClient &&
                     "bg-muted/20 text-muted-foreground/60",
                   "min-h-[8rem]",
@@ -1140,3 +1141,6 @@ export default function SchedulePage() {
     </div>
   );
 }
+
+
+    
