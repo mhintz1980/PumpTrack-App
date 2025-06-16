@@ -476,10 +476,18 @@ body {
 }
 
 .glass-card-content {
-  @apply px-4 pb-2 pt-0 text-xs space-y-1;
+  @apply px-4 pb-2 pt-0 space-y-1; /* Removed text-xs here to allow individual sizing */
   color: var(--glass-text-secondary);
 }
-.glass-card-content p { /* Ensure p tags within content also use this color */
+
+/* Specific classes for customer name and serial number within glass card content */
+.glass-card-content .customer-name {
+  font-size: 0.8rem;
+  color: var(--glass-text-secondary); /* Keep the same color */
+}
+
+.glass-card-content .serial-number {
+  font-size: 0.625rem; /* 10px */
   color: var(--glass-text-secondary);
 }
 
@@ -806,4 +814,12 @@ body {
     /* If these styles don't override existing calendar styles (like the white fill),
        you might need to use a more specific selector or add !important to these properties. */
   }
+}
+
+.customer-name {
+  font-size: 0.8rem;
+}
+
+.serial-number {
+  font-size: 0.625rem;
 }

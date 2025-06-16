@@ -76,10 +76,10 @@ export const KanbanCard = React.memo(function KanbanCard({
             {pump.model}
           </CardTitle>
           <p className="glass-card-description">
-            {pump.customer}
+            <span className="customer-name">{pump.customer}</span>
           </p>
-          <p className="glass-card-description text-[0.625rem]">
-            S/N: {displaySerialNumber}
+          <p className="glass-card-description">
+            <span className="serial-number">S/N: {displaySerialNumber}</span>
           </p>
         </div>
         <div className="flex items-center space-x-1">
