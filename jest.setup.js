@@ -5,7 +5,7 @@ if (typeof window !== 'undefined' && !window.matchMedia) {
   window.matchMedia = function (query) {
     return {
       matches: false,
-      media: query,
+      media: query, // Kept one instance of media: query
       onchange: null,
       addListener: function () {},
       removeListener: function () {},
