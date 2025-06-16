@@ -208,6 +208,7 @@ body {
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
+    background-attachment: fixed; /* Ensures the background covers viewport and stays fixed */
   }
 
   :root {
@@ -248,7 +249,7 @@ body {
     --sidebar-ring: hsl(var(--ring));
 
     /* Universal background image variable */
-    --universal-background-image: url('/images/44.png');
+    --universal-background-image: url('/images/Hex-Lgt.PNG');
 
     /* New Dark Glass Theme Variables - HSL values for base color */
     --glass-surface-hsl-values: 215 50% 12%; /* Dark blue base: #0f1b2d */
@@ -301,7 +302,7 @@ body {
     --sidebar-border: hsl(220, 25%, 15%);
 
     /* Universal background image for dark mode (can be customized) */
-    --universal-background-image: url('/images/44.png');
+    --universal-background-image: url('/images/Hex-Lgt.PNG');
   }
 }
 
@@ -551,12 +552,16 @@ body {
   text-shadow: 0 1px 2px rgba(0,0,0,0.3);
 }
 
-.glass-drag-handle {
+.glass-drag-handle,
+.glass-card .glass-button { /* Target the button itself within glass cards */
   color: var(--glass-text-muted);
+  visibility: visible !important; /* Ensure it's not hidden by the visibility property */
+  opacity: 1 !important; /* Ensures the element is fully visible by default, overriding other opacity settings */
   transition: all 0.3s ease-in-out;
 }
 
-.glass-drag-handle:hover {
+.glass-drag-handle:hover, /* Keep hover for grip dots */
+.glass-card .glass-button:hover { /* Apply hover styles to the button within glass cards */
   color: var(--glass-accent-purple);
   filter: drop-shadow(0 0 4px var(--glass-accent-glow-purple));
 }
@@ -650,10 +655,12 @@ body {
 }
 
 .kanban-page {
-  background-image: url('/images/44.png');
+  /* background-image: url('/images/44.png'); */ /* Removed to allow body background to show */
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
+  /* Add padding to the left to account for the collapsed sidebar */
+  padding-left: 60px; /* Adjust this value to match your collapsed sidebar's width */
 }
 
 .glass-card-title, /* For light glass cards */
@@ -785,4 +792,3 @@ body {
      opacity: 0.6 !important;
   }
 }
-
