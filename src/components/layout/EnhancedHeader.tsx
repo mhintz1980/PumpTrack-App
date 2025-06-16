@@ -36,6 +36,7 @@ interface EnhancedHeaderProps {
   availableSerialNumbers: string[];
   availablePONumbers: string[];
   availablePriorities: { label: string; value: string }[];
+  rightSection?: React.ReactNode;
 }
 
 export function EnhancedHeader({
@@ -50,6 +51,7 @@ export function EnhancedHeader({
   availableSerialNumbers,
   availablePONumbers,
   availablePriorities,
+  rightSection,
 }: EnhancedHeaderProps) {
   const activeFilterCount = Object.values(filters).filter(
     (value) => Array.isArray(value) ? value.length > 0 : value !== undefined && value !== ''
@@ -149,7 +151,9 @@ export function EnhancedHeader({
               )}
             </div>
           </div>
-          
+          {rightSection && (
+            <div className="flex gap-4 lg:ml-auto">{rightSection}</div>
+          )}
         </div>
       </div>
     </TooltipProvider>

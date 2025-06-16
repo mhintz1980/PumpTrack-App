@@ -75,3 +75,23 @@ export interface ActivityLogEntry {
   details?: Record<string, any>; // Optional field for specific changed values, e.g., { fromStage: 'A', toStage: 'B', field: 'serialNumber', oldValue: 'X', newValue: 'Y' }
   userId?: string; // Optional: ID of the user who performed the action (for future use with authentication)
 }
+
+export type PumpStatus =
+  | 'unscheduled'
+  | 'scheduled'
+  | 'queue'
+  | 'fabrication'
+  | 'powderCoat'
+  | 'assembly'
+  | 'testing'
+  | 'shipped';
+
+export interface KpiSnapshot {
+  totalOnOrder: number;
+  unscheduledCount: number;
+  remainingBuildUnscheduled: number;
+  remainingBuildScheduled: number;
+  remainingBuildInProcess: number;
+  remainingBuildQueue: number;
+  utilizationPct?: number;
+}

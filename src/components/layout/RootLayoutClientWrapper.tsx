@@ -2,6 +2,8 @@
 'use client'; 
 
 import type { ReactNode } from 'react';
+import { useState } from 'react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import {
@@ -52,7 +54,9 @@ function SidebarNavigationItems() {
 
 
 export function RootLayoutClientWrapper({ children }: { children: ReactNode }) {
+  const [queryClient] = useState(() => new QueryClient());
   return (
+    <QueryClientProvider client={queryClient}>
     <SidebarProvider defaultPinned={false}>
       <Sidebar side="left" variant="sidebar">
         <SidebarHeader>
@@ -79,5 +83,6 @@ export function RootLayoutClientWrapper({ children }: { children: ReactNode }) {
         </div>
       </SidebarInset>
     </SidebarProvider>
+    </QueryClientProvider>
   );
 }

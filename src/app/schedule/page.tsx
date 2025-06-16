@@ -44,6 +44,8 @@ import { useToast } from "@/hooks/use-toast";
 import { SchedulePumpCard } from "@/components/schedule/SchedulePumpCard";
 import dynamic from "next/dynamic";
 import { EnhancedHeader } from "@/components/layout/EnhancedHeader";
+import { KpiDeck } from "@/components/kpi/KpiDeck";
+import { useKpiSnapshot } from "@/hooks/useKpiSnapshot";
 const PumpDetailsModal = dynamic(() =>
   import("@/components/pump/PumpDetailsModal").then((m) => m.PumpDetailsModal),
 );
@@ -96,6 +98,8 @@ export default function SchedulePage() {
 
   const [globalSearchTerm, setGlobalSearchTerm] = useState("");
   const [filters, setFilters] = useState<Filters>({});
+
+  const { data: kpiSnapshot } = useKpiSnapshot();
 
   const [isAddPumpModalOpen, setIsAddPumpModalOpen] = useState(false);
 
@@ -1099,6 +1103,7 @@ export default function SchedulePage() {
           label: p.label,
           value: p.value,
         }))}
+        rightSection={kpiSnapshot ? <KpiDeck snapshot={kpiSnapshot} /> : null}
       />
 
       <main className="flex-grow overflow-hidden p-4 md:p-6 bg-glass-surface text-glass-text border border-glass-border backdrop-blur-md backdrop-saturate-150">
