@@ -43,9 +43,7 @@ export default function HomePage() {
     onMultiplePumpsMove,
     onOpenGroupDetailsModal,
     selectedPumpIdsForDrag,
-    onPumpCardClick,
-    explodedGroups,
-    onToggleExplodeGroup,
+    onPumpCardClick
   } = useHomePageLogic();
 
   if (isLoading) {
@@ -91,8 +89,6 @@ export default function HomePage() {
           onOpenGroupDetailsModal={onOpenGroupDetailsModal}
           selectedPumpIdsForDrag={selectedPumpIdsForDrag}
           onPumpCardClick={onPumpCardClick}
-          explodedGroups={explodedGroups}
-          onToggleExplodeGroup={onToggleExplodeGroup}
         />
       </main>
 

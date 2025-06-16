@@ -14,8 +14,6 @@ interface KanbanBoardProps {
   onOpenGroupDetailsModal?: (model: string, pumpsInGroup: Pump[]) => void;
   selectedPumpIdsForDrag: string[];
   onPumpCardClick: (pump: Pump, event: React.MouseEvent<HTMLDivElement>) => void;
-  explodedGroups: Record<StageId, Set<string>>;
-  onToggleExplodeGroup: (stageId: StageId, model: string) => void;
 }
 
 export function KanbanBoard({
@@ -26,8 +24,6 @@ export function KanbanBoard({
   onOpenGroupDetailsModal,
   selectedPumpIdsForDrag,
   onPumpCardClick,
-  explodedGroups,
-  onToggleExplodeGroup,
 }: KanbanBoardProps) {
   const [draggedItemInfo, setDraggedItemInfo] = React.useState<{type: 'single'; id: string} | {type: 'group'; pumpIds: string[]} | null>(null);
 
@@ -94,8 +90,6 @@ export function KanbanBoard({
           onOpenGroupDetailsModal={onOpenGroupDetailsModal}
           selectedPumpIdsForDrag={selectedPumpIdsForDrag}
           onPumpCardClick={onPumpCardClick}
-          explodedModelsInStage={explodedGroups[stage.id] || new Set()}
-          onToggleExplodeGroupForModel={(model) => onToggleExplodeGroup(stage.id, model)} // Corrected prop name
         />
       ))}
     </div>
