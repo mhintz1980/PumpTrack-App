@@ -15,10 +15,18 @@
 - Comment complex branches; skip obvious getters
 
 ## 🧪 Testing & Linting
+> Codex (and CI) use **pnpm** with a lock-file for repeatable installs.
+
 ```bash
-npm ci               # install deps
-npm run lint         # ESLint + Prettier check
-npm test             # Vitest unit tests
+# one-time env bootstrap (handled in Codex setup script)
+corepack enable
+corepack prepare pnpm@latest --activate
+pnpm install --frozen-lockfile --prefer-offline
+
+# required checks
+pnpm lint          # ESLint + Prettier
+pnpm test          # Jest unit tests
+pnpm typecheck     # tsc --noEmit
 ```
 All commands must succeed before opening a PR.
 
