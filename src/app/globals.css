@@ -249,7 +249,7 @@ body {
     --sidebar-ring: hsl(var(--ring));
 
     /* Universal background image variable */
-    --universal-background-image: url('/images/Hex-Lgt.PNG');
+    --universal-background-image: url('/images/off-white-hex.png');
 
     /* New Dark Glass Theme Variables - HSL values for base color */
     --glass-surface-hsl-values: 215 50% 12%; /* Dark blue base: #0f1b2d */
@@ -302,7 +302,7 @@ body {
     --sidebar-border: hsl(220, 25%, 15%);
 
     /* Universal background image for dark mode (can be customized) */
-    --universal-background-image: url('/images/Hex-Lgt.PNG');
+    --universal-background-image: url('/images/off-white-hex.png');
   }
 }
 
@@ -823,3 +823,4 @@ body {
 .serial-number {
   font-size: 0.625rem;
 }
+
