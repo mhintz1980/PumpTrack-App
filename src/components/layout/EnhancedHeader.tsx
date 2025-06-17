@@ -23,6 +23,7 @@ import {
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
+import { KpiDeckWithData } from '@/components/schedule/KpiDeck';
 
 interface EnhancedHeaderProps {
   title: string;
@@ -63,16 +64,19 @@ export function EnhancedHeader({
 
   return (
     <TooltipProvider>
-      <div 
+      <div
         className="px-4 py-2 sticky top-0 z-20 bg-transparent flex items-center"
         style={{ height: 'var(--header-height-value)' }}
       >
         <div className="container mx-auto flex flex-col lg:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
+          <header className="flex items-center gap-6 w-full">
             {isMobile && <SidebarTrigger className="h-7 w-7" />}
-            
-            <h1 className="text-xl sm:text-2xl font-bold text-glass-text-primary whitespace-nowrap">{title}</h1>
-            
+            <h1 className="text-xl sm:text-2xl font-bold text-glass-text-primary whitespace-nowrap flex-none">{title}</h1>
+            <div className="flex gap-4 ml-auto">
+              <KpiDeckWithData />
+            </div>
+          </header>
+          <div className="flex items-center gap-2 sm:gap-3 flex-wrap w-full mt-2 lg:mt-0">
             <div className="relative min-w-[150px] sm:min-w-[200px] max-w-[300px]">
               <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
@@ -84,7 +88,6 @@ export function EnhancedHeader({
                 aria-label="Search all fields"
               />
             </div>
-
             <div className="flex items-center gap-1">
               <DropdownMenu open={isMenuOpen} onOpenChange={setIsMenuOpen}>
                 <Tooltip>
@@ -106,13 +109,12 @@ export function EnhancedHeader({
                     <p>Open filters menu</p>
                   </TooltipContent>
                 </Tooltip>
-                <DropdownMenuContent 
+                <DropdownMenuContent
                     className={cn(
                       "w-72 p-4",
                       "enhanced-header-filters" // Apply class for specific styling
                     )}
                     align="start"
-                    // Removed inline styles as they are now handled by 'enhanced-header-filters' class
                 >
                   <DropdownMenuLabel>Filter Pumps</DropdownMenuLabel>
                   <DropdownMenuSeparator/>
@@ -128,7 +130,6 @@ export function EnhancedHeader({
                   />
                 </DropdownMenuContent>
               </DropdownMenu>
-
               {activeFilterCount > 0 && (
                 <Tooltip>
                   <TooltipTrigger asChild>
@@ -149,7 +150,6 @@ export function EnhancedHeader({
               )}
             </div>
           </div>
-          
         </div>
       </div>
     </TooltipProvider>
