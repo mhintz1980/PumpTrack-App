@@ -12,13 +12,14 @@ interface KpiDeckProps {
 
 const KpiDeckComponent: React.FC<KpiDeckProps> = ({ snapshot }) => {
   // Card 1: Unscheduled
-  const unscheduledValue = `${snapshot.unscheduledCount} of ${snapshot.totalOnOrder}`;
+  const unscheduledValue = `${snapshot.remainingBuildUnscheduled}d`;
 
   // Card 2: Remaining Work (stacked rows)
   const remainingRows: KpiSubRow[] = [
-    { label: "Unscheduled", value: snapshot.unscheduledCount },
-    { label: "Scheduled", value: snapshot.scheduledCount },
-    { label: "In Process", value: snapshot.inProcessCount },
+    { label: "Unscheduled", value: snapshot.remainingBuildUnscheduled },
+    { label: "Scheduled", value: snapshot.remainingBuildScheduled },
+    { label: "In Process", value: snapshot.remainingBuildInProcess },
+    { label: "Queue", value: snapshot.remainingBuildQueue },
   ];
 
   // Card 3: Capacity

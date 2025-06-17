@@ -25,6 +25,12 @@ export interface Pump {
   priority?: PriorityLevel;
   estimatedBuildTimeDays?: number; // Editable estimate for build time
   actualDurationDays?: number; // Actual time taken, to be populated later
+  /** Status of the pump in the overall build lifecycle */
+  status?: PumpStatus;
+  /** Total estimated build time (days) for analytics */
+  buildTimeDays?: number;
+  /** Remaining build time (days) based on schedule */
+  remainingBuildTimeDays?: number;
   createdAt: string; // ISO date string
   updatedAt: string; // ISO date string
 }
@@ -62,6 +68,7 @@ export type PumpStatus =
   | 'unscheduled'
   | 'scheduled'
   | 'in_process'
+  | 'queue'
   | 'completed'
   | 'shipped';
 
@@ -69,11 +76,16 @@ export type PumpStatus =
  * KpiSnapshot: Structure of KPI data returned from /api/kpis.
  */
 export interface KpiSnapshot {
-  unscheduledCount: number;
-  totalOnOrder: number;
-  scheduledCount: number;
-  inProcessCount: number;
-  utilizationPct?: number | null;
+  /** Remaining build days for unscheduled pumps */
+  remainingBuildUnscheduled: number;
+  /** Remaining build days for scheduled pumps */
+  remainingBuildScheduled: number;
+  /** Remaining build days for pumps currently in process */
+  remainingBuildInProcess: number;
+  /** Sum of remaining build days in the queue */
+  remainingBuildQueue: number;
+  /** Optional utilization percentage for capacity metrics */
+  utilizationPct?: number;
 }
 
 // New type for Activity Log Entries
