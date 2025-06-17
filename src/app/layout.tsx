@@ -1,22 +1,36 @@
 
-import type { Metadata } from 'next';
-import './globals.css';
-import { Toaster } from "@/components/ui/toaster";
-// Use namespace imports
-import * as GeistSansModule from 'geist/font/sans';
-import * as GeistMonoModule from 'geist/font/mono';
+import { GeistSans as GeistSansImport } from 'geist/font/sans';
+import { GeistMono as GeistMonoImport } from 'geist/font/mono';
 import { RootLayoutClientWrapper } from '@/components/layout/RootLayoutClientWrapper';
+import { Toaster } from "@/components/ui/toaster";
+import type { Metadata } from 'next';
 
-// Initialize fonts using the named exports from the imported modules
-const geistSans = GeistSansModule.GeistSans({
-  subsets: ['latin'],
-  variable: '--font-geist-sans',
-});
+// Attempt to access .default on the nested .GeistSans property
+// This is based on the error message implying GeistSansImport.GeistSans is an object.
+const geistSansFontObject = GeistSansImport.GeistSans;
+const geistMonoFontObject = GeistMonoImport.GeistMono;
 
-const geistMono = GeistMonoModule.GeistMono({
-  subsets: ['latin'],
-  variable: '--font-geist-mono',
-});
+// Check if the potentially nested object exists and has a default export that is a function
+const geistSansFont = (typeof geistSansFontObject === 'object' && geistSansFontObject && typeof geistSansFontObject.default === 'function')
+  ? geistSansFontObject.default({
+      subsets: ['latin'],
+      variable: '--font-geist-sans',
+    })
+  : GeistSansImport({ // Fallback to previous direct named import call if the above is not valid
+      subsets: ['latin'],
+      variable: '--font-geist-sans',
+    });
+
+const geistMonoFont = (typeof geistMonoFontObject === 'object' && geistMonoFontObject && typeof geistMonoFontObject.default === 'function')
+  ? geistMonoFontObject.default({
+      subsets: ['latin'],
+      variable: '--font-geist-mono',
+    })
+  : GeistMonoImport({ // Fallback
+      subsets: ['latin'],
+      variable: '--font-geist-mono',
+    });
+
 
 export const metadata: Metadata = {
   title: 'PumpTrack',
@@ -30,7 +44,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${geistSans.variable} ${geistMono.variable} font-sans antialiased`}>
+      <body className={`${geistSansFont.variable} ${geistMonoFont.variable} font-sans antialiased`}>
         {/* This comment is for addressing the "params are being enumerated" warning.
             The warning indicates that 'params' or 'searchParams' might be enumerated directly
             (e.g., Object.keys(params)) in a Server Component.
