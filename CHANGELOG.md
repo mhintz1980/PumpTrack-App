@@ -11,6 +11,7 @@ All notable changes to this project will be documented in this file.
 ### Changed
 
 - Sidebar now opens as an overlay without shifting page content
+- Disabled OpenTelemetry tracing during Next.js builds to avoid missing exporter errors
 
 ### Fixed
 
