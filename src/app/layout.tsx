@@ -1,36 +1,14 @@
 
-import { GeistSans as GeistSansImport } from 'geist/font/sans';
-import { GeistMono as GeistMonoImport } from 'geist/font/mono';
+import { GeistSans } from 'geist/font/sans';
+import { GeistMono } from 'geist/font/mono';
 import { RootLayoutClientWrapper } from '@/components/layout/RootLayoutClientWrapper';
 import { Toaster } from "@/components/ui/toaster";
 import type { Metadata } from 'next';
 
-// Attempt to access .default on the nested .GeistSans property
-// This is based on the error message implying GeistSansImport.GeistSans is an object.
-const geistSansFontObject = GeistSansImport.GeistSans;
-const geistMonoFontObject = GeistMonoImport.GeistMono;
-
-// Check if the potentially nested object exists and has a default export that is a function
-const geistSansFont = (typeof geistSansFontObject === 'object' && geistSansFontObject && typeof geistSansFontObject.default === 'function')
-  ? geistSansFontObject.default({
-      subsets: ['latin'],
-      variable: '--font-geist-sans',
-    })
-  : GeistSansImport({ // Fallback to previous direct named import call if the above is not valid
-      subsets: ['latin'],
-      variable: '--font-geist-sans',
-    });
-
-const geistMonoFont = (typeof geistMonoFontObject === 'object' && geistMonoFontObject && typeof geistMonoFontObject.default === 'function')
-  ? geistMonoFontObject.default({
-      subsets: ['latin'],
-      variable: '--font-geist-mono',
-    })
-  : GeistMonoImport({ // Fallback
-      subsets: ['latin'],
-      variable: '--font-geist-mono',
-    });
-
+// GeistSans and GeistMono are now metadata objects. Access their properties directly.
+// The `variable` property contains the CSS variable name.
+const geistSansFontClassName = GeistSans.variable;
+const geistMonoFontClassName = GeistMono.variable;
 
 export const metadata: Metadata = {
   title: 'PumpTrack',
@@ -44,7 +22,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${geistSansFont.variable} ${geistMonoFont.variable} font-sans antialiased`}>
+      <body className={`${geistSansFontClassName} ${geistMonoFontClassName} font-sans antialiased`}>
         {/* This comment is for addressing the "params are being enumerated" warning.
             The warning indicates that 'params' or 'searchParams' might be enumerated directly
             (e.g., Object.keys(params)) in a Server Component.
