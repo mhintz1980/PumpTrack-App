@@ -61,19 +61,24 @@ export interface Filters {
 export type PumpStatus =
   | 'unscheduled'
   | 'scheduled'
-  | 'in_process'
-  | 'completed'
+  | 'queue'
+  | 'fabrication'
+  | 'powderCoat'
+  | 'assembly'
+  | 'testing'
   | 'shipped';
 
 /**
  * KpiSnapshot: Structure of KPI data returned from /api/kpis.
  */
 export interface KpiSnapshot {
-  unscheduledCount: number;
   totalOnOrder: number;
-  scheduledCount: number;
-  inProcessCount: number;
-  utilizationPct?: number | null;
+  unscheduledCount: number;
+  remainingBuildUnscheduled: number;
+  remainingBuildScheduled: number;
+  remainingBuildInProcess: number;
+  remainingBuildQueue: number;
+  utilizationPct?: number;
 }
 
 // New type for Activity Log Entries
