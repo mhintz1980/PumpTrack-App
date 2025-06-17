@@ -15,10 +15,20 @@ const KpiDeckComponent: React.FC<KpiDeckProps> = ({ snapshot }) => {
   const unscheduledValue = `${snapshot.unscheduledCount} of ${snapshot.totalOnOrder}`;
 
   // Card 2: Remaining Work (stacked rows)
+  // Values represent days remaining for each category
   const remainingRows: KpiSubRow[] = [
-    { label: "Unscheduled", value: snapshot.unscheduledCount },
-    { label: "Scheduled", value: snapshot.scheduledCount },
-    { label: "In Process", value: snapshot.inProcessCount },
+    {
+      label: "Unscheduled",
+      value: `${snapshot.remainingBuildUnscheduled} d`,
+    },
+    {
+      label: "Scheduled",
+      value: `${snapshot.remainingBuildScheduled} d`,
+    },
+    {
+      label: "In Process",
+      value: `${snapshot.remainingBuildInProcess} d`,
+    },
   ];
 
   // Card 3: Capacity
