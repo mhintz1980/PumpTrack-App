@@ -54,6 +54,28 @@ export interface Filters {
   priority?: string[];
 }
 
+/**
+ * PumpStatus: Status of a pump for KPI purposes.
+ * Adjust as needed to match backend/API.
+ */
+export type PumpStatus =
+  | 'unscheduled'
+  | 'scheduled'
+  | 'in_process'
+  | 'completed'
+  | 'shipped';
+
+/**
+ * KpiSnapshot: Structure of KPI data returned from /api/kpis.
+ */
+export interface KpiSnapshot {
+  unscheduledCount: number;
+  totalOnOrder: number;
+  scheduledCount: number;
+  inProcessCount: number;
+  utilizationPct?: number | null;
+}
+
 // New type for Activity Log Entries
 export type ActivityLogType =
   | 'PUMP_CREATED'
