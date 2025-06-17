@@ -21,11 +21,9 @@ const KpiDeckComponent: React.FC<KpiDeckProps> = ({ snapshot }) => {
     { label: "In Process", value: snapshot.inProcessCount },
   ];
 
-  // Card 3: Capacity
-  const capacityValue =
-    typeof snapshot.utilizationPct === "number"
-      ? `${snapshot.utilizationPct}%`
-      : "N/A";
+  // Card 3: Capacity (optional)
+  const showCapacity = typeof snapshot.utilizationPct === "number";
+  const capacityValue = showCapacity ? `${snapshot.utilizationPct}%` : "N/A";
 
   return (
     <div className="flex gap-6">
@@ -42,12 +40,14 @@ const KpiDeckComponent: React.FC<KpiDeckProps> = ({ snapshot }) => {
         value=""
         subRows={remainingRows}
       />
-      <KpiCard
-        id="capacity"
-        icon={<span role="img" aria-label="Capacity">⚡</span>}
-        label="Capacity"
-        value={capacityValue}
-      />
+      {showCapacity && (
+        <KpiCard
+          id="capacity"
+          icon={<span role="img" aria-label="Capacity">⚡</span>}
+          label="Capacity"
+          value={capacityValue}
+        />
+      )}
     </div>
   );
 };
