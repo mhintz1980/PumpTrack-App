@@ -1,5 +1,6 @@
 import React from "react";
 import useSWR from "swr";
+import { CalendarX, Clock, Cpu } from "lucide-react";
 import { KpiCard, KpiSubRow } from "./KpiCard";
 import type { KpiSnapshot } from "@/types";
 
@@ -31,20 +32,20 @@ const KpiDeckComponent: React.FC<KpiDeckProps> = ({ snapshot }) => {
     <div className="flex gap-6">
       <KpiCard
         id="unscheduled"
-        icon={<span role="img" aria-label="Unscheduled">📦</span>}
+        icon={<CalendarX size={24} />}
         label="Unscheduled"
         value={unscheduledValue}
       />
       <KpiCard
         id="remaining"
-        icon={<span role="img" aria-label="Remaining Work">🗂️</span>}
+        icon={<Clock size={24} />}
         label="Remaining Work"
         value=""
         subRows={remainingRows}
       />
       <KpiCard
         id="capacity"
-        icon={<span role="img" aria-label="Capacity">⚡</span>}
+        icon={<Cpu size={24} />}
         label="Capacity"
         value={capacityValue}
       />
