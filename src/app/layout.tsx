@@ -2,18 +2,18 @@
 import type { Metadata } from 'next';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
-// Attempt to use default imports directly
-import GeistSansFontFunction from 'geist/font/sans';
-import GeistMonoFontFunction from 'geist/font/mono';
+// Use namespace imports
+import * as GeistSansModule from 'geist/font/sans';
+import * as GeistMonoModule from 'geist/font/mono';
 import { RootLayoutClientWrapper } from '@/components/layout/RootLayoutClientWrapper';
 
-// Initialize fonts using the default imports
-const geistSans = GeistSansFontFunction({
+// Initialize fonts using the named exports from the imported modules
+const geistSans = GeistSansModule.GeistSans({
   subsets: ['latin'],
   variable: '--font-geist-sans',
 });
 
-const geistMono = GeistMonoFontFunction({
+const geistMono = GeistMonoModule.GeistMono({
   subsets: ['latin'],
   variable: '--font-geist-mono',
 });
