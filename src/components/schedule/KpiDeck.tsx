@@ -2,6 +2,7 @@ import React from "react";
 import useSWR from "swr";
 import { KpiCard, KpiSubRow } from "./KpiCard";
 import type { KpiSnapshot } from "@/types";
+import { CalendarX, Clock, Cpu } from "lucide-react";
 
 /**
  * Props for KpiDeck.
@@ -16,9 +17,9 @@ const KpiDeckComponent: React.FC<KpiDeckProps> = ({ snapshot }) => {
 
   // Card 2: Remaining Work (stacked rows)
   const remainingRows: KpiSubRow[] = [
-    { label: "Unscheduled", value: snapshot.unscheduledCount },
-    { label: "Scheduled", value: snapshot.scheduledCount },
-    { label: "In Process", value: snapshot.inProcessCount },
+    { label: "Unscheduled", value: snapshot.remainingBuildUnscheduled },
+    { label: "Scheduled", value: snapshot.remainingBuildScheduled },
+    { label: "In Process", value: snapshot.remainingBuildInProcess },
   ];
 
   // Card 3: Capacity
@@ -31,23 +32,25 @@ const KpiDeckComponent: React.FC<KpiDeckProps> = ({ snapshot }) => {
     <div className="flex gap-6">
       <KpiCard
         id="unscheduled"
-        icon={<span role="img" aria-label="Unscheduled">📦</span>}
+        icon={<CalendarX className="w-5 h-5" />}
         label="Unscheduled"
         value={unscheduledValue}
       />
       <KpiCard
         id="remaining"
-        icon={<span role="img" aria-label="Remaining Work">🗂️</span>}
+        icon={<Clock className="w-5 h-5" />}
         label="Remaining Work"
         value=""
         subRows={remainingRows}
       />
-      <KpiCard
-        id="capacity"
-        icon={<span role="img" aria-label="Capacity">⚡</span>}
-        label="Capacity"
-        value={capacityValue}
-      />
+      {snapshot.utilizationPct !== undefined && (
+        <KpiCard
+          id="capacity"
+          icon={<Cpu className="w-5 h-5" />}
+          label="Capacity"
+          value={capacityValue}
+        />
+      )}
     </div>
   );
 };

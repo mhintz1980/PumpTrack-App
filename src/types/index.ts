@@ -73,6 +73,9 @@ export interface KpiSnapshot {
   totalOnOrder: number;
   scheduledCount: number;
   inProcessCount: number;
+  remainingBuildUnscheduled: number;
+  remainingBuildScheduled: number;
+  remainingBuildInProcess: number;
   utilizationPct?: number | null;
 }
 
