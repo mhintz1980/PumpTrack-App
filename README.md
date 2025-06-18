@@ -6,7 +6,7 @@ To get started, take a look at `src/app/page.tsx`.
 
 ## Requirements
 
-- **Node.js** 18.18 or later (see `package.json`)
+- **Node.js** 18.18 or later
 - **pnpm** for dependency management
 
 ## Install
