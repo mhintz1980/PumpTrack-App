@@ -7,6 +7,7 @@ All notable changes to this project will be documented in this file.
 ### Added
 
 - Initial project structure and documentation stubs.
+- MIT license and package metadata.
 
 ### Changed
 
