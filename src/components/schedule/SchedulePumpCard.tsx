@@ -2,6 +2,7 @@
 "use client";
 
 import React from "react";
+import { useDrag } from "react-dnd";
 import {
   Card,
   CardContent,
@@ -28,8 +29,6 @@ interface SchedulePumpCardProps {
   pump: PlannablePump;
   isSelected: boolean;
   onCardClick: (pump: PlannablePump, event: React.MouseEvent) => void;
-  onDragStart: (e: React.DragEvent, pump: PlannablePump) => void;
-  onDragEnd?: (e: React.DragEvent) => void;
   onOpenDetailsModal: (pump: PlannablePump) => void;
 }
 
@@ -37,11 +36,17 @@ export const SchedulePumpCard = React.memo(function SchedulePumpCard({
   pump,
   isSelected,
   onCardClick,
-  onDragStart,
-  onDragEnd,
   onOpenDetailsModal,
 }: SchedulePumpCardProps) {
   const displaySerialNumber = pump.serialNumber || "N/A";
+
+  const [{ isDragging }, drag] = useDrag(() => ({
+    type: "pump",
+    item: pump,
+    collect: (monitor) => ({
+      isDragging: monitor.isDragging(),
+    }),
+  }), [pump]);
 
   const handleEyeClick = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -57,19 +62,6 @@ export const SchedulePumpCard = React.memo(function SchedulePumpCard({
     onCardClick(pump, e);
   };
 
-  const handleDragStart = (e: React.DragEvent) => {
-    onDragStart(e, pump);
-  };
-
-  const handleDragEndInternal = (e: React.DragEvent) => {
-    const targetElement = e.currentTarget as HTMLElement;
-    if (targetElement) {
-      targetElement.style.opacity = "1";
-    }
-    if (onDragEnd) {
-      onDragEnd(e);
-    }
-  };
 
   const priorityClass = () => {
     switch (pump.priority) {
@@ -84,9 +76,8 @@ export const SchedulePumpCard = React.memo(function SchedulePumpCard({
 
   return (
     <Card
-      draggable={true}
-      onDragStart={handleDragStart}
-      onDragEnd={handleDragEndInternal}
+      ref={drag as unknown as React.Ref<HTMLDivElement>}
+      style={{ opacity: isDragging ? 0.5 : 1 }}
       onClick={handleCardClick}
       className={cn(
         "glass-card group w-[16rem] cursor-grab active:cursor-grabbing select-none",
