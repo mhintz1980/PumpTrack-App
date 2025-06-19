@@ -10,6 +10,8 @@ import { MissingInfoModal } from '@/components/pump/MissingInfoModal';
 import { GroupedPumpDetailsModal } from '@/components/pump/GroupedPumpDetailsModal';
 import { Loader2 } from 'lucide-react'; // For loading indicator
 
+
+
 export default function HomePage() {
   const {
     filteredPumps,
