@@ -1,6 +1,6 @@
 # Firebase Studio
 
-This is a NextJS starter in Firebase Studio.
+This is a Next.js starter built for Firebase Studio.
 
 To get started, take a look at `src/app/page.tsx`.
 
@@ -11,13 +11,15 @@ To get started, take a look at `src/app/page.tsx`.
 
 ## Install
 
+Install all dependencies using **pnpm**:
+
 ```bash
 pnpm install
 ```
 
 ## Development
 
-Start the dev server:
+Start the development server:
 
 ```bash
 npm run dev
@@ -39,4 +41,4 @@ Create a production build:
 npm run build
 ```
 
-For additional coding guidelines see [`AGENTS.md`](AGENTS.md).
+For coding guidelines and contribution rules, see [`AGENTS.md`](AGENTS.md).
