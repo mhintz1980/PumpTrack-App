@@ -1,16 +1,15 @@
-
-import type { LucideIcon } from 'lucide-react';
-import type { PRIORITY_LEVELS } from '@/lib/constants';
+import type { LucideIcon } from "lucide-react";
+import type { PRIORITY_LEVELS } from "@/lib/constants";
 
 export type StageId =
-  | 'open-jobs'
-  | 'fabrication'
-  | 'assembly'
-  | 'testing'
-  | 'powder-coat'
-  | 'shipped';
+  | "open-jobs"
+  | "fabrication"
+  | "assembly"
+  | "testing"
+  | "powder-coat"
+  | "shipped";
 
-export type PriorityLevel = typeof PRIORITY_LEVELS[number]['value'];
+export type PriorityLevel = (typeof PRIORITY_LEVELS)[number]["value"];
 
 export interface Pump {
   id: string; // Unique identifier for the pump
@@ -43,7 +42,7 @@ export interface Stage {
   icon: LucideIcon;
 }
 
-export type ViewMode = 'default' | 'condensed';
+export type ViewMode = "default" | "condensed";
 
 export interface Filters {
   serialNumber?: string[];
@@ -59,11 +58,11 @@ export interface Filters {
  * Adjust as needed to match backend/API.
  */
 export type PumpStatus =
-  | 'unscheduled'
-  | 'scheduled'
-  | 'in_process'
-  | 'completed'
-  | 'shipped';
+  | "unscheduled"
+  | "scheduled"
+  | "in_process"
+  | "completed"
+  | "shipped";
 
 /**
  * KpiSnapshot: Structure of KPI data returned from /api/kpis.
@@ -78,15 +77,15 @@ export interface KpiSnapshot {
 
 // New type for Activity Log Entries
 export type ActivityLogType =
-  | 'PUMP_CREATED'
-  | 'PUMP_UPDATED'
-  | 'STAGE_MOVED'
-  | 'NOTE_ADDED'
-  | 'NOTE_UPDATED'
-  | 'PRIORITY_CHANGED'
-  | 'DETAILS_EDITED' // Generic for other field changes
-  | 'PUMP_ARCHIVED'
-  | 'PUMP_DELETED';
+  | "PUMP_CREATED"
+  | "PUMP_UPDATED"
+  | "STAGE_MOVED"
+  | "NOTE_ADDED"
+  | "NOTE_UPDATED"
+  | "PRIORITY_CHANGED"
+  | "DETAILS_EDITED" // Generic for other field changes
+  | "PUMP_ARCHIVED"
+  | "PUMP_DELETED";
 
 export interface ActivityLogEntry {
   id: string; // Unique ID for the log entry
@@ -96,4 +95,11 @@ export interface ActivityLogEntry {
   description: string; // Human-readable description of the change
   details?: Record<string, any>; // Optional field for specific changed values, e.g., { fromStage: 'A', toStage: 'B', field: 'serialNumber', oldValue: 'X', newValue: 'Y' }
   userId?: string; // Optional: ID of the user who performed the action (for future use with authentication)
+}
+
+export interface CalendarBlock {
+  id: string;
+  pumpId: string;
+  start: string;
+  end: string;
 }
