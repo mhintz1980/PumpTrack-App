@@ -46,6 +46,8 @@ import {
 } from "@/lib/constants";
 import { useToast } from "@/hooks/use-toast";
 import { SchedulePumpCard } from "@/components/schedule/SchedulePumpCard";
+import { CalendarBlock } from "@/components/calendar/CalendarBlock";
+import { KanbanBacklog } from "@/components/backlog/KanbanBacklog";
 import dynamic from "next/dynamic";
 import { EnhancedHeader } from "@/components/layout/EnhancedHeader";
 const PumpDetailsModal = dynamic(() =>
@@ -73,7 +75,6 @@ interface ScheduleTimelineEntry extends ScheduledPump {
 }
 
 type DraggedItemType = "plannable-single" | "plannable-batch" | "scheduled";
-
 
 export default function SchedulePage() {
   const { toast } = useToast();
@@ -239,8 +240,18 @@ export default function SchedulePage() {
     return scheduledItems.reduce((sum, item) => sum + item.daysPerUnit, 0);
   }, [scheduledItems]);
 
-  const ScheduleDayCell = ({ date, dayIndex }: { date: Date; dayIndex: number }) => {
-    const [{ isOver }, drop] = useDrop<PlannablePump, void, { isOver: boolean }>({
+  const ScheduleDayCell = ({
+    date,
+    dayIndex,
+  }: {
+    date: Date;
+    dayIndex: number;
+  }) => {
+    const [{ isOver }, drop] = useDrop<
+      PlannablePump,
+      void,
+      { isOver: boolean }
+    >({
       accept: "pump",
       drop: (dragged) => {
         const start = calendarDays[dayIndex];
@@ -278,7 +289,9 @@ export default function SchedulePage() {
 
     const itemsStartingThisDay = scheduleTimeline
       .filter((item) => item.startDay === dayIndex)
-      .sort((a, b) => (a.priority === "urgent" ? -1 : b.priority === "urgent" ? 1 : 0));
+      .sort((a, b) =>
+        a.priority === "urgent" ? -1 : b.priority === "urgent" ? 1 : 0,
+      );
 
     const isTodayClient =
       clientRenderInfo && date.toDateString() === clientRenderInfo.todayString;
@@ -341,7 +354,6 @@ export default function SchedulePage() {
     },
     [],
   );
-
 
   const removeFromSchedule = useCallback(
     (instanceIdToRemove: string) => {
@@ -554,9 +566,7 @@ export default function SchedulePage() {
         </div>
       </CardHeader>
       <CardContent>
-        <ScrollArea
-          className="h-[400px] border rounded-md p-2 glass-scrollbar"
-        >
+        <ScrollArea className="h-[400px] border rounded-md p-2 glass-scrollbar">
           {isLoading ? (
             <p className="text-center p-4 text-muted-foreground">
               Loading plannable pumps...
@@ -566,17 +576,12 @@ export default function SchedulePage() {
               No plannable items match filters or all are scheduled.
             </p>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 p-1">
-              {filteredPlannableItems.map((item) => (
-                <SchedulePumpCard
-                  key={item.id}
-                  pump={item}
-                  isSelected={selectedPlannableItemIds.includes(item.id)}
-                  onCardClick={handlePlannableItemClick}
-                  onOpenDetailsModal={() => handleOpenDetailsModal(item)}
-                />
-              ))}
-            </div>
+            <KanbanBacklog
+              pumps={filteredPlannableItems}
+              selectedPumpIds={selectedPlannableItemIds}
+              onCardClick={handlePlannableItemClick}
+              onOpenDetailsModal={handleOpenDetailsModal}
+            />
           )}
         </ScrollArea>
       </CardContent>
@@ -612,10 +617,27 @@ export default function SchedulePage() {
             </div>
           ))}
         </div>
-        <div className="grid grid-cols-7 gap-1 min-h-[300px]">
+        <div className="grid grid-cols-7 gap-1 min-h-[300px] auto-rows-[3rem] relative">
           {calendarDays.map((date, dayIndex) => (
-            <ScheduleDayCell key={date.toISOString()} date={date} dayIndex={dayIndex} />
+            <ScheduleDayCell
+              key={date.toISOString()}
+              date={date}
+              dayIndex={dayIndex}
+            />
           ))}
+          {scheduleTimeline.map((entry) => {
+            const row = Math.floor(entry.startDay / 7) + 1;
+            const col = (entry.startDay % 7) + 1;
+            return (
+              <CalendarBlock
+                key={entry.instanceId}
+                label={entry.model}
+                duration={entry.duration}
+                colorClass={getColorForModelOnCalendar(entry.model)}
+                style={{ gridRow: row, gridColumnStart: col }}
+              />
+            );
+          })}
         </div>
         {scheduledItems.length > 0 && (
           <div className="mt-6">
@@ -668,61 +690,62 @@ export default function SchedulePage() {
   return (
     <DndProvider backend={HTML5Backend}>
       <div className="flex flex-col h-full">
-      <EnhancedHeader
-        title="Production Planning & Schedule"
-        searchTerm={globalSearchTerm}
-        onSearchChange={setGlobalSearchTerm}
-        filters={filters}
-        onFiltersChange={setFilters}
-        availablePumpModels={allPumpModels}
-        availablePowderCoaters={allPowderCoaters}
-        availableCustomers={allCustomerNames}
-        availableSerialNumbers={allSerialNumbers}
-        availablePONumbers={allPONumbers}
-        availablePriorities={allPriorities.map((p) => ({
-          label: p.label,
-          value: p.value,
-        }))}
-      />
+        <EnhancedHeader
+          title="Production Planning & Schedule"
+          searchTerm={globalSearchTerm}
+          onSearchChange={setGlobalSearchTerm}
+          filters={filters}
+          onFiltersChange={setFilters}
+          availablePumpModels={allPumpModels}
+          availablePowderCoaters={allPowderCoaters}
+          availableCustomers={allCustomerNames}
+          availableSerialNumbers={allSerialNumbers}
+          availablePONumbers={allPONumbers}
+          availablePriorities={allPriorities.map((p) => ({
+            label: p.label,
+            value: p.value,
+          }))}
+        />
 
-      <main className="flex-grow overflow-hidden p-4 md:p-6 bg-glass-surface text-glass-text border border-glass-border backdrop-blur-md backdrop-saturate-150">
-        <div className="mb-6">
-          <div className="flex flex-wrap gap-x-4 gap-y-2 text-sm text-muted-foreground">
-            <div className="flex items-center gap-1">
-              <Package size={16} />
-              <span>Plannable Pumps: {totalPlannablePumps}</span>
-            </div>
-            <div className="flex items-center gap-1">
-              <Clock size={16} />
-              <span>Scheduled Duration: {totalScheduledDaysDuration} days</span>
+        <main className="flex-grow overflow-hidden p-4 md:p-6 bg-glass-surface text-glass-text border border-glass-border backdrop-blur-md backdrop-saturate-150">
+          <div className="mb-6">
+            <div className="flex flex-wrap gap-x-4 gap-y-2 text-sm text-muted-foreground">
+              <div className="flex items-center gap-1">
+                <Package size={16} />
+                <span>Plannable Pumps: {totalPlannablePumps}</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <Clock size={16} />
+                <span>
+                  Scheduled Duration: {totalScheduledDaysDuration} days
+                </span>
+              </div>
             </div>
           </div>
-        </div>
-        <div className="flex-grow overflow-auto space-y-6">
-          <section>
-            <PlannablePumpsTable />
-          </section>
-          <Separator className="my-4" />
-          <section>
-            <CalendarView />
-          </section>
-        </div>
-      </main>
+          <div className="flex-grow overflow-auto space-y-6">
+            <section>
+              <PlannablePumpsTable />
+            </section>
+            <Separator className="my-4" />
+            <section>
+              <CalendarView />
+            </section>
+          </div>
+        </main>
 
-      <AddPumpForm
-        isOpen={isAddPumpModalOpen}
-        onClose={() => setIsAddPumpModalOpen(false)}
-        onAddPump={handleAddPumps}
-      />
+        <AddPumpForm
+          isOpen={isAddPumpModalOpen}
+          onClose={() => setIsAddPumpModalOpen(false)}
+          onAddPump={handleAddPumps}
+        />
 
-      <PumpDetailsModal
-        isOpen={isDetailsModalOpen}
-        onClose={handleCloseDetailsModal}
-        pump={selectedPumpForDetails}
-        onUpdatePump={handleUpdatePump}
-      />
+        <PumpDetailsModal
+          isOpen={isDetailsModalOpen}
+          onClose={handleCloseDetailsModal}
+          pump={selectedPumpForDetails}
+          onUpdatePump={handleUpdatePump}
+        />
       </div>
     </DndProvider>
   );
 }
-
