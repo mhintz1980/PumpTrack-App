@@ -1,0 +1,28 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Default deny all reads and writes
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Allow client reads for core collections for now
+    // This should be refined with proper authentication rules later.
+    match /pumps/{pumpId} {
+      allow read: if true;
+    }
+    match /calendarBlocks/{blockId} {
+      allow read: if true;
+    }
+    match /kpiSnapshots/{snapshotId} {
+      allow read: if true;
+    }
+
+    // Example for allowing writes only from backend/functions (to be implemented later)
+    // match /pumps/{pumpId} {
+    //   allow write: if request.auth != null && get(/databases/$(database)/documents/admins/$(request.auth.uid)).exists;
+    //   // Or: allow write: if request.auth.token.isFunction == true; (if using custom claims from Functions)
+    // }
+  }
+}

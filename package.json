@@ -1,9 +1,11 @@
+
 {
   "name": "nextn",
   "version": "0.1.0",
   "private": true,
   "scripts": {
     "dev": "npx next dev --turbopack",
+    "emulate": "firebase emulators:start --only functions,firestore",
     "genkit:dev": "genkit start -- tsx src/ai/dev.ts",
     "genkit:watch": "genkit start -- tsx --watch src/ai/dev.ts",
     "build": "next build",
@@ -76,6 +78,7 @@
     "babel-jest": "^30.0.0",
     "eslint": "^8.57.1",
     "eslint-config-next": "^15.3.3",
+    "eslint-plugin-jsdoc": "^48.8.2",
     "genkit-cli": "^1.8.0",
     "jest": "^30.0.0",
     "jest-environment-jsdom": "^30.0.0",
@@ -85,5 +88,9 @@
     "typescript": "^5"
   },
   "license": "MIT",
-  "packageManager": "pnpm@10.12.1+sha512.f0dda8580f0ee9481c5c79a1d927b9164f2c478e90992ad268bbb2465a736984391d6333d2c327913578b2804af33474ca554ba29c04a8b13060a717675ae3ac"
+  "packageManager": "pnpm@10.12.1+sha512.f0dda8580f0ee9481c5c79a1d927b9164f2c478e90992ad268bbb2465a736984391d6333d2c327913578b2804af33474ca554ba29c04a8b13060a717675ae3ac",
+  "overrides": {
+    "eslint-plugin-jsdoc": "^48.8.2"
+  }
 }
+
