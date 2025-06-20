@@ -1,4 +1,5 @@
 import { CalendarBlock } from "@/types";
+import { randomUUID } from "crypto";
 
 // In-memory store for demo/testing
 const blocks: CalendarBlock[] = [];
@@ -15,6 +16,14 @@ export async function createOrUpdateCalendarBlock(
   const startDate = new Date(start);
   const endDate = new Date(end);
 
+  if (
+    isNaN(startDate.getTime()) ||
+    isNaN(endDate.getTime()) ||
+    startDate >= endDate
+  ) {
+    throw new Error("INVALID_DATES");
+  }
+
   // Check conflicts with existing blocks for this pump
   for (const block of blocks) {
     if (
@@ -25,14 +34,13 @@ export async function createOrUpdateCalendarBlock(
     }
   }
 
-  let block = blocks.find((b) => b.pumpId === pumpId);
-  if (block) {
-    block.start = start;
-    block.end = end;
-  } else {
-    block = { id: crypto.randomUUID(), pumpId, start, end };
-    blocks.push(block);
-  }
+  const block: CalendarBlock = {
+    id: randomUUID(),
+    pumpId,
+    start,
+    end,
+  };
+  blocks.push(block);
   return block;
 }
 
