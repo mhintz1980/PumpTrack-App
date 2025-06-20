@@ -1,5 +1,13 @@
+const noop = () => {};
+
 module.exports = {
   DndProvider: ({ children }) => children,
-  useDrag: () => [{}, () => {}],
-  useDrop: () => [{}, () => {}],
+  useDrag: () => [
+    { isDragging: false },
+    noop,
+  ],
+  useDrop: () => [
+    { isOver: false },
+    noop,
+  ],
 };

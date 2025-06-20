@@ -247,45 +247,51 @@ export default function SchedulePage() {
     date: Date;
     dayIndex: number;
   }) => {
-    const [{ isOver }, drop] = useDrop<
-      PlannablePump,
-      void,
-      { isOver: boolean }
-    >({
-      accept: "pump",
-      drop: (dragged) => {
-        const start = calendarDays[dayIndex];
-        const end = new Date(start);
-        end.setDate(start.getDate() + dragged.daysPerUnit - 1);
+    const [{ isOver }, drop] = useDrop<PlannablePump, void, { isOver: boolean }>(
+      {
+        accept: "pump",
+        drop: (dragged) => {
+          const start = calendarDays[dayIndex];
+          const end = new Date(start);
+          end.setDate(start.getDate() + dragged.daysPerUnit - 1);
 
-        setScheduledItems((prev) => {
-          const filteredPrev = prev.filter((si) => si.id !== dragged.id);
-          return [
-            ...filteredPrev,
-            {
-              ...dragged,
-              scheduledOnDayIndex: dayIndex,
-              instanceId: crypto.randomUUID(),
-            },
-          ].sort((a, b) => a.scheduledOnDayIndex - b.scheduledOnDayIndex);
-        });
+          const previous = scheduledItems;
+          setScheduledItems((prev) => {
+            const filteredPrev = prev.filter((si) => si.id !== dragged.id);
+            return [
+              ...filteredPrev,
+              {
+                ...dragged,
+                scheduledOnDayIndex: dayIndex,
+                instanceId: crypto.randomUUID(),
+              },
+            ].sort((a, b) => a.scheduledOnDayIndex - b.scheduledOnDayIndex);
+          });
 
-        mutate(
-          "/api/schedule",
-          async (curr) => {
-            await api.schedulePump(dragged.id, {
-              start: start.toISOString(),
-              end: end.toISOString(),
-            });
-            return curr;
-          },
-          { revalidate: false },
-        );
+          (async () => {
+            try {
+              await api.schedulePump(dragged.id, {
+                start: start.toISOString(),
+                end: end.toISOString(),
+              });
+              mutate("/api/schedule");
+              setSelectedPlannableItemIds([]);
+            } catch (error) {
+              console.error("Failed to schedule pump:", error);
+              setScheduledItems(previous);
+              toast({
+                variant: "destructive",
+                title: "Schedule Failed",
+                description: "Could not schedule pump. Please try again.",
+              });
+            }
+          })();
+        },
+        collect: (monitor) => ({
+          isOver: monitor.isOver(),
+        }),
       },
-      collect: (monitor) => ({
-        isOver: monitor.isOver(),
-      }),
-    });
+    );
 
     const itemsStartingThisDay = scheduleTimeline
       .filter((item) => item.startDay === dayIndex)
@@ -631,7 +637,7 @@ export default function SchedulePage() {
             return (
               <CalendarBlock
                 key={entry.instanceId}
-                label={entry.model}
+                pump={entry}
                 duration={entry.duration}
                 colorClass={getColorForModelOnCalendar(entry.model)}
                 style={{ gridRow: row, gridColumnStart: col }}
