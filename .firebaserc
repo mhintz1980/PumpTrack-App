@@ -1,0 +1,5 @@
+{
+  "projects": {
+    "default": "pumptrack-hx0rg"      // replace with your real Firebase project ID or alias
+  }
+}
