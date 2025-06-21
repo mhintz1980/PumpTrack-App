@@ -1,11 +1,12 @@
 {
+  "firestore": {
+    "rules": "firestore.rules",
+    "indexes": "firestore.indexes.json"
+  },
+  "emulators": {
     "firestore": {
-      "rules": "firestore.rules",
-      "indexes": "firestore.indexes.json"
-    },
-    "emulators": {
-      "firestore": { "port": 8080 }
-      // add "functions" later, once we scaffold Cloud Functions
+      "host": "127.0.0.1",
+      "port": 8088
     }
   }
-  
+}
