@@ -1,4 +1,7 @@
 module.exports = {
   testEnvironment: 'node',
-  setupFiles: ['<rootDir>/jest.setup.ts'], // load the single polyfill file
+  setupFiles: ['<rootDir>/jest.setup.ts'],
+  moduleNameMapper: {
+    '^@/(.*)$': '<rootDir>/src/$1',   // lets Jest resolve "@/lib/…" paths
+  },
 };
