@@ -153,6 +153,9 @@ importers:
         specifier: ^3.24.2
         version: 3.24.2
     devDependencies:
+      '@babel/core':
+        specifier: ^7.27.4
+        version: 7.27.4
       '@babel/preset-env':
         specifier: ^7.27.2
         version: 7.27.2(@babel/core@7.27.4)
