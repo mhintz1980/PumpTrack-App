@@ -1,3 +1,4 @@
+// @ts-nocheck
 const { Request } = require('node-fetch');      // Our polyfilled WHATWG Request
 const { POST } = require('@/app/api/pumps/[id]/schedule/route');
 
