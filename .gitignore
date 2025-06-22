@@ -47,3 +47,4 @@ node_modules/
 .pnpm-store/
 .next/
 .cache/
+firestore-debug.log
