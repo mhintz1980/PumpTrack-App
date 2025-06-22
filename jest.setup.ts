@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Polyfill WHAT-WG fetch primitives for Jest (CommonJS runtime)
  */
