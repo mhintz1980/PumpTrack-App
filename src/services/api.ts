@@ -1,11 +1,11 @@
 export async function schedulePump(
-  id: string,
+  pumpId: string,
   data: { start: string; end: string },
 ) {
-  const res = await fetch("/api/schedule", {
+  const res = await fetch(`/api/pumps/${pumpId}/schedule`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ id, ...data }),
+    body: JSON.stringify(data),
   });
 
   if (!res.ok) {
