@@ -19,13 +19,13 @@ export async function POST(
 
   try {
     await db.runTransaction(async (tx) => {
-      // overlap check
+      // Overlap: start < existing.end && end > existing.start
       const overlapSnap = await tx.get(
         blocksCol.where('start', '<', end).where('end', '>', start)
       );
       if (!overlapSnap.empty) throw new Error('overlap');
 
-      // write block + update pump
+      // Write block + mark pump
       tx.set(blocksCol.doc(), { pumpId: id, start, end } as CalendarBlock);
       tx.update(pumpRef, { status: 'scheduled' });
     });
