@@ -1,16 +1,26 @@
 // @ts-nocheck
 const { GET } = require('@/app/api/kpis/route');
 
-// stub Firestore collection().get()
 jest.mock('@/lib/firebase', () => ({
   getFirestore: () => ({
     collection: () => ({
-      get: async () => ({
-        forEach: (fn) => [
-          { data: () => ({ status: 'unscheduled', quantity: 2 }) },
-          { data: () => ({ status: 'scheduled' }) },
-          { data: () => ({ status: 'in-process', quantity: 3 }) },
-        ].forEach(fn),
+      orderBy: () => ({
+        limit: () => ({
+          get: async () => ({
+            empty: false,
+            docs: [
+              {
+                data: () => ({
+                  unscheduledCount: 1,
+                  scheduledCount: 1,
+                  inProcessCount: 1,
+                  totalOnOrder: 6,
+                  timestamp: Date.now(),
+                }),
+              },
+            ],
+          }),
+        }),
       }),
     }),
   }),
