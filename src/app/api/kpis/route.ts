@@ -1,36 +1,20 @@
 import { NextResponse } from 'next/server';
 import { getFirestore } from '@/lib/firebase';
 
+// GET /api/kpis – returns the newest KPI snapshot (or 204 if none yet)
 export async function GET() {
-  const db = getFirestore();
-  const pumps = await db.collection('pumps').get();
+  try {
+    const db   = getFirestore();
+    const snap = await db
+      .collection('kpiSnapshots')
+      .orderBy('timestamp', 'desc')
+      .limit(1)
+      .get();
 
-  let unscheduled = 0,
-    scheduled = 0,
-    inProcess = 0,
-    totalOnOrder = 0;
-
-  pumps.forEach((doc) => {
-    const p = doc.data();
-    switch (p.status) {
-      case 'unscheduled':
-        unscheduled++;
-        break;
-      case 'scheduled':
-        scheduled++;
-        break;
-      case 'in-process':
-        inProcess++;
-        break;
-    }
-    totalOnOrder += p.quantity ?? 1; // default 1 if qty missing
-  });
-
-  return NextResponse.json({
-    timestamp: Date.now(),
-    unscheduledCount: unscheduled,
-    scheduledCount: scheduled,
-    inProcessCount: inProcess,
-    totalOnOrder,
-  });
+    if (snap.empty) return NextResponse.json({}, { status: 204 });
+    return NextResponse.json(snap.docs[0].data());
+  } catch (err) {
+    console.error('[kpis API] ', err);
+    return NextResponse.json({ error: 'internal-error' }, { status: 500 });
+  }
 }
