@@ -1,5 +1,4 @@
-/* eslint-disable @typescript-eslint/ban-ts-comment */
-const { NextResponse } = require('next/server');
+const { Request } = require('node-fetch');      // Our polyfilled WHATWG Request
 const { POST } = require('@/app/api/pumps/[id]/schedule/route');
 
 // Stub Firestore
@@ -20,7 +19,14 @@ jest.mock('@/lib/firebase', () => ({
 
 describe('POST /api/pumps/:id/schedule', () => {
   it('returns 400 when dates are missing', async () => {
-    const res = await POST(new NextResponse().request, { params: { id: 'pumpA' } });
+    // real Request with empty JSON body
+    const req = new Request('http://localhost', {
+      method: 'POST',
+      body: JSON.stringify({}),     // no start/end
+      headers: { 'Content-Type': 'application/json' },
+    });
+
+    const res = await POST(req, { params: { id: 'pumpA' } });
     expect(res.status).toBe(400);
   });
 });
