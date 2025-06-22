@@ -1,11 +1,8 @@
-import fetch, { Request, Response, Headers } from 'node-fetch';
-// expose WHATWG fetch globals so tests using Request/Response work
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-ignore
-global.fetch = fetch;
-// @ts-ignore
-global.Request = Request;
-// @ts-ignore
-global.Response = Response;
-// @ts-ignore
-global.Headers = Headers;
+/**
+ * Polyfill WHAT-WG fetch primitives for Jest (CommonJS runtime)
+ */
+const fetch = require('node-fetch');      // node-fetch v2 (CJS)
+global.fetch    = fetch;
+global.Request  = fetch.Request;
+global.Response = fetch.Response;
+global.Headers  = fetch.Headers;
