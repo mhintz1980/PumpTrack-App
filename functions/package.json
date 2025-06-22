@@ -1,0 +1,21 @@
+{
+  "name": "pumptrack-functions",
+  "version": "0.1.0",
+  "private": true,
+  "engines": { "node": "20" },
+  "packageManager": "pnpm@10.0.0",
+  "main": "lib/index.js",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "lint": "eslint src --ext .ts",
+    "deploy": "pnpm build"
+  },
+  "dependencies": {
+    "firebase-admin": "^12",
+    "firebase-functions": "^4"
+  },
+  "devDependencies": {
+    "typescript": "^5.5.0",
+    "@types/node": "^20"
+  }
+}
