@@ -249,7 +249,7 @@ body {
     --sidebar-ring: hsl(var(--ring));
 
     /* Universal background image variable */
-    --universal-background-image: url('/images/off-wht-hex.png');
+    --universal-background-image: url('/images/10.jpg');
 
     /* New Dark Glass Theme Variables - HSL values for base color */
     --glass-surface-hsl-values: 215 50% 12%; /* Dark blue base: #0f1b2d */
