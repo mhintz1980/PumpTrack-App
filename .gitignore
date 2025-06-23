@@ -48,3 +48,4 @@ node_modules/
 .next/
 .cache/
 firestore-debug.log
+firestore-debug.log
