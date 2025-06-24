@@ -18,24 +18,31 @@ export async function POST(
   const blocksCol = db.collection('calendarBlocks');
 
   try {
+    console.log('Starting schedule transaction:', { pumpId: id, start, end });
+  
     await db.runTransaction(async (tx) => {
-      // Overlap: start < existing.end && end > existing.start
-      const overlapSnap = await tx.get(
-        blocksCol.where('start', '<', end).where('end', '>', start)
-      );
-      if (!overlapSnap.empty) throw new Error('overlap');
-
-      // Write block + mark pump
-      tx.set(blocksCol.doc(), { pumpId: id, start, end } as CalendarBlock);
+      const overlapQuery = blocksCol.where('start', '<', end).where('end', '>', start);
+      console.log('Overlap query prepared:', overlapQuery);
+  
+      const overlapSnap = await tx.get(overlapQuery);
+      console.log('Overlap snapshot size:', overlapSnap.size);
+  
+      if (!overlapSnap.empty) {
+        console.log('Overlap detected, throwing error');
+        throw new Error('overlap');
+      }
+  
+      console.log('No overlap, writing calendar block and updating pump');
+      tx.set(blocksCol.doc(), { pumpId: id, start, end });
       tx.update(pumpRef, { status: 'scheduled' });
     });
+  
+    console.log('Transaction committed successfully');
   } catch (err) {
+    console.error('Schedule transaction failed:', err);
     if ((err as Error).message === 'overlap') {
       return NextResponse.json({ error: 'overlap' }, { status: 409 });
     }
-    console.error(err);
     return NextResponse.json({ error: 'server' }, { status: 500 });
   }
-
-  return NextResponse.json({ ok: true });
 }
