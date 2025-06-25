@@ -5,9 +5,10 @@ type CalendarBlock = { pumpId: string; start: number; end: number };
 
 export async function POST(
   req: Request,
-  { params }: { params: { id: string } }
+  context: { params: { id: string } }
 ) {
-  const { id } = params;
+  // await the params object before destructuring
+  const { id } = await context.params;
   const { start, end } = await req.json();
 
   if (!start || !end)
