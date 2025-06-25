@@ -41,4 +41,13 @@ Create a production build:
 npm run build
 ```
 
+## Local Firestore Emulator
+
+Set these env vars to enable the emulator:
+
+```
+GOOGLE_CLOUD_PROJECT=pumptrack-dev
+FIRESTORE_EMULATOR_HOST=127.0.0.1:9099
+```
+
 For coding guidelines and contribution rules, see [`AGENTS.md`](AGENTS.md).
