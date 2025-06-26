@@ -26,6 +26,8 @@ export async function POST(
   const blocksCol = db.collection('calendarBlocks');
 
   try {
+    console.log('Starting schedule transaction:', { pumpId: id, start, end });
+  
     await db.runTransaction(async (tx) => {
       console.log('Transaction start:', { pumpId: id, startNum, endNum });
 
@@ -42,6 +44,8 @@ export async function POST(
 
       console.log('Transaction successful for', id);
     });
+  
+    console.log('Transaction committed successfully');
   } catch (err) {
     console.error('API Transaction Error:', err);
     if ((err as Error).message === 'overlap') {
@@ -49,6 +53,4 @@ export async function POST(
     }
     return NextResponse.json({ error: 'server' }, { status: 500 });
   }
-
-  return NextResponse.json({ ok: true });
 }
