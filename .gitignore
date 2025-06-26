@@ -49,3 +49,4 @@ node_modules/
 .cache/
 firestore-debug.log
 firestore-debug.log
+serviceAccountKey.json

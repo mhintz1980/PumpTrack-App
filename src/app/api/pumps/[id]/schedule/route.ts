@@ -7,12 +7,19 @@ export async function POST(
   req: Request,
   context: { params: { id: string } }
 ) {
-  // await the params object before destructuring
-  const { id } = await context.params;
+  const { id } = context.params;
   const { start, end } = await req.json();
 
-  if (!start || !end)
+  // Accept either a UNIX timestamp or ISO string, but convert both to a number
+  const startNum = typeof start === "string" ? Date.parse(start) : start;
+  const endNum = typeof end === "string" ? Date.parse(end) : end;
+
+  if (
+    typeof startNum !== "number" || isNaN(startNum) ||
+    typeof endNum !== "number" || isNaN(endNum)
+  ) {
     return NextResponse.json({ error: 'missing-dates' }, { status: 400 });
+  }
 
   const db = getFirestore();
   const pumpRef = db.collection('pumps').doc(id);
@@ -20,21 +27,26 @@ export async function POST(
 
   try {
     await db.runTransaction(async (tx) => {
+      console.log('Transaction start:', { pumpId: id, startNum, endNum });
+
       // Overlap: start < existing.end && end > existing.start
       const overlapSnap = await tx.get(
-        blocksCol.where('start', '<', end).where('end', '>', start)
+        blocksCol.where('start', '<', endNum).where('end', '>', startNum)
       );
+      console.log('Overlap query result:', overlapSnap.empty);
+
       if (!overlapSnap.empty) throw new Error('overlap');
 
-      // Write block + mark pump
-      tx.set(blocksCol.doc(), { pumpId: id, start, end } as CalendarBlock);
+      tx.set(blocksCol.doc(), { pumpId: id, start: startNum, end: endNum } as CalendarBlock);
       tx.update(pumpRef, { status: 'scheduled' });
+
+      console.log('Transaction successful for', id);
     });
   } catch (err) {
+    console.error('API Transaction Error:', err);
     if ((err as Error).message === 'overlap') {
       return NextResponse.json({ error: 'overlap' }, { status: 409 });
     }
-    console.error(err);
     return NextResponse.json({ error: 'server' }, { status: 500 });
   }
 

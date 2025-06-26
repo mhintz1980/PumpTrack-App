@@ -1,22 +1,28 @@
-// Central Firestore initialiser – avoids multiple app instances
-import { getApps, initializeApp, cert, applicationDefault, ServiceAccount } from 'firebase-admin/app';
+// src/lib/firebase.ts
+
+import { getApps, initializeApp, applicationDefault } from 'firebase-admin/app';
 import { getFirestore as _getFirestore } from 'firebase-admin/firestore';
 
+// Ensures only one Firebase Admin app instance is ever created
 export function getFirestore() {
-  // If an app is already initialised (e.g. hot reload) reuse it
+  // Hot reload guard: reuse existing app
   if (getApps().length) return _getFirestore();
 
-  // • Locally / prod:  use the JSON-string service account from env
-  // • On Workstations / Cloud Shell: fall back to ADC
-  if (process.env.FIREBASE_ADMIN_KEY) {
-    initializeApp({
-      credential: cert(
-        JSON.parse(process.env.FIREBASE_ADMIN_KEY) as ServiceAccount
-      ),
-    });
-  } else {
-    initializeApp({ credential: applicationDefault() });
-  }
+  // This will automatically use the service account key at the file path
+  // specified by GOOGLE_APPLICATION_CREDENTIALS in your .env.local
+  initializeApp({
+    credential: applicationDefault(),
+  });
 
-  return _getFirestore();
+  const db = _getFirestore();
+
+  // 🚩 Point to emulator if FIRESTORE_EMULATOR_HOST is set (local dev)
+  if (process.env.FIRESTORE_EMULATOR_HOST) {
+    db.settings({
+      host: process.env.FIRESTORE_EMULATOR_HOST,
+      ssl: false,
+    });
+  }
+  
+  return db;
 }
