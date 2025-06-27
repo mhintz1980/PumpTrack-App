@@ -4,41 +4,24 @@ This is a Next.js starter built for Firebase Studio.
 
 To get started, take a look at `src/app/page.tsx`.
 
-## Requirements
+# PumpTrack App
 
-- **Node.js** 18.18 or later
-- **pnpm** for dependency management
+## Onboarding
 
-## Install
+- Node version: 20 (see .nvmrc, Nix config)
+- Dependency manager: pnpm (activate via corepack)
+- Install: `pnpm install && corepack pnpm approve-builds`
+- Start: `pnpm dev`
+- Check code: `pnpm lint && pnpm test && pnpm typecheck`
+- Add environment variables: copy `.env.example` to `.env.local` and fill in
 
-Install all dependencies using **pnpm**:
+## Coding & Branching
 
-```bash
-pnpm install
-```
+- All code lives under `code/<slug>` branches
+- All client components in `src/app/` must use `"use client"` at file top
+- Reference `AGENTS.md` and `CONTRIBUTING.md` for more info
 
-## Development
+## Documentation
 
-Start the development server:
-
-```bash
-npm run dev
-```
-
-## Testing
-
-Run the Jest test suite:
-
-```bash
-pnpm test
-```
-
-## Build
-
-Create a production build:
-
-```bash
-npm run build
-```
-
-For coding guidelines and contribution rules, see [`AGENTS.md`](AGENTS.md).
+- [PumpTrack MVP / Demo-Ready Checklist] is your task list and the only onboarding you need
+- Remove/ignore all legacy/manual scripts/instructions
