@@ -74,6 +74,12 @@ export interface KpiSnapshot {
   scheduledCount: number;
   inProcessCount: number;
   utilizationPct?: number | null;
+
+  priorityCounts?: Record<string, number>;
+  powderCoaterCounts?: Record<string, number>;
+  customerCounts?: Record<string, number>;
+
+  remainingBuildDays?: number;
 }
 
 // New type for Activity Log Entries
