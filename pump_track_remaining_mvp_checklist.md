@@ -9,7 +9,7 @@
 
 **2. Clean Up Codebase**
 
-- Remove old/manual seeder scripts not needed (e.g. `scripts/seedPumps.ts`)
+- Remove old/manual seeder scripts not needed (e.g. `scripts/seedPumps.ts` → now archived under `legacy/scripts`)
 - Delete old test/migration docs/data not referenced by app
 - Clean up unused code, logs, or placeholder logic
 - Remove outdated README/comments/instructions
@@ -56,5 +56,5 @@
 
 **Start with “Clean Up Codebase”:**
 
-- Remove or archive `scripts/seedPumps.ts` and any other obsolete docs/scripts.
+- Remove or archive `scripts/seedPumps.ts` and any other obsolete docs/scripts (archived to `legacy/scripts`).
 - Delete any “README” or inline instructions that are out-of-date or conflict with this new checklist.
