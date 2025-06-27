@@ -112,25 +112,44 @@ export default function SchedulePage() {
     });
   }, []);
 
-  useEffect(() => {
-    const fetchPumps = async () => {
-      setIsLoading(true);
-      try {
-        const fetchedPumps = await pumpService.getAllPumps();
-        setInitialPumps(fetchedPumps);
-      } catch (error) {
-        console.error("Failed to fetch pumps for schedule:", error);
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: "Could not load pump data for scheduling.",
+useEffect(() => {
+  const fetchPumps = async () => {
+    setIsLoading(true);
+    try {
+      const fetchedPumps = await pumpService.getAllPumps();
+      setInitialPumps(fetchedPumps);
+
+      // DEV ONLY: Seed Firestore with all demo pump IDs for drag-and-drop!
+      if (process.env.NODE_ENV === "development") {
+        fetch('/api/seed-pumps', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ pumpIds: fetchedPumps.map(p => p.id) }),
+        })
+        .then(res => res.json())
+        .then(data => {
+          if (!data.ok) {
+            console.warn('Pump seeding failed:', data);
+          }
+        })
+        .catch(err => {
+          console.warn('Pump seeding error:', err);
         });
-      } finally {
-        setIsLoading(false);
       }
-    };
-    fetchPumps();
-  }, [toast]);
+    } catch (error) {
+      console.error("Failed to fetch pumps for schedule:", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Could not load pump data for scheduling.",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  fetchPumps();
+}, [toast]);
+
 
   useEffect(() => {
     const scheduledPumpOriginalIds = new Set(scheduledItems.map((si) => si.id));

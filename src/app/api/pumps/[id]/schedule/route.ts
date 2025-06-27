@@ -5,9 +5,9 @@ type CalendarBlock = { pumpId: string; start: number; end: number };
 
 export async function POST(
   req: Request,
-  context: { params: { id: string } }
+  { params }: { params: { id: string } }
 ) {
-  const { id } = context.params;
+  const { id } = params;
   const { start, end } = await req.json();
 
   // Accept either a UNIX timestamp or ISO string, but convert both to a number
