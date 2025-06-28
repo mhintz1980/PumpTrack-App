@@ -14,6 +14,8 @@ To get started, take a look at `src/app/page.tsx`.
 - Start: `pnpm dev`
 - Check code: `pnpm lint && pnpm test && pnpm typecheck`
 - Add environment variables: copy `.env.example` to `.env.local` and fill in
+  - `FIRESTORE_EMULATOR_HOST=localhost:8080`
+  - `GOOGLE_APPLICATION_CREDENTIALS=path/to/serviceAccount.json`
 
 ## Coding & Branching
 

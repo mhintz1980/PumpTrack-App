@@ -16,6 +16,8 @@ Thank you for contributing to PumpTrack! This guide will help you set up your de
    ```
 3. **Copy and edit environment variables:**
    - Copy `.env.example` to `.env.local` and fill in required values.
+     - `FIRESTORE_EMULATOR_HOST=localhost:8080`
+     - `GOOGLE_APPLICATION_CREDENTIALS=path/to/serviceAccount.json`
 4. **Run the dev server:**
    ```bash
    pnpm dev

@@ -8,6 +8,7 @@ All notable changes to this project will be documented in this file.
 
 - Initial project structure and documentation stubs.
 - MIT license and package metadata.
+- `.env.example` with Firestore emulator and service account placeholders.
 
 ### Changed
 
