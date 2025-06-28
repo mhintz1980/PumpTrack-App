@@ -15,6 +15,7 @@ All notable changes to this project will be documented in this file.
 - Sidebar now opens as an overlay without shifting page content
 - The `seedpumps.ts` script was moved to `/legacy` for historical reference
 
+
 ### Fixed
 
 - Filter dropdown comboboxes now use glassmorphic styling
