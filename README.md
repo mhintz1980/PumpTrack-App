@@ -42,4 +42,5 @@ To get started, take a look at `src/app/page.tsx`.
 
 - [PumpTrack MVP / Demo-Ready Checklist] is your task list and the only onboarding you need
 - Remove/ignore all legacy/manual scripts/instructions
+- Legacy scripts now live under `/legacy` for reference only
 - See [docs/architecture-notes.md](docs/architecture-notes.md) for project structure
