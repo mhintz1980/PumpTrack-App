@@ -13,7 +13,7 @@ All notable changes to this project will be documented in this file.
 ### Changed
 
 - Sidebar now opens as an overlay without shifting page content
-- Seedpumps script moved to `/legacy` for historical reference
+- The `seedpumps.ts` script was moved to `/legacy` for historical reference
 
 ### Fixed
 
