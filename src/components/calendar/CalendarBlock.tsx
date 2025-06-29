@@ -38,7 +38,12 @@ export const CalendarBlock: React.FC<CalendarBlockProps> = ({
         "text-xs rounded-sm p-1 border shadow-sm overflow-hidden cursor-grab active:cursor-grabbing",
         colorClass,
       )}
-      style={{ opacity: isDragging ? 0.5 : 1, gridColumn: `span ${duration}`, ...style }}
+      style={{
+        opacity: isDragging ? 0.5 : 1,
+        // span across duration without overriding start position
+        gridColumnEnd: `span ${Math.ceil(duration)}`,
+        ...style,
+      }}
     >
       {pump.model}
     </div>
