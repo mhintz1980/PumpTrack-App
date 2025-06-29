@@ -12,7 +12,6 @@
 - Remove old/manual seeder scripts not needed (e.g. `scripts/seedPumps.ts`)
 - Delete old test/migration docs/data not referenced by app
 - Clean up unused code, logs, or placeholder logic
-- Remove outdated README/comments/instructions
 
 **3. UI/UX Polishing**
 
@@ -41,7 +40,7 @@
 
 **Old/Obsolete Instructions:**
 
-- Move or delete any outdated docs/scripts/instructions from the repo (keep only one up-to-date README or onboarding doc).
+- Archive or delete outdated README, comments, docs, or scripts (including `scripts/seedPumps.ts`); keep only one up-to-date onboarding doc.
 
 ---
 
@@ -56,5 +55,4 @@
 
 **Start with “Clean Up Codebase”:**
 
-- Remove or archive `scripts/seedPumps.ts` and any other obsolete docs/scripts.
-- Delete any “README” or inline instructions that are out-of-date or conflict with this new checklist.
+Focus on archiving outdated docs and scripts as noted above.
