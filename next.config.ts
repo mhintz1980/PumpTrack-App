@@ -1,7 +1,9 @@
+
 import type { NextConfig } from 'next'
 
 const nextConfig: NextConfig = {
   // ── existing options ─────────────────────────────
+  // Server starts successfully, no configuration errors noted in recent logs.
   typescript: {
     ignoreBuildErrors: true,
   },
