@@ -313,12 +313,6 @@ useEffect(() => {
       },
     );
 
-    const itemsStartingThisDay = scheduleTimeline
-      .filter((item) => item.startDay === dayIndex)
-      .sort((a, b) =>
-        a.priority === "urgent" ? -1 : b.priority === "urgent" ? 1 : 0,
-      );
-
     const isTodayClient =
       clientRenderInfo && date.toDateString() === clientRenderInfo.todayString;
     const isDifferentMonthClient =
@@ -343,24 +337,7 @@ useEffect(() => {
         >
           {date.getDate()}
         </div>
-        <ScrollArea className="flex-grow space-y-0.5 overflow-y-auto glass-scrollbar">
-          {itemsStartingThisDay.map((item) => (
-            <div
-              key={item.instanceId}
-              title={`${item.model} - ${item.serialNumber || "N/A"}\nCustomer: ${item.customer}\nPO: ${item.poNumber}\nSchedule Block: ${item.daysPerUnit} days`}
-              className={cn(
-                "text-[10px] p-1 rounded mb-0.5 cursor-grab active:cursor-grabbing text-primary-foreground leading-tight border select-none",
-                getColorForModelOnCalendar(item.model),
-                "overflow-hidden transition-transform hover:scale-105",
-              )}
-              style={{ minHeight: "1.4rem" }}
-            >
-              <p className="font-semibold truncate">{item.model}</p>
-              <p className="truncate text-xs">{item.serialNumber || "N/A"}</p>
-              <p className="truncate text-[9px] opacity-80">{item.customer}</p>
-            </div>
-          ))}
-        </ScrollArea>
+        <div className="flex-grow space-y-0.5 overflow-y-auto glass-scrollbar" />
       </div>
     );
   };
@@ -408,7 +385,8 @@ useEffect(() => {
       description:
         "All pumps removed from schedule and returned to plannable list.",
     });
-  }, [toast]);
+  }, [toast],
+  );
 
   const handleOpenDetailsModal = useCallback((pump: Pump) => {
     setSelectedPumpForDetails(pump);
@@ -643,7 +621,7 @@ useEffect(() => {
             </div>
           ))}
         </div>
-        <div className="grid grid-cols-7 gap-1 min-h-[300px] auto-rows-min relative">
+        <div className="grid grid-cols-7 grid-rows-6 gap-1 min-h-[300px] auto-rows-min relative">
           {calendarDays.map((date, dayIndex) => (
             <ScheduleDayCell
               key={date.toISOString()}
@@ -775,4 +753,5 @@ useEffect(() => {
     </DndProvider>
   );
 }
+
 
