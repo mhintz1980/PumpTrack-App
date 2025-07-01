@@ -1,5 +1,20 @@
 
 {
-  "indexes": [],
+  "indexes": [
+    {
+      "collectionGroup": "calendarBlocks",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "start",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "end",
+          "order": "ASCENDING"
+        }
+      ]
+    }
+  ],
   "fieldOverrides": []
 }
