@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect, useMemo, useCallback } from "react";
@@ -642,7 +643,7 @@ useEffect(() => {
             </div>
           ))}
         </div>
-        <div className="grid grid-cols-7 gap-1 min-h-[300px] auto-rows-[3rem] relative">
+        <div className="grid grid-cols-7 gap-1 min-h-[300px] auto-rows-min relative">
           {calendarDays.map((date, dayIndex) => (
             <ScheduleDayCell
               key={date.toISOString()}
@@ -774,3 +775,4 @@ useEffect(() => {
     </DndProvider>
   );
 }
+
