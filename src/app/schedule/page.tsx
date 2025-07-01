@@ -621,7 +621,7 @@ useEffect(() => {
             </div>
           ))}
         </div>
-        <div className="grid grid-cols-7 grid-rows-6 gap-1 min-h-[300px] auto-rows-min relative">
+        <div className="grid grid-cols-7 auto-rows-min gap-1 min-h-[300px] relative">
           {calendarDays.map((date, dayIndex) => (
             <ScheduleDayCell
               key={date.toISOString()}
