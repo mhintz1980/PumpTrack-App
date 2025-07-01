@@ -1,3 +1,4 @@
+
 import { NextResponse } from 'next/server';
 import { getFirestore } from '@/lib/firebase';
 
@@ -46,6 +47,7 @@ export async function POST(
     });
   
     console.log('Transaction committed successfully');
+    return NextResponse.json({ ok: true }); // Return a success response
   } catch (err) {
     console.error('API Transaction Error:', err);
     if ((err as Error).message === 'overlap') {
