@@ -15,14 +15,12 @@ interface ScheduledPump extends Pump {
 
 export interface CalendarBlockProps {
   pump: ScheduledPump;
-  duration: number;
   colorClass?: string;
   style?: React.CSSProperties;
 }
 
 export const CalendarBlock: React.FC<CalendarBlockProps> = ({
   pump,
-  duration,
   colorClass,
   style,
 }) => {
@@ -43,7 +41,7 @@ export const CalendarBlock: React.FC<CalendarBlockProps> = ({
         colorClass,
         isDragging && "opacity-50"
       )}
-      style={{ gridColumn: `span ${duration}`, ...style }}
+      style={style}
       title={`${pump.model} - ${pump.serialNumber || "N/A"}\nCustomer: ${pump.customer}\nPO: ${pump.poNumber}\nSchedule Block: ${pump.daysPerUnit} days`}
     >
       <p className="font-semibold truncate">{pump.model}</p>

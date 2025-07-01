@@ -636,9 +636,11 @@ useEffect(() => {
               <CalendarBlock
                 key={entry.instanceId}
                 pump={entry}
-                duration={entry.duration}
                 colorClass={getColorForModelOnCalendar(entry.model)}
-                style={{ gridRow: row, gridColumnStart: col }}
+                style={{
+                  gridRow: row,
+                  gridColumn: `${col} / span ${entry.duration}`,
+                }}
               />
             );
           })}
@@ -753,5 +755,3 @@ useEffect(() => {
     </DndProvider>
   );
 }
-
-
