@@ -32,13 +32,25 @@ export async function POST(
     await db.runTransaction(async (tx) => {
       console.log('Transaction start:', { pumpId: id, startNum, endNum });
 
-      // Overlap: start < existing.end && end > existing.start
-      const overlapSnap = await tx.get(
-        blocksCol.where('start', '<', endNum).where('end', '>', startNum)
+      // Overlap logic: (StartA < EndB) and (EndA > StartB)
+      // Performant Firestore query: Use a single range filter on one field.
+      // Query for all blocks that START before the NEW block ENDS.
+      const potentialOverlapsSnap = await tx.get(
+        blocksCol.where('start', '<', endNum)
       );
-      console.log('Overlap query result:', overlapSnap.empty);
+      
+      // Now, filter these results in memory for the second condition:
+      // Check if any of the fetched blocks END after the NEW block STARTS.
+      const hasOverlap = potentialOverlapsSnap.docs.some(doc => {
+          const block = doc.data() as CalendarBlock;
+          return block.end > startNum; // This is the (EndA > StartB) part of the logic
+      });
 
-      if (!overlapSnap.empty) throw new Error('overlap');
+      console.log('Overlap check result:', { hasOverlap });
+
+      if (hasOverlap) {
+        throw new Error('overlap');
+      }
 
       tx.set(blocksCol.doc(), { pumpId: id, start: startNum, end: endNum } as CalendarBlock);
       tx.update(pumpRef, { status: 'scheduled' });
