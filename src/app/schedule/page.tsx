@@ -73,9 +73,48 @@ interface ScheduleTimelineEntry extends ScheduledPump {
   startDay: number;
   endDay: number;
   duration: number;
+  lane: number;
 }
 
+type Lane = Array<Omit<ScheduleTimelineEntry, 'lane'>>;
+
 type DraggedItemType = "plannable-single" | "plannable-batch" | "scheduled";
+
+const assignLanesToScheduledItems = (items: ScheduledPump[]): ScheduleTimelineEntry[] => {
+  if (!items || items.length === 0) return [];
+
+  const sortedItems = [...items].sort((a, b) => a.scheduledOnDayIndex - b.scheduledOnDayIndex);
+  const lanes: Lane[] = [];
+
+  const itemEntries = sortedItems.map(item => ({
+    ...item,
+    startDay: item.scheduledOnDayIndex,
+    duration: Math.ceil(item.daysPerUnit),
+    endDay: item.scheduledOnDayIndex + Math.ceil(item.daysPerUnit) - 1,
+  }));
+
+  const fullTimelineEntries: ScheduleTimelineEntry[] = [];
+
+  itemEntries.forEach(item => {
+    let placed = false;
+    for (let i = 0; i < lanes.length; i++) {
+      const lastItemInLane = lanes[i][lanes[i].length - 1];
+      if (item.startDay > lastItemInLane.endDay) {
+        lanes[i].push(item);
+        fullTimelineEntries.push({ ...item, lane: i });
+        placed = true;
+        break;
+      }
+    }
+    if (!placed) {
+      const newLaneIndex = lanes.length;
+      lanes.push([item]);
+      fullTimelineEntries.push({ ...item, lane: newLaneIndex });
+    }
+  });
+
+  return fullTimelineEntries;
+};
 
 export default function SchedulePage() {
   const { toast } = useToast();
@@ -220,42 +259,24 @@ useEffect(() => {
 
   const calendarDays = useMemo(() => {
     const days = [];
-    // For SSR and initial client render, calendarDays might be based on server's 'new Date()'
-    // or client's 'new Date()' respectively. This is generally fine for establishing the grid.
-    // The dynamic "today" and "current month" styling is handled by clientRenderInfo state.
     const todayForGrid = clientRenderInfo
       ? new Date(clientRenderInfo.todayEpoch)
       : new Date();
 
     const startDate = new Date(todayForGrid);
-    startDate.setDate(todayForGrid.getDate() - todayForGrid.getDay()); // Start week on Sunday
+    startDate.setDate(todayForGrid.getDate() - todayForGrid.getDay()); 
     for (let i = 0; i < 42; i++) {
-      // 6 weeks
       const date = new Date(startDate);
       date.setDate(startDate.getDate() + i);
       days.push(date);
     }
     return days;
-  }, [clientRenderInfo]); // Recompute if clientRenderInfo changes (e.g. day boundary crossed during session)
+  }, [clientRenderInfo]); 
 
   const scheduleTimeline = useMemo(() => {
-    const timeline: ScheduleTimelineEntry[] = [];
-    scheduledItems
-      .sort((a, b) => a.scheduledOnDayIndex - b.scheduledOnDayIndex)
-      .forEach((item) => {
-        const startDay = item.scheduledOnDayIndex;
-        const duration = item.daysPerUnit;
-
-        timeline.push({
-          ...item,
-          startDay: startDay,
-          endDay: startDay + duration - 1,
-          duration,
-        });
-      });
-    return timeline.sort((a, b) => a.startDay - b.startDay);
+    return assignLanesToScheduledItems(scheduledItems);
   }, [scheduledItems]);
-
+  
   const totalScheduledDaysDuration = useMemo(() => {
     return scheduledItems.reduce((sum, item) => sum + item.daysPerUnit, 0);
   }, [scheduledItems]);
@@ -273,7 +294,7 @@ useEffect(() => {
         drop: (dragged) => {
           const start = calendarDays[dayIndex];
           const end = new Date(start);
-          end.setDate(start.getDate() + dragged.daysPerUnit - 1);
+          end.setDate(start.getDate() + Math.ceil(dragged.daysPerUnit) - 1);
 
           const previous = scheduledItems;
           setScheduledItems((prev) => {
@@ -337,7 +358,6 @@ useEffect(() => {
         >
           {date.getDate()}
         </div>
-        <div className="flex-grow space-y-0.5 overflow-y-auto glass-scrollbar" />
       </div>
     );
   };
@@ -621,7 +641,7 @@ useEffect(() => {
             </div>
           ))}
         </div>
-        <div className="grid grid-cols-7 auto-rows-min gap-1 min-h-[300px] relative">
+        <div className="grid grid-cols-7 auto-rows-[minmax(8rem,auto)] gap-1 relative">
           {calendarDays.map((date, dayIndex) => (
             <ScheduleDayCell
               key={date.toISOString()}
@@ -630,17 +650,24 @@ useEffect(() => {
             />
           ))}
           {scheduleTimeline.map((entry) => {
-            const row = Math.floor(entry.startDay / 7) + 1;
-            const col = (entry.startDay % 7) + 1;
+            const startDayOfWeek = entry.startDay % 7;
+            const startWeek = Math.floor(entry.startDay / 7);
+
+            const blockStyle: React.CSSProperties = {
+              position: 'absolute',
+              top: `calc(${startWeek} * (8rem + 4px) + 2rem + ${entry.lane * 1.75}rem)`, // 8rem row, 4px gap, 2rem date header, 1.75rem per lane
+              left: `calc(${startDayOfWeek} * (100% / 7) + 2px)`,
+              width: `calc(${entry.duration} * (100% / 7) - 4px)`,
+              height: `1.5rem`, // 24px
+              zIndex: 10 + entry.lane,
+            };
+
             return (
               <CalendarBlock
                 key={entry.instanceId}
                 pump={entry}
                 colorClass={getColorForModelOnCalendar(entry.model)}
-                style={{
-                  gridRow: row,
-                  gridColumn: `${col} / span ${entry.duration}`,
-                }}
+                style={blockStyle}
               />
             );
           })}
