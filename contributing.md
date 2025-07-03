@@ -1,3 +1,4 @@
+
 # Contributing to PumpTrack
 
 Thank you for contributing to PumpTrack! This guide will help you set up your dev environment, follow team conventions, and ensure a smooth workflow for all agents and human collaborators.

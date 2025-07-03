@@ -58,13 +58,14 @@ const AddPumpForm = dynamic(() =>
   import("@/components/pump/AddPumpForm").then((m) => m.AddPumpForm),
 );
 import { GroupedKanbanCard } from "@/components/kanban/GroupedKanbanCard";
+import { ScheduleDayCell } from "@/components/schedule/ScheduleDayCell";
 import * as pumpService from "@/services/pumpService";
 
-interface PlannablePump extends Pump {
+export interface PlannablePump extends Pump {
   daysPerUnit: number;
 }
 
-interface ScheduledPump extends PlannablePump {
+export interface ScheduledPump extends PlannablePump {
   scheduledOnDayIndex: number;
   instanceId: string;
 }
@@ -159,23 +160,23 @@ useEffect(() => {
       const fetchedPumps = await pumpService.getAllPumps();
       setInitialPumps(fetchedPumps);
 
-      // DEV ONLY: Seed Firestore with all demo pump IDs for drag-and-drop!
-      if (process.env.NODE_ENV === "development") {
-        fetch('/api/seed-pumps', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ pumpIds: fetchedPumps.map(p => p.id) }),
-        })
-        .then(res => res.json())
-        .then(data => {
-          if (!data.ok) {
-            console.warn('Pump seeding failed:', data);
-          }
-        })
-        .catch(err => {
-          console.warn('Pump seeding error:', err);
-        });
-      }
+      // // DEV ONLY: Seed Firestore with all demo pump IDs for drag-and-drop!
+      // if (process.env.NODE_ENV === "development") {
+      //   fetch('/api/seed-pumps', {
+      //     method: 'POST',
+      //     headers: { 'Content-Type': 'application/json' },
+      //     body: JSON.stringify({ pumpIds: fetchedPumps.map(p => p.id) }),
+      //   })
+      //   .then(res => res.json())
+      //   .then(data => {
+      //     if (!data.ok) {
+      //       console.warn('Pump seeding failed:', data);
+      //     }
+      //   })
+      //   .catch(err => {
+      //     console.warn('Pump seeding error:', err);
+      //   });
+      // }
     } catch (error) {
       console.error("Failed to fetch pumps for schedule:", error);
       toast({
@@ -281,86 +282,43 @@ useEffect(() => {
     return scheduledItems.reduce((sum, item) => sum + item.daysPerUnit, 0);
   }, [scheduledItems]);
 
-  const ScheduleDayCell = ({
-    date,
-    dayIndex,
-  }: {
-    date: Date;
-    dayIndex: number;
-  }) => {
-    const [{ isOver }, drop] = useDrop<PlannablePump, void, { isOver: boolean }>(
-      {
-        accept: "pump",
-        drop: (dragged) => {
-          const start = calendarDays[dayIndex];
-          const end = new Date(start);
-          end.setDate(start.getDate() + Math.ceil(dragged.daysPerUnit) - 1);
+  const handleDropPump = useCallback((dragged: PlannablePump, dayIndex: number) => {
+    const start = calendarDays[dayIndex];
+    const end = new Date(start);
+    end.setDate(start.getDate() + Math.ceil(dragged.daysPerUnit) - 1);
 
-          const previous = scheduledItems;
-          setScheduledItems((prev) => {
-            const filteredPrev = prev.filter((si) => si.id !== dragged.id);
-            return [
-              ...filteredPrev,
-              {
-                ...dragged,
-                scheduledOnDayIndex: dayIndex,
-                instanceId: crypto.randomUUID(),
-              },
-            ].sort((a, b) => a.scheduledOnDayIndex - b.scheduledOnDayIndex);
-          });
-
-          (async () => {
-            try {
-              await api.schedulePump(dragged.id, {
-                start: start.toISOString(),
-                end: end.toISOString(),
-              });
-              mutate("/api/schedule");
-              setSelectedPlannableItemIds([]);
-            } catch (error) {
-              console.error("Failed to schedule pump:", error);
-              setScheduledItems(previous);
-              toast({
-                variant: "destructive",
-                title: "Schedule Failed",
-                description: "Could not schedule pump. Please try again.",
-              });
-            }
-          })();
+    const previous = scheduledItems;
+    setScheduledItems((prev) => {
+      const filteredPrev = prev.filter((si) => si.id !== dragged.id);
+      return [
+        ...filteredPrev,
+        {
+          ...dragged,
+          scheduledOnDayIndex: dayIndex,
+          instanceId: crypto.randomUUID(),
         },
-        collect: (monitor) => ({
-          isOver: monitor.isOver(),
-        }),
-      },
-    );
+      ].sort((a, b) => a.scheduledOnDayIndex - b.scheduledOnDayIndex);
+    });
 
-    const isTodayClient =
-      clientRenderInfo && date.toDateString() === clientRenderInfo.todayString;
-    const isDifferentMonthClient =
-      clientRenderInfo && date.getMonth() !== clientRenderInfo.currentMonth;
-
-    return (
-      <div
-        ref={drop as unknown as React.Ref<HTMLDivElement>}
-        key={date.toISOString()}
-        className={cn(
-          "border rounded-sm p-1 text-xs relative flex flex-col bg-background/40 hover:bg-background/60 transition-colors",
-          isDifferentMonthClient && "bg-muted/20 text-muted-foreground/60",
-          "min-h-[8rem]",
-          isOver && "bg-primary/10 border-primary",
-        )}
-      >
-        <div
-          className={cn(
-            "font-medium pb-0.5 text-right",
-            isTodayClient && "text-primary font-bold",
-          )}
-        >
-          {date.getDate()}
-        </div>
-      </div>
-    );
-  };
+    (async () => {
+      try {
+        await api.schedulePump(dragged.id, {
+          start: start.toISOString(),
+          end: end.toISOString(),
+        });
+        mutate("/api/schedule");
+        setSelectedPlannableItemIds([]);
+      } catch (error) {
+        console.error("Failed to schedule pump:", error);
+        setScheduledItems(previous);
+        toast({
+          variant: "destructive",
+          title: "Schedule Failed",
+          description: "Could not schedule pump. Please try again.",
+        });
+      }
+    })();
+  }, [calendarDays, scheduledItems, toast, mutate]);
 
   const handlePlannableItemClick = useCallback(
     (item: PlannablePump, event: React.MouseEvent) => {
@@ -647,6 +605,9 @@ useEffect(() => {
               key={date.toISOString()}
               date={date}
               dayIndex={dayIndex}
+              isToday={clientRenderInfo ? date.toDateString() === clientRenderInfo.todayString : false}
+              isDifferentMonth={clientRenderInfo ? date.getMonth() !== clientRenderInfo.currentMonth : false}
+              onDropPump={handleDropPump}
             />
           ))}
           {scheduleTimeline.map((entry) => {
