@@ -24,6 +24,18 @@ if (!latest) {
 }
 
 const specContent = readFileSync(join(specsDir, latest.file), 'utf8');
-console.log(`Loaded spec: ${latest.file}\n---\n${specContent.slice(0, 400)}...\n`);
 
-// TODO: Pass specContent to test-designer agent for test generation
+// Parse Acceptance Criteria and Functional Requirements below
+const acMatch = specContent.match(/Acceptance Criteria[^\n]*\n([\s\S]*?)(?:\n---|$)/i);
+const frMatch = specContent.match(/Functional Requirements[^\n]*\n([\s\S]*?)(?:\n---|$)/i);
+
+let agentPrompt = '';
+if (acMatch) {
+  agentPrompt += '## Acceptance Criteria\n' + acMatch[1].trim() + '\n\n';
+}
+if (frMatch) {
+  agentPrompt += '## Functional Requirements\n' + frMatch[1].trim() + '\n\n';
+}
+
+console.log('\n----- Agent Prompt for Test-Designer -----\n');
+console.log(agentPrompt || '(No prompt data found)');
