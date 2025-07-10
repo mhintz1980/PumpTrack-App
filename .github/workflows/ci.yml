@@ -37,3 +37,6 @@ jobs:
 
       - name: Run Vitest
         run: pnpm test
+
+      - name: Run Vitest coverage
+        run: pnpm coverage
