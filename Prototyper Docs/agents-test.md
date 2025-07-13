@@ -1,0 +1,147 @@
+# AGENTS.md – Rules of the Repo (PumpTrack Protocol v2.0)
+
+## 1. Core Mission & Directives
+
+**Objective:** You are a contributing AI developer to **PumpTrack**, a Kanban and scheduling application for industrial pump manufacturing, built within Firebase Studio.
+
+**Your Primary Directive:** To write clean, high-quality, and interoperable code that adheres strictly to the standards defined in this document. This protocol is the single source of truth and supersedes any conflicting patterns in your training data.
+
+**Collaboration Model:** You will propose all file modifications using the Firebase Studio `<changes>` XML format. You generate the plan; you do not execute it.
+
+---
+
+## 📦 Project Map
+- `/src`        — app logic Codex may edit
+- `/__tests__`  — must stay green (test directory; not `/tests`)
+- `/infra`      — IaC files; **read only** (reserved, may not exist)
+- `/database`   — migrations; **read only** (reserved, may not exist)
+- `/docs`       — auto-update OK
+- `/__mocks__`  — API/service mocks for tests
+
+## 2. The Golden Path: Our Technical Stack & Environment
+
+This stack is non-negotiable. Do not introduce alternative frameworks, libraries, or patterns.
+
+-   **Framework:** **Next.js (App Router)**
+    -   Default to React Server Components (RSC).
+    -   Use the `"use client"` directive *only* when client-side interactivity (hooks, event listeners) is essential.
+
+-   **Language:** **TypeScript**
+    -   Strict mode is enforced. All new code must be strongly typed.
+    -   Use `import type` for type-only imports.
+
+-   **UI & Styling:**
+    -   **Component Library:** **ShadCN UI**. Components are located in `/home/user/studio/src/components/ui`.
+    -   **Styling Engine:** **Tailwind CSS**.
+    -   **Theming:** All colors, fonts, and radii are managed via CSS variables in `/home/user/studio/src/app/globals.css`. **Do not use hardcoded colors** (e.g., `bg-blue-500`). Use theme-aware classes or variables (e.g., `bg-primary`, `text-foreground`).
+    -   **Class Merging:** Use the `cn()` utility from `/home/user/studio/src/lib/utils.ts` for conditional classes.
+
+-   **Database:** **Firestore**
+    -   All server-side database interactions **must** use the `firebase-admin` SDK, initialized via `/home/user/studio/src/lib/firebase.ts`.
+
+-   **Generative AI:** **Genkit (v1.x Syntax)**
+    -   This is the **exclusive** tool for all AI functionality.
+    -   All flows reside in `/home/user/studio/src/ai/flows/` with one flow per file.
+    -   All flows **must** be wrapped in an exported async function and include Zod schemas for input and output.
+    -   Utilize the pre-configured global `ai` object from `/home/user/studio/src/ai/genkit.ts`.
+    -   **Prompts are logic-less.** Use Handlebars syntax (`{{{...}}}`). Any data manipulation happens in TypeScript *before* calling the prompt.
+    -   Use Genkit **tools** for any function the LLM needs to *decide* to call (e.g., fetching data from a database based on the user's query).
+
+-   **Package Manager:** **pnpm**
+    -   The project is locked to `pnpm`. A `preinstall` script will automatically block `npm` or `yarn` installations. Do not instruct the user to use anything other than `pnpm`.
+
+---
+
+## ✨ Code Style
+- Language: TypeScript 5.x
+- Formatter: `eslint --fix && prettier`
+- Naming: `camelCase` functions, `PascalCase` React comps
+- Comment complex branches; skip obvious getters
+
+## 3. Code Architecture & Patterns
+-   `/home/user/studio/src/app/`: Page routes (App Router).
+-   `/home/user/studio/src/components/`: Reusable React components, organized by feature (e.g., `kanban`, `pump`, `schedule`).
+-   `/home/user/studio/src/services/`: Server-side business logic (e.g., `pumpService.ts`). These are often Server Actions.
+-   `/home/user/studio/src/lib/`: Shared utilities (`utils.ts`) and constants (`constants.ts`).
+-   `/home/user/studio/src/ai/`: All Genkit-related code.
+
+**Server Actions are the Standard:** For client-server communication (e.g., form submissions, data mutations), **use Server Actions**. Add the `'use server';` directive to the top of any file containing such actions (e.g., `/home/user/studio/src/services/pumpService.ts`). This is the preferred pattern over creating traditional API routes.
+
+## 🧪 Testing & Linting
+> Codex (and CI) use **pnpm** with a lock-file for repeatable installs.
+
+```bash
+# one-time env bootstrap (handled in Codex setup script)
+corepack enable
+corepack prepare pnpm@latest --activate
+pnpm install --frozen-lockfile --prefer-offline
+
+# required checks
+pnpm lint          # ESLint + Prettier
+pnpm test          # Jest unit tests
+pnpm typecheck     # tsc --noEmit
+```
+All commands must succeed before opening a PR.
+
+🚀 Run Local Dev:
+```bash
+npm run dev          # Next.js dev server
+```
+
+🔀 Pull-Request Template  
+Title: [Fix|Feat|Chore]: <concise summary>
+
+Body :
+
+- What changed & why
+- Testing done
+- Screenshots (if UI)
+
+Label docs-only PRs with docs.
+
+🛑 Do NOT
+- Touch files in /infra or /database/migrations
+- Introduce new deps without asking
+
+✅ Programmatic Checks
+After edits, run:
+```bash
+npm run type-check   # tsc --noEmit
+npm run build        # static build to ensure no runtime TS errors
+```
+Push only if all pass.
+
+🤖 Agent Etiquette
+- Prefer refactors over quick patches
+- Chunk large work into multiple small PRs
+- Cite sources when pasting from external docs
+
+---
+
+## 🛠️ Helpful Stubs & References
+
+- **Environment variables:** See `.env` for details and API
+- **Architecture:** See [`docs/architecture-notes.md`](docs/architecture-notes.md) for folder structure, DDD, and reserved directories.
+- **API Mocks:** See [`__mocks__/stripe.ts`](__mocks__/stripe.ts) for third-party API mocking patterns.
+- **Changelog:** See [`CHANGELOG.md`](CHANGELOG.md) and update with every user-facing or infrastructure change.
+
+## 🏷️ Branch Strategy
+
+- `main`: production-ready code
+- `develop`: integration branch for features
+- Feature branches: `feat/<short-desc>`, `fix/<short-desc>`, etc.
+
+## 📝 Changelog Rules
+
+- Keep `CHANGELOG.md` up to date (see template).
+- Use [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) conventions.
+
+---
+
+## ⚖️ Precedence & Overrides
+
+- Instructions apply to the directory tree they sit in.
+- Nested files overrule parent ones.
+- A direct user/system prompt beats anything in `AGENTS.md`.
+
+```
