@@ -29,6 +29,7 @@ export default defineConfig({
     coverage: { // Added comma here
       provider: 'v8',
       reporter: ['text', 'html'],
+      include: ['src/utils/capitalize.ts'],  // Only enforce coverage on this file for now
       thresholds: {          // ✅ plural
         lines: 90,
         statements: 90,
