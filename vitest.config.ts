@@ -26,16 +26,17 @@ export default defineConfig({
       '**/cypress/**',
       '**/__legacy_tests__/**',
     ],
-    coverage: { // Added comma here
+    coverage: {
       provider: 'v8',
       reporter: ['text', 'html'],
-      include: ['src/utils/capitalize.ts'],  // Only enforce coverage on this file for now
-      thresholds: {          // ✅ plural
+      include: ['src/**/*.{ts,tsx}'],  // Include all src files
+      exclude: ['src/**/*.{test,spec}.{ts,tsx}', 'src/ai/dev.ts'],
+      thresholds: {
         lines: 90,
         statements: 90,
         functions: 90,
         branches: 90,
+      },
     },
   },
-  },
-}); // Added closing brace for test object
+});
