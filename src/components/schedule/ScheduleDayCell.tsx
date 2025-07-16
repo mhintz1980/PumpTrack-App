@@ -31,8 +31,8 @@ export const ScheduleDayCell: React.FC<ScheduleDayCellProps> = ({
   );
 
   return (
-    <div
-      ref={drop as unknown as React.LegacyRef<HTMLDivElement>}
+    <div  
+      ref={drop as any} // HACK: Workaround for react-dnd type issue with React 18 strict mode
       className={cn(
         "border rounded-sm p-1 text-xs relative flex flex-col bg-background/40 hover:bg-background/60 transition-colors min-h-[8rem]",
         isDifferentMonth && "bg-muted/20 text-muted-foreground/60",
