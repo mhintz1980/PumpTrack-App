@@ -637,6 +637,7 @@ class AgentOrchestrator {
       // Otherwise, join with specsDir
       filePath = join(this.specsDir, fileName);
     }
+
     
     if (!existsSync(filePath)) {
       throw new Error(`Spec file not found: ${filePath}`);
@@ -704,6 +705,7 @@ async function main() {
   
   const orchestrator = new AgentOrchestrator();
   await orchestrator.run(fixedSpecFile);
+
 }
 
 // Run if called directly
