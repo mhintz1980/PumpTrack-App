@@ -1,8 +1,10 @@
 {
   "mcpServers": {
     "sequential": {
-      "command": "uvx",
-      "args": ["mcp-server-sequential@latest"],
+      "command": "npx",
+      "args": [
+        "@modelcontextprotocol/server-everything@latest"
+      ],
       "env": {
         "FASTMCP_LOG_LEVEL": "ERROR"
       },
@@ -15,23 +17,26 @@
       ]
     },
     "firebase": {
-      "command": "uvx", 
-      "args": ["mcp-server-firebase@latest"],
+      "command": "npx",
+      "args": [
+        "@modelcontextprotocol/server-filesystem@latest"
+      ],
       "env": {
-        "FASTMCP_LOG_LEVEL": "ERROR",
-        "GOOGLE_APPLICATION_CREDENTIALS": ".env.local"
+        "FASTMCP_LOG_LEVEL": "ERROR"
       },
       "disabled": false,
       "autoApprove": [
-        "firestore_query",
-        "firestore_add",
-        "firestore_update",
-        "firestore_delete"
+        "read_file",
+        "write_file",
+        "list_directory",
+        "create_directory"
       ]
     },
     "puppeteer": {
-      "command": "uvx",
-      "args": ["mcp-server-puppeteer@latest"],
+      "command": "npx",
+      "args": [
+        "@modelcontextprotocol/server-puppeteer@latest"
+      ],
       "env": {
         "FASTMCP_LOG_LEVEL": "ERROR"
       },
@@ -40,12 +45,15 @@
         "screenshot",
         "navigate",
         "click",
-        "type"
+        "type",
+        "puppeteer_navigate"
       ]
     },
     "context7": {
-      "command": "uvx",
-      "args": ["mcp-server-context7@latest"],
+      "command": "npx",
+      "args": [
+        "@modelcontextprotocol/server-everything@latest"
+      ],
       "env": {
         "FASTMCP_LOG_LEVEL": "ERROR"
       },
@@ -53,7 +61,10 @@
       "autoApprove": [
         "analyze_context",
         "generate_summary",
-        "extract_insights"
+        "extract_insights",
+        "echo",
+        "sampleLLM",
+        "annotatedMessage"
       ]
     }
   }

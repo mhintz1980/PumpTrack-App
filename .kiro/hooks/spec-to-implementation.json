@@ -1,0 +1,22 @@
+{
+  "name": "Spec to Implementation",
+  "description": "Automatically generates implementation when a new spec file is created or updated",
+  "trigger": {
+    "type": "file_changed",
+    "patterns": [
+      "specs/**/*.md"
+    ]
+  },
+  "actions": [
+    {
+      "type": "run_command",
+      "command": "pnpm exec tsx run-agents.ts",
+      "args": ["${file_path}"]
+    },
+    {
+      "type": "show_notification",
+      "message": "🚀 Implementation generated from spec: ${file_name}"
+    }
+  ],
+  "enabled": true
+}

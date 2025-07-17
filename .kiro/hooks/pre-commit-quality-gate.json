@@ -1,0 +1,29 @@
+{
+  "name": "Pre-Commit Quality Gate",
+  "description": "Runs comprehensive quality checks before allowing commits",
+  "trigger": {
+    "type": "pre_commit"
+  },
+  "actions": [
+    {
+      "type": "run_command",
+      "command": "pnpm lint",
+      "fail_on_error": true
+    },
+    {
+      "type": "run_command", 
+      "command": "pnpm typecheck",
+      "fail_on_error": true
+    },
+    {
+      "type": "run_command",
+      "command": "pnpm test",
+      "fail_on_error": true
+    },
+    {
+      "type": "show_notification",
+      "message": "✅ All quality checks passed! Ready to commit."
+    }
+  ],
+  "enabled": true
+}

@@ -1,0 +1,25 @@
+{
+  "name": "Auto Documentation Generator",
+  "description": "Automatically generates and updates documentation",
+  "trigger": {
+    "type": "file_saved",
+    "patterns": [
+      "src/components/**/*.tsx",
+      "src/services/**/*.ts",
+      "src/utils/**/*.ts"
+    ]
+  },
+  "actions": [
+    {
+      "type": "run_command",
+      "command": "pnpm exec tsx scripts/generate-docs.ts",
+      "args": ["${file_path}"],
+      "show_output": false
+    },
+    {
+      "type": "show_notification",
+      "message": "📚 Documentation updated for ${file_name}"
+    }
+  ],
+  "enabled": false
+}

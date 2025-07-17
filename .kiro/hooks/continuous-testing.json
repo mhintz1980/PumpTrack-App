@@ -1,0 +1,24 @@
+{
+  "name": "Continuous Testing",
+  "description": "Automatically runs tests when source files are changed",
+  "trigger": {
+    "type": "file_changed",
+    "patterns": [
+      "src/**/*.ts",
+      "src/**/*.tsx"
+    ]
+  },
+  "actions": [
+    {
+      "type": "run_command",
+      "command": "pnpm test",
+      "args": ["--run"],
+      "show_output": true
+    },
+    {
+      "type": "show_notification",
+      "message": "🧪 Tests run for: ${file_name}"
+    }
+  ],
+  "enabled": true
+}
