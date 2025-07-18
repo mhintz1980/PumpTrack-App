@@ -8,21 +8,31 @@
     {
       "type": "run_command",
       "command": "pnpm lint",
-      "fail_on_error": true
+      "fail_on_error": true,
+      "timeout": 30000
     },
     {
       "type": "run_command", 
       "command": "pnpm typecheck",
-      "fail_on_error": true
+      "fail_on_error": true,
+      "timeout": 60000
     },
     {
       "type": "run_command",
       "command": "pnpm test",
-      "fail_on_error": true
+      "fail_on_error": true,
+      "timeout": 120000
+    },
+    {
+      "type": "run_command",
+      "command": "pnpm coverage",
+      "fail_on_error": false,
+      "timeout": 180000,
+      "show_output": false
     },
     {
       "type": "show_notification",
-      "message": "✅ All quality checks passed! Ready to commit."
+      "message": "✅ Quality gate passed! All checks completed successfully."
     }
   ],
   "enabled": true

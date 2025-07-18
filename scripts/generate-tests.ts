@@ -17,33 +17,33 @@ interface FileAnalysis {
 }
 
 class TestGenerator {
-  
+
   async generateTestsForFile(filePath: string): Promise<void> {
     console.log(`🧪 Auto-generating tests for: ${filePath}`);
-    
+
     try {
       const analysis = await this.analyzeFile(filePath);
       const testContent = this.generateTestContent(analysis);
       const testFilePath = this.getTestFilePath(filePath);
-      
+
       // Don't overwrite existing tests
       if (existsSync(testFilePath)) {
         console.log(`⚠️ Test file already exists: ${testFilePath}`);
         return;
       }
-      
+
       await this.writeTestFile(testFilePath, testContent);
       console.log(`✅ Generated test file: ${testFilePath}`);
-      
+
     } catch (error) {
       console.error(`❌ Failed to generate tests for ${filePath}:`, error);
     }
   }
-  
+
   private async analyzeFile(filePath: string): Promise<FileAnalysis> {
     const content = readFileSync(filePath, 'utf8');
     const fileName = basename(filePath, extname(filePath));
-    
+
     // Determine file type
     let fileType: 'component' | 'utility' | 'service';
     if (filePath.includes('/components/')) {
@@ -53,11 +53,11 @@ class TestGenerator {
     } else {
       fileType = 'service';
     }
-    
+
     // Extract exports
     const exports = this.extractExports(content);
     const imports = this.extractImports(content);
-    
+
     return {
       filePath,
       fileName,
@@ -66,43 +66,43 @@ class TestGenerator {
       imports
     };
   }
-  
+
   private extractExports(content: string): string[] {
     const exports: string[] = [];
-    
+
     // Function exports
     const functionMatches = content.match(/export\s+(function|const|async\s+function)\s+(\w+)/g) || [];
     functionMatches.forEach(match => {
       const nameMatch = match.match(/(\w+)$/);
       if (nameMatch) exports.push(nameMatch[1]);
     });
-    
+
     // Component exports
     const componentMatches = content.match(/export\s+const\s+(\w+):\s*React\.FC/g) || [];
     componentMatches.forEach(match => {
       const nameMatch = match.match(/const\s+(\w+):/);
       if (nameMatch) exports.push(nameMatch[1]);
     });
-    
+
     // Default exports
     const defaultMatch = content.match(/export\s+default\s+(\w+)/);
     if (defaultMatch) exports.push(defaultMatch[1]);
-    
+
     return exports;
   }
-  
+
   private extractImports(content: string): string[] {
     const imports: string[] = [];
     const importMatches = content.match(/import\s+.*\s+from\s+['"]([^'"]+)['"]/g) || [];
-    
+
     importMatches.forEach(match => {
       const pathMatch = match.match(/from\s+['"]([^'"]+)['"]/);
       if (pathMatch) imports.push(pathMatch[1]);
     });
-    
+
     return imports;
   }
-  
+
   private generateTestContent(analysis: FileAnalysis): string {
     switch (analysis.fileType) {
       case 'component':
@@ -115,11 +115,11 @@ class TestGenerator {
         return this.generateGenericTest(analysis);
     }
   }
-  
+
   private generateComponentTest(analysis: FileAnalysis): string {
     const componentName = analysis.exports[0] || analysis.fileName;
     const importPath = this.getImportPath(analysis.filePath);
-    
+
     return `import { render, screen, fireEvent } from '@testing-library/react';
 import { ${componentName} } from '${importPath}';
 
@@ -175,12 +175,13 @@ describe('${componentName}', () => {
   });
 });`;
   }
-  
+
   private generateUtilityTest(analysis: FileAnalysis): string {
     const functionName = analysis.exports[0] || analysis.fileName;
     const importPath = this.getImportPath(analysis.filePath);
-    
+
     return `import { ${functionName} } from '${importPath}';
+import { performance } from 'perf_hooks';
 
 describe('${functionName}()', () => {
   describe('Basic Functionality', () => {
@@ -229,11 +230,11 @@ describe('${functionName}()', () => {
   });
 });`;
   }
-  
+
   private generateServiceTest(analysis: FileAnalysis): string {
     const serviceName = analysis.exports[0] || analysis.fileName;
     const importPath = this.getImportPath(analysis.filePath);
-    
+
     return `import { ${serviceName} } from '${importPath}';
 
 describe('${serviceName}', () => {
@@ -283,11 +284,11 @@ describe('${serviceName}', () => {
   });
 });`;
   }
-  
+
   private generateGenericTest(analysis: FileAnalysis): string {
     const exportName = analysis.exports[0] || analysis.fileName;
     const importPath = this.getImportPath(analysis.filePath);
-    
+
     return `import { ${exportName} } from '${importPath}';
 
 describe('${exportName}', () => {
@@ -301,7 +302,7 @@ describe('${exportName}', () => {
   });
 });`;
   }
-  
+
   private getImportPath(filePath: string): string {
     // Convert file path to import path
     if (filePath.startsWith('src/')) {
@@ -309,19 +310,19 @@ describe('${exportName}', () => {
     }
     return filePath.replace(/\.(ts|tsx)$/, '');
   }
-  
+
   private getTestFilePath(filePath: string): string {
     const relativePath = filePath.replace(/^src\//, '');
     const testPath = relativePath.replace(/\.(ts|tsx)$/, '.spec.$1');
     return join('__tests__', testPath);
   }
-  
+
   private async writeTestFile(testFilePath: string, content: string): Promise<void> {
     const dir = dirname(testFilePath);
     if (!existsSync(dir)) {
       mkdirSync(dir, { recursive: true });
     }
-    
+
     writeFileSync(testFilePath, content, 'utf8');
   }
 }
@@ -329,17 +330,17 @@ describe('${exportName}', () => {
 // CLI interface
 async function main() {
   const filePath = process.argv[2];
-  
+
   if (!filePath) {
     console.error('❌ Usage: tsx generate-tests.ts <file-path>');
     process.exit(1);
   }
-  
+
   if (!existsSync(filePath)) {
     console.error(`❌ File not found: ${filePath}`);
     process.exit(1);
   }
-  
+
   const generator = new TestGenerator();
   await generator.generateTestsForFile(filePath);
 }
