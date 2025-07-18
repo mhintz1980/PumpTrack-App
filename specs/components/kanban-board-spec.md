@@ -14,7 +14,7 @@ Comprehensive Kanban board component for managing pump manufacturing workflow st
 ---
 
 ## 2. User Stories
-
+n
 - **As a** production manager, **I want** to drag pump cards between workflow stages **so that** I can track manufacturing progress visually.
 - **As a** team member, **I want** to see real-time updates when others move cards **so that** everyone stays synchronized.
 - **As a** supervisor, **I want** to filter and search pump cards **so that** I can quickly find specific items.
@@ -29,7 +29,7 @@ Comprehensive Kanban board component for managing pump manufacturing workflow st
 ---
 
 ## 3. Functional Requirements
-
+n
 - **FR-1** The component **SHALL** support drag-and-drop between columns
 - **FR-2** The component **SHALL** integrate with Firebase for real-time updates
 - **FR-3** The component **SHALL** provide search and filter capabilities
@@ -40,6 +40,8 @@ Comprehensive Kanban board component for managing pump manufacturing workflow st
 ## 4. Technical Details
 
 ### 5.1 Architecture & Components
+
+=======
 
 - **Existing components:**
   - `/src/components/kanban/KanbanBoard.tsx`

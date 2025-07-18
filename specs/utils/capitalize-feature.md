@@ -2,6 +2,7 @@
 
 **slug:** utils-capitalize  
 **Status:** Implemented  
+
 **Date:** 2025-07-07  
 **Author:** Mark
 

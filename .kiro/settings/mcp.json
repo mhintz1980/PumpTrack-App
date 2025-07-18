@@ -5,6 +5,7 @@
       "args": [
         "@modelcontextprotocol/server-everything@latest"
       ],
+
       "env": {
         "FASTMCP_LOG_LEVEL": "ERROR"
       },
@@ -54,6 +55,7 @@
       "args": [
         "@modelcontextprotocol/server-everything@latest"
       ],
+
       "env": {
         "FASTMCP_LOG_LEVEL": "ERROR"
       },
@@ -61,6 +63,7 @@
       "autoApprove": [
         "analyze_context",
         "generate_summary",
+
         "extract_insights",
         "echo",
         "sampleLLM",
