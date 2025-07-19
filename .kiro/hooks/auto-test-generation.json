@@ -1,0 +1,20 @@
+{
+  "name": "Auto Test Generation",
+  "description": "Automatically generates tests when new components or utilities are created",
+  "trigger": {
+    "type": "file_created",
+    "patterns": [
+      "src/components/**/*.tsx",
+      "src/utils/**/*.ts",
+      "src/services/**/*.ts"
+    ]
+  },
+  "actions": [
+    {
+      "type": "run_command",
+      "command": "pnpm exec tsx scripts/generate-tests.ts",
+      "args": ["${file_path}"]
+    }
+  ],
+  "enabled": true
+}

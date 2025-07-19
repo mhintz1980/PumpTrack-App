@@ -1,0 +1,19 @@
+{
+  "name": "AI Code Review",
+  "description": "Automatically reviews code changes using AI",
+  "trigger": {
+    "type": "pre_commit"
+  },
+  "actions": [
+    {
+      "type": "run_command",
+      "command": "pnpm exec tsx scripts/ai-code-review.ts",
+      "show_output": true
+    },
+    {
+      "type": "show_notification",
+      "message": "🤖 AI code review completed"
+    }
+  ],
+  "enabled": true
+}

@@ -1,0 +1,25 @@
+{
+  "name": "Coverage Check on Save",
+  "description": "Shows coverage impact when files are saved",
+  "trigger": {
+    "type": "file_saved",
+    "patterns": [
+      "src/**/*.ts",
+      "src/**/*.tsx",
+      "__tests__/**/*.spec.ts",
+      "__tests__/**/*.spec.tsx"
+    ]
+  },
+  "actions": [
+    {
+      "type": "run_command",
+      "command": "pnpm coverage",
+      "show_output": false
+    },
+    {
+      "type": "show_notification",
+      "message": "Coverage updated - check terminal for details"
+    }
+  ],
+  "enabled": true
+}

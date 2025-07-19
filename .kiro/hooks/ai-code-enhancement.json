@@ -1,0 +1,20 @@
+{
+  "name": "AI Code Enhancement",
+  "description": "Uses AI to enhance code quality and suggest improvements",
+  "trigger": {
+    "type": "file_saved",
+    "patterns": [
+      "src/**/*.ts",
+      "src/**/*.tsx"
+    ]
+  },
+  "actions": [
+    {
+      "type": "run_command",
+      "command": "pnpm exec tsx scripts/ai-code-review.ts",
+      "args": ["${file_path}"],
+      "show_output": false
+    }
+  ],
+  "enabled": true
+}

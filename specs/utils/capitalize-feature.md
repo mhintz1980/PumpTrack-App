@@ -1,7 +1,8 @@
 # Feature Specification: Capitalize Utility
 
 **slug:** utils-capitalize  
-**Status:** Draft  
+**Status:** Implemented  
+
 **Date:** 2025-07-07  
 **Author:** Mark
 

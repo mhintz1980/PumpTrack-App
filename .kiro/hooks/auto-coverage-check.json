@@ -1,0 +1,23 @@
+{
+  "name": "Auto Coverage Check",
+  "description": "Automatically runs coverage check when tests are updated",
+  "trigger": {
+    "type": "file_changed",
+    "patterns": [
+      "__tests__/**/*.spec.ts",
+      "__tests__/**/*.spec.tsx"
+    ]
+  },
+  "actions": [
+    {
+      "type": "run_command",
+      "command": "pnpm coverage",
+      "show_output": true
+    },
+    {
+      "type": "show_notification",
+      "message": "📊 Coverage check completed for: ${file_name}"
+    }
+  ],
+  "enabled": true
+}

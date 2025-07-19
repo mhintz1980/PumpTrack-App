@@ -26,12 +26,15 @@ specs/
 ## 📋 Specification Status
 
 ### ✅ Completed Specs
+
 - [utils/capitalize-feature.md](./utils/capitalize-feature.md) - String capitalization utility
 
 ### 🔄 In Progress Specs
+
 - None currently
 
 ### 📝 Planned Specs
+
 - **Components:**
   - kanban/board-spec.md - Kanban board functionality
   - schedule/calendar-spec.md - Scheduling calendar
@@ -58,6 +61,7 @@ Each spec should follow the template in [featureSpecification.md](../featureSpec
 6. **Testing Notes** - Unit, component, and E2E test requirements
 
 ## 🔗 Related Files
+
 - [../featureSpecification.md](../featureSpecification.md) - Specification template
 - [../AGENTS.md](../AGENTS.md) - Development protocol
 - [../testingProtocol_v1.md](../testingProtocol_v1.md) - Testing workflow

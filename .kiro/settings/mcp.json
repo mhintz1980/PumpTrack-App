@@ -1,60 +1,20 @@
 {
   "mcpServers": {
-    "sequential": {
+    "fetch": {
       "command": "uvx",
-      "args": ["mcp-server-sequential@latest"],
-      "env": {
-        "FASTMCP_LOG_LEVEL": "ERROR"
-      },
-      "disabled": false,
-      "autoApprove": [
-        "create_task",
-        "update_task",
-        "list_tasks",
-        "complete_task"
-      ]
+      "args": ["mcp-server-fetch"],
+      "env": {},
+      "disabled": true,
+      "autoApprove": []
     },
     "firebase": {
-      "command": "uvx", 
-      "args": ["mcp-server-firebase@latest"],
-      "env": {
-        "FASTMCP_LOG_LEVEL": "ERROR",
-        "GOOGLE_APPLICATION_CREDENTIALS": ".env.local"
-      },
-      "disabled": false,
-      "autoApprove": [
-        "firestore_query",
-        "firestore_add",
-        "firestore_update",
-        "firestore_delete"
-      ]
-    },
-    "puppeteer": {
       "command": "uvx",
-      "args": ["mcp-server-puppeteer@latest"],
+      "args": ["firebase-mcp-server@latest"],
       "env": {
-        "FASTMCP_LOG_LEVEL": "ERROR"
+        "FIREBASE_PROJECT_ID": "pumptrack-hx0rg"
       },
       "disabled": false,
-      "autoApprove": [
-        "screenshot",
-        "navigate",
-        "click",
-        "type"
-      ]
-    },
-    "context7": {
-      "command": "uvx",
-      "args": ["mcp-server-context7@latest"],
-      "env": {
-        "FASTMCP_LOG_LEVEL": "ERROR"
-      },
-      "disabled": false,
-      "autoApprove": [
-        "analyze_context",
-        "generate_summary",
-        "extract_insights"
-      ]
+      "autoApprove": ["mcp_firebase_mcp_firestore_list_collections", "mcp_firebase_mcp_firestore_get_document", "mcp_firebase_mcp_storage_list_files"]
     }
   }
 }
