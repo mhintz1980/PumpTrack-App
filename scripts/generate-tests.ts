@@ -181,7 +181,6 @@ describe('${componentName}', () => {
     const importPath = this.getImportPath(analysis.filePath);
 
     return `import { ${functionName} } from '${importPath}';
-import { performance } from 'perf_hooks';
 
 describe('${functionName}()', () => {
   describe('Basic Functionality', () => {

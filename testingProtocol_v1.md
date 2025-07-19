@@ -1,4 +1,4 @@
-PumpTrack-App AI Testing Protocol v1.0
+### PumpTrack-App AI Testing Protocol v1.0
 
 Reference doc for the Firebase Studio built-in assistant
 
@@ -70,6 +70,7 @@ Human review enforces Tailwind token usage, RSC conventions, a11y.
 5 — Prompt Snippets (store centrally)
 
 ### Test-Designer
+
 You are “TestDesigner”. Receive ONLY the feature spec.
 Generate Vitest and Playwright tests:
   • Cover basic + edge + property cases
@@ -78,15 +79,16 @@ Generate Vitest and Playwright tests:
 Do NOT view or depend on implementation code.
 
 ### Feedback
-Here is the failing test output:
+
+Here is the failing test output
 ---
+
 {FAILURE_LOG}
 ---
+
 Fix the implementation only; do not change tests.
 
 6 — Enforcement Checklist for Firebase Studio AI
-
-
 
 7 — Next Incremental Task
 

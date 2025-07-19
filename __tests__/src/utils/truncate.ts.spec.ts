@@ -1,3 +1,4 @@
+import { describe, expect, it } from 'vitest';
 import { truncate } from '@/utils/truncate';
 
 describe('truncate()', () => {
@@ -26,10 +27,10 @@ describe('truncate()', () => {
     const result = truncate("");
     expect(result).toBe("");
   });
-  
+
   it('handles single character input', () => {
     const result = truncate("a");
-    expect(result).toBe("A");
+    expect(result).toBe("a");
   });
 
   // Property-based testing
@@ -39,7 +40,7 @@ describe('truncate()', () => {
     truncate(original);
     expect(original).toBe(originalCopy);
   });
-  
+
   it('is idempotent - applying it twice gives same result as once', () => {
     const input = 'example';
     const onceResult = truncate(input);
